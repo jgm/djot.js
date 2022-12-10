@@ -1,5 +1,6 @@
 import { Event } from "./event.js";
 import { AttributeParser } from "./attributes.js";
+import { find, boundedFind } from "./find.js";
 
 /* General note on the parsing strategy:  our objective is to
  * parse without backtracking. To that end, we keep a stack of
@@ -10,44 +11,6 @@ import { AttributeParser } from "./attributes.js";
  * opener. We can then change the annotation of the match at
  * that location to '+emphasis' or whatever.
  */
-
-// see https://stackoverflow.com/questions/72119570/
-type RegExpMatchArrayWithIndices =
-  RegExpMatchArray & { indices: Array<[number, number]> };
-
-const pattern = function(patt : string) : RegExp {
-  return new RegExp(patt, 'yd');
-}
-
-const find = function(subj : string, patt : RegExp, startpos : number) : null | { sp : number, ep : number, captures : string[] } {
-  patt.lastIndex = startpos;
-  const result = (patt.exec(subj) as null | RegExpMatchArrayWithIndices);
-  if (result !== null) {
-    var idx = 1;
-    const capts = [];
-    while (result.indices[idx]) {
-      capts.push(subj.substring(result.indices[idx][0], result.indices[idx][1]));
-      idx++;
-    }
-    return { sp: result.indices[0][0], ep: result.indices[0][1], captures: capts };
-  } else {
-    return null;
-  }
-}
-
-// let [sp, ep, capt] = find("(he)llo there", /\w+/d, 0);
-// console.log(sp, ep, capt);
-let m1 = find("hello there", pattern("^(he)\\w+"), 0);
-console.log(m1);
-let m2 = find("hello there", pattern("^(he)\\w+"), 1);
-console.log(m2);
-
-const boundedFind = function(subj : string, patt : RegExp, startpos : number, endpos : number) {
-//  local sp,ep,c1,c2,c3 = find(subj, patt, startpos)
-//  if ep and ep <= endpos then
-//    return sp,ep,c1,c2,c3
-//  end
-}
 
 
 /*

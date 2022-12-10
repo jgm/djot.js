@@ -10,7 +10,8 @@
     "skipLibCheck": true
   },
   "include": [
-    "attribute.ts",
+    "attributes.ts",
+    "find.ts",
     "inline.ts",
     "event.ts"
   ]
