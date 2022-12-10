@@ -2,21 +2,39 @@ import { Event } from "./event.js";
 import { AttributeParser } from "./attributes.js";
 import { find, boundedFind } from "./find.js";
 
-/* General note on the parsing strategy:  our objective is to
- * parse without backtracking. To that end, we keep a stack of
- * potential 'openers' for links, images, emphasis, and other
- * inline containers.  When we parse a potential closer for
- * one of these constructions, we can scan the stack of openers
- * for a match, which will tell us the location of the potential
- * opener. We can then change the annotation of the match at
- * that location to '+emphasis' or whatever.
- */
+// General note on the parsing strategy:  our objective is to
+// parse without backtracking. To that end, we keep a stack of
+// potential 'openers' for links, images, emphasis, and other
+// inline containers.  When we parse a potential closer for
+// one of these constructions, we can scan the stack of openers
+// for a match, which will tell us the location of the potential
+// opener. We can then change the annotation of the match at
+// that location to '+emphasis' or whatever.
 
+// Opener:
+// 1 = startpos, 2 = endpos, 3 = annotation, 4 = substartpos, 5 = endpos
+//
+// [link text](url)
+// ^         ^^
+// 1         23
+// startpos    (1)
+// endpos      (1)
+// substartpos (2)
+// subendpos   (3)
+// annot       "explicit_link"
+
+type Opener = {
+  startpos : number,
+  endpos : number,
+  annot : string,
+  substartpos : number,
+  subendpos : number
+}
+
+type OpenerMap =
+  { [opener: string]: {pos: number, data: Opener}[] } // in reverse order
 
 /*
-function InlineParser:add_match(startpos, endpos, annotation)
-  self.matches[startpos] = {startpos, endpos, annotation}
-end
 
 function InlineParser:add_opener(name, ...)
   -- 1 = startpos, 2 = endpos, 3 = annotation, 4 = substartpos, 5 = endpos
@@ -468,11 +486,6 @@ InlineParser.matchers = {
     end
   }
 
-function InlineParser:single_char(pos)
-  self:add_match(pos, pos, "str")
-  return pos + 1
-end
-
 -- Reparse attribute_slices that we tried to parse as an attribute
 function InlineParser:reparse_attributes()
   local slices = self.attribute_slices
@@ -594,11 +607,6 @@ function InlineParser:feed(spos, endpos)
   end
 end
 
-  -- Return true if we're parsing verbatim content.
-function InlineParser:in_verbatim()
-  return self.verbatim > 0
-end
-
 function InlineParser:get_matches()
   local sorted = {}
   local subject = self.subject
@@ -651,7 +659,7 @@ class InlineParser {
   warn : (msg : string) => void;
   subject : string;
   matches : Event[];
-  openers : Object; // map from closer_type to array of (pos, data) in reverse order
+  openers : OpenerMap; // map from closer_type to array of (pos, data) in reverse order
   verbatim : number; // parsing a verbatim span to be ended by N backticks
   verbatimType : string; // math or regular
   destination : boolean; // parsing link destination?
@@ -676,6 +684,19 @@ class InlineParser {
     this.attributeParser = null;
     this.attributeStart = null;
     this.attributeSlices = null;
+  }
+
+  addMatch(startpos : number, endpos : number, annot : string) : void {
+    this.matches[startpos] = {startpos: startpos, endpos: endpos, annot: annot};
+  }
+
+  in_verbatim() : boolean {
+    return (this.verbatim > 0);
+  }
+
+  single_char(pos : number) {
+    this.addMatch(pos, pos, "str");
+    return pos + 1;
   }
 
 }
