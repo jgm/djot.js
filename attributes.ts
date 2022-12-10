@@ -16,6 +16,8 @@
  * quotedval <- '"' ([^"] | '\"') '"'
  */
 
+import { Event } from "./events.js";
+
 // states
 enum State {
   SCANNING = 0,
@@ -30,12 +32,6 @@ enum State {
   FAIL,
   DONE,
   START
-}
-
-type Match = {
-  startpos : number,
-  endpos : number,
-  annotation : string
 }
 
 const isKeyChar = function(c : string) {
@@ -98,13 +94,13 @@ handlers[State.SCANNING_ID] = function(parser : AttributeParser, pos : number) {
     return State.SCANNING_ID;
   } else if (c === '}') {
     if (parser.begin && parser.lastpos && parser.lastpos > parser.begin) {
-      parser.addMatch(parser.begin + 1, parser.lastpos, "id");
+      parser.addEvent(parser.begin + 1, parser.lastpos, "id");
     }
     parser.begin = null;
     return State.DONE;
   } else if (/^\s/.exec(c) !== null) {
     if (parser.begin && parser.lastpos && parser.lastpos > parser.begin) {
-      parser.addMatch(parser.begin + 1, parser.lastpos, "id");
+      parser.addEvent(parser.begin + 1, parser.lastpos, "id");
     }
     parser.begin = null;
     return State.SCANNING;
@@ -119,13 +115,13 @@ handlers[State.SCANNING_CLASS] = function(parser : AttributeParser, pos : number
     return State.SCANNING_CLASS;
   } else if (c === '}') {
     if (parser.begin && parser.lastpos && parser.lastpos > parser.begin) {
-      parser.addMatch(parser.begin + 1, parser.lastpos, "class");
+      parser.addEvent(parser.begin + 1, parser.lastpos, "class");
     }
     parser.begin = null;
     return State.DONE;
   } else if (/^\s/.exec(c) !== null) {
     if (parser.begin && parser.lastpos && parser.lastpos > parser.begin) {
-      parser.addMatch(parser.begin + 1, parser.lastpos, "class");
+      parser.addEvent(parser.begin + 1, parser.lastpos, "class");
     }
     parser.begin = null;
     return State.SCANNING;
@@ -137,7 +133,7 @@ handlers[State.SCANNING_CLASS] = function(parser : AttributeParser, pos : number
 handlers[State.SCANNING_KEY] = function(parser : AttributeParser, pos : number) {
   const c = parser.subject.substr(pos, 1);
   if (c === '=' && parser.begin && parser.lastpos) {
-    parser.addMatch(parser.begin, parser.lastpos, "key");
+    parser.addEvent(parser.begin, parser.lastpos, "key");
     parser.begin = null;
     return State.SCANNING_VALUE;
   } else if (/^[a-zA-Z0-9_:-]/.exec(c) !== null) {
@@ -165,11 +161,11 @@ handlers[State.SCANNING_BARE_VALUE] = function(parser : AttributeParser, pos : n
   if (/^[a-zA-Z0-9_:-]/.exec(c) !== null) {
     return State.SCANNING_BARE_VALUE;
   } else if (c === '}' && parser.begin && parser.lastpos) {
-    parser.addMatch(parser.begin, parser.lastpos, "value");
+    parser.addEvent(parser.begin, parser.lastpos, "value");
     parser.begin = null;
     return State.DONE;
   } else if (/^\s/.exec(c) && parser.begin && parser.lastpos) {
-    parser.addMatch(parser.begin, parser.lastpos, "value");
+    parser.addEvent(parser.begin, parser.lastpos, "value");
     parser.begin = null;
     return State.SCANNING;
   } else {
@@ -184,7 +180,7 @@ handlers[State.SCANNING_ESCAPED] = function(parser : AttributeParser, pos : numb
 handlers[State.SCANNING_QUOTED_VALUE] = function(parser : AttributeParser, pos : number) {
   const c = parser.subject.charAt(pos);
   if (c === '"' && parser.begin && parser.lastpos) {
-    parser.addMatch(parser.begin + 1, parser.lastpos, "value");
+    parser.addEvent(parser.begin + 1, parser.lastpos, "value");
     parser.begin = null;
     return State.SCANNING;
   } else if (c === "\\") {
@@ -199,7 +195,7 @@ class AttributeParser {
   state : State;
   begin : number | null;
   lastpos : number | null;
-  matches : Match[];
+  matches : Event[];
 
   constructor(subject : string) {
     this.subject = subject;
@@ -209,8 +205,8 @@ class AttributeParser {
     this.matches = []
   }
 
-  addMatch(startpos : number, endpos : number, annot : string) {
-    this.matches.push({ startpos: startpos, endpos: endpos, annotation: annot });
+  addEvent(startpos : number, endpos : number, annot : string) {
+    this.matches.push({ startpos: startpos, endpos: endpos, annot: annot });
   }
 
   /* Feed parser a slice of text from the subject, between
