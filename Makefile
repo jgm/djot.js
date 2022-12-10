@@ -1,10 +1,7 @@
 MODULES=attributes.js event.js inline.js
 
-%.js: %.ts
-	tsc $<
-
-test: $(MODULES)
-	yarn test
+test:
+	tsc && yarn test
 .PHONY: test
 
 clean:
