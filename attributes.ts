@@ -1,19 +1,20 @@
-/* Parser for attributes
-attributes { id = "foo", class = "bar baz",
-             key1 = "val1", key2 = "val2" }
-syntax:
-
-attributes <- '{' whitespace* attribute (whitespace attribute)* whitespace* '}'
-attribute <- identifier | class | keyval
-identifier <- '#' name
-class <- '.' name
-name <- (nonspace, nonpunctuation other than ':', '_', '-')+
-keyval <- key '=' val
-key <- (ASCII_ALPHANUM | ':' | '_' | '-')+
-val <- bareval | quotedval
-bareval <- (ASCII_ALPHANUM | ':' | '_' | '-')+
-quotedval <- '"' ([^"] | '\"') '"'
-*/
+/* Parser for attributes, implemented as a state machine.
+ *
+ * attributes { id = "foo", class = "bar baz",
+ *              key1 = "val1", key2 = "val2" }
+ * syntax:
+ *
+ * attributes <- '{' whitespace* attribute (whitespace attribute)* whitespace* '}'
+ * attribute <- identifier | class | keyval
+ * identifier <- '#' name
+ * class <- '.' name
+ * name <- (nonspace, nonpunctuation other than ':', '_', '-')+
+ * keyval <- key '=' val
+ * key <- (ASCII_ALPHANUM | ':' | '_' | '-')+
+ * val <- bareval | quotedval
+ * bareval <- (ASCII_ALPHANUM | ':' | '_' | '-')+
+ * quotedval <- '"' ([^"] | '\"') '"'
+ */
 
 // states
 enum State {
@@ -237,6 +238,7 @@ class AttributeParser {
   }
 }
 
+/*
 const test = function() {
   const x = `{a=b #ident
 .class
@@ -249,6 +251,7 @@ key=val1
 }
 
 test()
+*/
 
 export {
   AttributeParser
