@@ -37,22 +37,13 @@ type Match = {
   annotation : string
 }
 
-type Parser = {
-  subject : string,
-  state : State,
-  begin : number | null,
-  lastpos : number | null,
-  matches : Match[],
-  addMatch : (startpos : number, endpos : number, annot : string) => any
-}
-
 const isKeyChar = function(c : string) {
   return (/^[a-zA-Z0-9_:-]/.exec(c) !== null);
 }
 
-const handlers : ((parser : Parser, pos : number) => State)[] = [];
+const handlers : ((parser : AttributeParser, pos : number) => State)[] = [];
 
-handlers[State.START] = function(parser : Parser, pos : number) {
+handlers[State.START] = function(parser : AttributeParser, pos : number) {
   if (parser.subject.charAt(pos) === '{') {
     return State.SCANNING;
   } else {
@@ -60,15 +51,15 @@ handlers[State.START] = function(parser : Parser, pos : number) {
   }
 }
 
-handlers[State.FAIL] = function(parser : Parser, pos : number) {
+handlers[State.FAIL] = function(parser : AttributeParser, pos : number) {
   return State.FAIL;
 }
 
-handlers[State.DONE] = function(parser : Parser, pos : number) {
+handlers[State.DONE] = function(parser : AttributeParser, pos : number) {
   return State.DONE;
 }
 
-handlers[State.SCANNING] = function(parser : Parser, pos : number) {
+handlers[State.SCANNING] = function(parser : AttributeParser, pos : number) {
   const c = parser.subject.charAt(pos);
   if (c === ' ' || c === '\t' || c === '\n' || c === '\r') {
     return State.SCANNING;
@@ -91,7 +82,7 @@ handlers[State.SCANNING] = function(parser : Parser, pos : number) {
   }
 }
 
-handlers[State.SCANNING_COMMENT] = function(parser : Parser, pos : number) {
+handlers[State.SCANNING_COMMENT] = function(parser : AttributeParser, pos : number) {
   if (parser.subject.charAt(pos) === '%') {
     return State.SCANNING;
   } else {
@@ -99,7 +90,7 @@ handlers[State.SCANNING_COMMENT] = function(parser : Parser, pos : number) {
   }
 }
 
-handlers[State.SCANNING_ID] = function(parser : Parser, pos : number) {
+handlers[State.SCANNING_ID] = function(parser : AttributeParser, pos : number) {
   const c = parser.subject.substr(pos, 1);
 
   if ((/^[^\s\p]/.exec(c) !== null) || c === '_' || c === '-' || c === ':') {
@@ -121,7 +112,7 @@ handlers[State.SCANNING_ID] = function(parser : Parser, pos : number) {
   }
 }
 
-handlers[State.SCANNING_CLASS] = function(parser : Parser, pos : number) {
+handlers[State.SCANNING_CLASS] = function(parser : AttributeParser, pos : number) {
   const c = parser.subject.substr(pos, 1);
   if ((/^[^\s\p]/.exec(c) !== null) || c === '_' || c === '-' || c === ':') {
     return State.SCANNING_CLASS;
@@ -142,7 +133,7 @@ handlers[State.SCANNING_CLASS] = function(parser : Parser, pos : number) {
   }
 }
 
-handlers[State.SCANNING_KEY] = function(parser : Parser, pos : number) {
+handlers[State.SCANNING_KEY] = function(parser : AttributeParser, pos : number) {
   const c = parser.subject.substr(pos, 1);
   if (c === '=' && parser.begin && parser.lastpos) {
     parser.addMatch(parser.begin, parser.lastpos, "key");
@@ -155,7 +146,7 @@ handlers[State.SCANNING_KEY] = function(parser : Parser, pos : number) {
   }
 }
 
-handlers[State.SCANNING_VALUE] = function(parser : Parser, pos : number) {
+handlers[State.SCANNING_VALUE] = function(parser : AttributeParser, pos : number) {
   const c = parser.subject.charAt(pos);
   if (c === '"') {
     parser.begin = pos;
@@ -168,7 +159,7 @@ handlers[State.SCANNING_VALUE] = function(parser : Parser, pos : number) {
   }
 }
 
-handlers[State.SCANNING_BARE_VALUE] = function(parser : Parser, pos : number) {
+handlers[State.SCANNING_BARE_VALUE] = function(parser : AttributeParser, pos : number) {
   const c = parser.subject.charAt(pos);
   if (/^[a-zA-Z0-9_:-]/.exec(c) !== null) {
     return State.SCANNING_BARE_VALUE;
@@ -185,11 +176,11 @@ handlers[State.SCANNING_BARE_VALUE] = function(parser : Parser, pos : number) {
   }
 }
 
-handlers[State.SCANNING_ESCAPED] = function(parser : Parser, pos : number) {
+handlers[State.SCANNING_ESCAPED] = function(parser : AttributeParser, pos : number) {
   return State.SCANNING_QUOTED_VALUE;
 }
 
-handlers[State.SCANNING_QUOTED_VALUE] = function(parser : Parser, pos : number) {
+handlers[State.SCANNING_QUOTED_VALUE] = function(parser : AttributeParser, pos : number) {
   const c = parser.subject.charAt(pos);
   if (c === '"' && parser.begin && parser.lastpos) {
     parser.addMatch(parser.begin + 1, parser.lastpos, "value");
@@ -246,7 +237,6 @@ class AttributeParser {
   }
 }
 
-/*
 const test = function() {
   const x = `{a=b #ident
 .class
@@ -259,7 +249,6 @@ key=val1
 }
 
 test()
-*/
 
 export {
   AttributeParser
