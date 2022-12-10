@@ -1,51 +1,56 @@
 import { Event } from "./event.js";
+import { AttributeParser } from "./attributes.js";
+
+/* General note on the parsing strategy:  our objective is to
+ * parse without backtracking. To that end, we keep a stack of
+ * potential 'openers' for links, images, emphasis, and other
+ * inline containers.  When we parse a potential closer for
+ * one of these constructions, we can scan the stack of openers
+ * for a match, which will tell us the location of the potential
+ * opener. We can then change the annotation of the match at
+ * that location to '+emphasis' or whatever.
+ */
+
+// see https://stackoverflow.com/questions/72119570/
+type RegExpMatchArrayWithIndices =
+  RegExpMatchArray & { indices: Array<[number, number]> };
+
+const pattern = function(patt : string) : RegExp {
+  return new RegExp(patt, 'yd');
+}
+
+const find = function(subj : string, patt : RegExp, startpos : number) : null | { sp : number, ep : number, captures : string[] } {
+  patt.lastIndex = startpos;
+  const result = (patt.exec(subj) as null | RegExpMatchArrayWithIndices);
+  if (result !== null) {
+    var idx = 1;
+    const capts = [];
+    while (result.indices[idx]) {
+      capts.push(subj.substring(result.indices[idx][0], result.indices[idx][1]));
+      idx++;
+    }
+    return { sp: result.indices[0][0], ep: result.indices[0][1], captures: capts };
+  } else {
+    return null;
+  }
+}
+
+// let [sp, ep, capt] = find("(he)llo there", /\w+/d, 0);
+// console.log(sp, ep, capt);
+let m1 = find("hello there", pattern("^(he)\\w+"), 0);
+console.log(m1);
+let m2 = find("hello there", pattern("^(he)\\w+"), 1);
+console.log(m2);
+
+const boundedFind = function(subj : string, patt : RegExp, startpos : number, endpos : number) {
+//  local sp,ep,c1,c2,c3 = find(subj, patt, startpos)
+//  if ep and ep <= endpos then
+//    return sp,ep,c1,c2,c3
+//  end
+}
+
 
 /*
--- this allows the code to work with both lua and luajit:
-local unpack = unpack or table.unpack
-local attributes = require("djot.attributes")
-local find, byte = string.find, string.byte
-
--- allow up to 3 captures...
-local function bounded_find(subj, patt, startpos, endpos)
-  local sp,ep,c1,c2,c3 = find(subj, patt, startpos)
-  if ep and ep <= endpos then
-    return sp,ep,c1,c2,c3
-  end
-end
-
--- General note on the parsing strategy:  our objective is to
--- parse without backtracking. To that end, we keep a stack of
--- potential 'openers' for links, images, emphasis, and other
--- inline containers.  When we parse a potential closer for
--- one of these constructions, we can scan the stack of openers
--- for a match, which will tell us the location of the potential
--- opener. We can then change the annotation of the match at
--- that location to '+emphasis' or whatever.
-
-local InlineParser = {}
-
-function InlineParser:new(subject, warn)
-  local state =
-    { warn = warn or function() end, -- function to issue warnings
-      subject = subject, -- text to parse
-      matches = {}, -- table pos : (endpos, annotation)
-      openers = {}, -- map from closer_type to array of (pos, data) in reverse order
-      verbatim = 0, -- parsing verbatim span to be ended by n backticks
-      verbatim_type = nil, -- whether verbatim is math or regular
-      destination = false, -- parsing link destination in ()
-      firstpos = 0, -- position of first slice
-      lastpos = 0,  -- position of last slice
-      allow_attributes = true, -- allow parsing of attributes
-      attribute_parser = nil,  -- attribute parser
-      attribute_start = nil,  -- start of potential attribute
-      attribute_slices = nil, -- slices we've tried to parse as attributes
-    }
-  setmetatable(state, self)
-  self.__index = self
-  return state
-end
-
 function InlineParser:add_match(startpos, endpos, annotation)
   self.matches[startpos] = {startpos, endpos, annotation}
 end
@@ -677,8 +682,40 @@ function InlineParser:get_matches()
   end
   return sorted
 end
-
-return { InlineParser = InlineParser }
 */
 
-export { }
+class InlineParser {
+  warn : (msg : string) => void;
+  subject : string;
+  matches : Event[];
+  openers : Object; // map from closer_type to array of (pos, data) in reverse order
+  verbatim : number; // parsing a verbatim span to be ended by N backticks
+  verbatimType : string; // math or regular
+  destination : boolean; // parsing link destination?
+  firstpos : number; // position of first slice
+  lastpos : number; // position of last slice
+  allowAttributes : boolean; // allow parsing of attributes
+  attributeParser : null | AttributeParser; // attribute parser
+  attributeStart : null | number; // start pos of potential attribute
+  attributeSlices : null | {startpos : number, endpos : number}[]; // slices we've tried to parse as atttributes
+
+  constructor(subject : string, warn : ((msg : string) => void)) {
+    this.warn = warn;
+    this.subject = subject;
+    this.matches = [];
+    this.openers = {};
+    this.verbatim = 0;
+    this.verbatimType = "";
+    this.destination = false;
+    this.firstpos = 0;
+    this.lastpos = 0;
+    this.allowAttributes = false;
+    this.attributeParser = null;
+    this.attributeStart = null;
+    this.attributeSlices = null;
+  }
+
+}
+
+
+export { AttributeParser }
