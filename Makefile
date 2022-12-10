@@ -1,4 +1,4 @@
-MODULES=attributes.js events.js
+MODULES=attributes.js event.js inline.js
 
 %.js: %.ts
 	tsc $<
