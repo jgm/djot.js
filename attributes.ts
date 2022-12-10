@@ -234,21 +234,6 @@ class AttributeParser {
   }
 }
 
-/*
-const test = function() {
-  const x = `{a=b #ident
-.class
-key=val1
-.class key2="val two \\" ok"}abc`;
-  const parser = new AttributeParser(x);
-  const result = parser.feed(0,x.length - 1);
-  console.log(result.status, result.position);
-  console.log(parser.matches);
-}
-
-test()
-*/
-
 export {
   AttributeParser
 }
