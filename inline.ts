@@ -41,18 +41,6 @@ const matchesPattern = function(match : Event, patt : RegExp) : boolean {
 
 /*
 
-function InlineParser:str_matches(startpos, endpos)
-  for i = startpos, endpos do
-    local m = self.matches[i]
-    if m then
-      local sp, ep, annot = unpack(m)
-      if annot ~= "str" and annot ~= "escape" then
-        self.matches[i] = {sp, ep, "str"}
-      end
-    end
-  end
-end
-
 function InlineParser.between_matched(c, annotation, defaultmatch, opentest)
   return function(self, pos, endpos)
     defaultmatch = defaultmatch or "str"
@@ -697,6 +685,18 @@ class InlineParser {
           break;
         }
         i--;
+      }
+    }
+  }
+
+  strMatches(startpos : number, endpos : number) : void {
+    // convert matches between startpos and endpos to str
+    for (let i = startpos; i <= endpos; i++) {
+      let m = this.matches[i];
+      if (m !== null) {
+        if (m.annot !== "str" && m.annot !== "escape") {
+          m.annot = "str";
+        }
       }
     }
   }
