@@ -375,10 +375,10 @@ InlineParser.matchers = {
       if bounded_find(self.subject, "^[_*~^+='\"-]", pos + 1, endpos) then
         self:add_match(pos, pos, "open_marker")
         return pos + 1
-      elseif self.allow_attributes then
-        self.attribute_parser = attributes.AttributeParser:new(self.subject)
-        self.attribute_start = pos
-        self.attribute_slices = {}
+      elseif self.allowAttributes then
+        self.attributeParser = attributes.AttributeParser:new(self.subject)
+        self.attributeStart = pos
+        self.attributeSlices = {}
         return pos
       else
         self:add_match(pos, pos, "str")
@@ -486,24 +486,6 @@ InlineParser.matchers = {
     end
   }
 
--- Reparse attribute_slices that we tried to parse as an attribute
-function InlineParser:reparse_attributes()
-  local slices = self.attribute_slices
-  if not slices then
-    return
-  end
-  self.allow_attributes = false
-  self.attribute_parser = nil
-  self.attribute_start = nil
-  if slices then
-    for i=1,#slices do
-      self:feed(unpack(slices[i]))
-    end
-  end
-  self.allow_attributes = true
-  self.slices = nil
-end
-
 -- Feed a slice to the parser, updating state.
 function InlineParser:feed(spos, endpos)
   local special = "[][\\`{}_*()!<>~^:=+$\r\n'\".-]"
@@ -518,37 +500,37 @@ function InlineParser:feed(spos, endpos)
   end
   pos = spos
   while pos <= endpos do
-    if self.attribute_parser then
+    if self.attributeParser then
       local sp = pos
       local ep2 = bounded_find(subject, special, pos, endpos)
       if not ep2 or ep2 > endpos then
         ep2 = endpos
       end
-      local status, ep = self.attribute_parser:feed(sp, ep2)
+      local status, ep = self.attributeParser:feed(sp, ep2)
       if status == "done" then
-        local attribute_start = self.attribute_start
+        local attributeStart = self.attributeStart
         -- add attribute matches
-        self:add_match(attribute_start, attribute_start, "+attributes")
+        self:add_match(attributeStart, attributeStart, "+attributes")
         self:add_match(ep, ep, "-attributes")
-        local attr_matches = self.attribute_parser:get_matches()
+        local attr_matches = self.attributeParser:get_matches()
         -- add attribute matches
         for i=1,#attr_matches do
           self:add_match(unpack(attr_matches[i]))
         end
         -- restore state to prior to adding attribute parser:
-        self.attribute_parser = nil
-        self.attribute_start = nil
-        self.attribute_slices = nil
+        self.attributeParser = nil
+        self.attributeStart = nil
+        self.attributeSlices = nil
         pos = ep + 1
       elseif status == "fail" then
         self:reparse_attributes()
         pos = sp  -- we'll want to go over the whole failed portion again,
                   -- as no slice was added for it
       elseif status == "continue" then
-        if #self.attribute_slices == 0 then
-          self.attribute_slices = {}
+        if #self.attributeSlices == 0 then
+          self.attributeSlices = {}
         end
-        self.attribute_slices[#self.attribute_slices + 1] = {sp,ep}
+        self.attributeSlices[#self.attributeSlices + 1] = {sp,ep}
         pos = ep + 1
       end
     else
@@ -607,56 +589,10 @@ function InlineParser:feed(spos, endpos)
   end
 end
 
-function InlineParser:get_matches()
-  local sorted = {}
-  local subject = self.subject
-  local lastsp, lastep, lastannot
-  if self.attribute_parser then -- we're still in an attribute parse
-    self:reparse_attributes()
-  end
-  for i=self.firstpos, self.lastpos do
-    if self.matches[i] then
-      local sp, ep, annot = unpack(self.matches[i])
-      if annot == "str" and lastannot == "str" and lastep + 1 == sp then
-          -- consolidate adjacent strs
-        sorted[#sorted] = {lastsp, ep, annot}
-        lastsp, lastep, lastannot = lastsp, ep, annot
-      else
-        sorted[#sorted + 1] = self.matches[i]
-        lastsp, lastep, lastannot = sp, ep, annot
-      end
-    end
-  end
-  if #sorted > 0 then
-    local last = sorted[#sorted]
-    local startpos, endpos, annot = unpack(last)
-    -- remove final softbreak
-    if annot == "softbreak" then
-      sorted[#sorted] = nil
-      last = sorted[#sorted]
-      if not last then
-        return sorted
-      end
-      startpos, endpos, annot = unpack(last)
-    end
-    -- remove trailing spaces
-    if annot == "str" and byte(subject, endpos) == 32 then
-      while endpos > startpos and byte(subject, endpos) == 32 do
-        endpos = endpos - 1
-      end
-      sorted[#sorted] = {startpos, endpos, annot}
-    end
-    if self.verbatim > 0 then -- unclosed verbatim
-      self.warn({ message = "Unclosed verbatim", pos = endpos })
-      sorted[#sorted + 1] = {endpos, endpos, "-" .. self.verbatim_type}
-    end
-  end
-  return sorted
-end
 */
 
 class InlineParser {
-  warn : (msg : string) => void;
+  warn : (message : string, pos : number) => void;
   subject : string;
   matches : Event[];
   openers : OpenerMap; // map from closer_type to array of (pos, data) in reverse order
@@ -670,7 +606,7 @@ class InlineParser {
   attributeStart : null | number; // start pos of potential attribute
   attributeSlices : null | {startpos : number, endpos : number}[]; // slices we've tried to parse as atttributes
 
-  constructor(subject : string, warn : ((msg : string) => void)) {
+  constructor(subject : string, warn : (message : string, pos : number) => void) {
     this.warn = warn;
     this.subject = subject;
     this.matches = [];
@@ -690,16 +626,93 @@ class InlineParser {
     this.matches[startpos] = {startpos: startpos, endpos: endpos, annot: annot};
   }
 
-  in_verbatim() : boolean {
+  inVerbatim() : boolean {
     return (this.verbatim > 0);
   }
 
-  single_char(pos : number) {
+  singleChar(pos : number) : number {
     this.addMatch(pos, pos, "str");
     return pos + 1;
   }
 
+  reparseAttributes() : void {
+    // Reparse attributeSlices that we tried to parse as an attribute
+    let slices = this.attributeSlices;
+    if (slices === null) {
+      return;
+    }
+    this.allowAttributes = false;
+    this.attributeParser = null;
+    this.attributeStart = null;
+    if (slices !== null) {
+      slices.forEach( (slice) => {
+        this.feed(slice.startpos, slice.endpos);
+      });
+    }
+    this.allowAttributes = true;
+    this.attributeSlices = null;
+  }
+
+  getMatches() : Event[] {
+    let sorted = [];
+    const subject = this.subject
+    let lastsp, lastep, lastannot
+    if (this.attributeParser) {
+      // we're still in an attribute parse
+      this.reparseAttributes();
+    }
+    for (let i = this.firstpos; this.lastpos; i++) {
+      if (this.matches[i] !== null) {
+        let {startpos: sp, endpos: ep, annot: annot} = this.matches[i];
+        if (annot === "str" && lastannot === "str" && lastep && lastsp &&
+            lastep + 1 == sp) {
+          // consolidate adjacent strs
+          sorted.push({startpos: lastsp, endpos: ep, annot: annot});
+          lastsp = lastsp;
+          lastep = ep;
+          lastannot = annot;
+        } else {
+          sorted.push(this.matches[i]);
+          lastsp = sp;
+          lastep = ep;
+          lastannot = annot;
+        }
+      }
+    }
+    if (sorted.length > 0) {
+      let last = sorted[sorted.length - 1];
+      let {startpos, endpos, annot} = last;
+      // remove final softbreak
+      if (annot === "softbreak") {
+        sorted.pop();
+        last = sorted[sorted.length - 1];
+        startpos = last.startpos;
+        endpos = last.endpos;
+        annot = last.annot;
+      }
+      // remove trailing spaces
+      if (annot === "str" && subject.codePointAt(endpos) === 32) {
+        while (endpos > startpos && subject.codePointAt(endpos) === 32) {
+          endpos = endpos - 1;
+        }
+        sorted.push({startpos: startpos, endpos: endpos, annot: annot});
+      }
+      if (this.verbatim > 0) { // unclosed verbatim
+        this.warn("Unclosed verbatim", endpos);
+        sorted.push({ startpos: endpos,
+                      endpos: endpos,
+                      annot: "-" + this.verbatimType });
+      }
+    }
+    return sorted;
+  }
+
+  feed(startpos : number, endpos : number) : void {
+    return; // TODO
+  }
+
+
 }
 
 
-export { AttributeParser }
+export { InlineParser }
