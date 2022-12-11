@@ -26,48 +26,15 @@ import { find, boundedFind } from "./find.js";
 type Opener = {
   startpos : number,
   endpos : number,
-  annot : string,
-  substartpos : number,
-  subendpos : number
+  annot : null | string,
+  substartpos : null | number,
+  subendpos : null | number
 }
 
 type OpenerMap =
-  { [opener: string]: {pos: number, data: Opener}[] } // in reverse order
+  { [opener: string]: Opener[] } // in reverse order
 
 /*
-
-function InlineParser:add_opener(name, ...)
-  -- 1 = startpos, 2 = endpos, 3 = annotation, 4 = substartpos, 5 = endpos
-  --
-  -- [link text](url)
-  -- ^         ^^
-  -- 1,2      4 5  3 = "explicit_link"
-
-  if not self.openers[name] then
-    self.openers[name] = {}
-  end
-  table.insert(self.openers[name], {...})
-end
-
-function InlineParser:clear_openers(startpos, endpos)
-  -- remove other openers in between the matches
-  for _,v in pairs(self.openers) do
-    local i = #v
-    while v[i] do
-      local sp,ep,_,sp2,ep2 = unpack(v[i])
-      if sp >= startpos and ep <= endpos then
-        v[i] = nil
-      elseif (sp2 and sp2 >= startpos) and (ep2 and ep2 <= endpos) then
-        v[i][3] = nil
-        v[i][4] = nil
-        v[i][5] = nil
-      else
-        break
-      end
-      i = i - 1
-    end
-  end
-end
 
 function InlineParser:str_matches(startpos, endpos)
   for i = startpos, endpos do
@@ -595,7 +562,7 @@ class InlineParser {
   warn : (message : string, pos : number) => void;
   subject : string;
   matches : Event[];
-  openers : OpenerMap; // map from closer_type to array of (pos, data) in reverse order
+  openers : OpenerMap; // map from opener type to Opener[] in reverse order
   verbatim : number; // parsing a verbatim span to be ended by N backticks
   verbatimType : string; // math or regular
   destination : boolean; // parsing link destination?
@@ -706,6 +673,36 @@ class InlineParser {
     }
     return sorted;
   }
+
+  addOpener(name : string, opener : Opener) : void {
+    if (!this.openers[name]) {
+      this.openers[name] = [];
+    }
+    this.openers[name].push(opener);
+  }
+
+  clearOpeners(startpos : number, endpos : number) : void {
+    // Remove other openers in between the matches
+    for (let k in this.openers) {
+      let v = this.openers[k];
+      let i = v.length - 1
+      while (v[i]) {
+        let opener = v[i];
+        if (opener.startpos >= startpos && opener.endpos <= endpos) {
+          delete v[i];
+        } else if ((opener.substartpos && opener.substartpos >= startpos) &&
+                   (opener.subendpos && opener.subendpos <= endpos)) {
+          v[i].substartpos = null;
+          v[i].subendpos = null;
+          v[i].annot = null;
+        } else {
+          break;
+        }
+        i--;
+      }
+    }
+  }
+
 
   feed(startpos : number, endpos : number) : void {
     return; // TODO
