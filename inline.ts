@@ -118,10 +118,13 @@ const betweenMatched = function(
   }
 }
 
+// handlers for specific code points:
+const matchers = {
+  [96]: function(self : InlineParser, pos : number, endpos : number) {
+    return null; // TODO
+  }
 
 /*
-
-InlineParser.matchers = {
     -- 96 = `
     [96] = function(self, pos, endpos)
       local subject = self.subject
@@ -449,111 +452,8 @@ InlineParser.matchers = {
       end
     end
   }
-
--- Feed a slice to the parser, updating state.
-function InlineParser:feed(spos, endpos)
-  local special = "[][\\`{}_*()!<>~^:=+$\r\n'\".-]"
-  local subject = self.subject
-  local matchers = self.matchers
-  local pos
-  if self.firstpos == 0 or spos < self.firstpos then
-    self.firstpos = spos
-  end
-  if self.lastpos == 0 or endpos > self.lastpos then
-    self.lastpos = endpos
-  end
-  pos = spos
-  while pos <= endpos do
-    if self.attributeParser then
-      local sp = pos
-      local ep2 = bounded_find(subject, special, pos, endpos)
-      if not ep2 or ep2 > endpos then
-        ep2 = endpos
-      end
-      local status, ep = self.attributeParser:feed(sp, ep2)
-      if status == "done" then
-        local attributeStart = self.attributeStart
-        -- add attribute matches
-        self:add_match(attributeStart, attributeStart, "+attributes")
-        self:add_match(ep, ep, "-attributes")
-        local attr_matches = self.attributeParser:get_matches()
-        -- add attribute matches
-        for i=1,#attr_matches do
-          self:add_match(unpack(attr_matches[i]))
-        end
-        -- restore state to prior to adding attribute parser:
-        self.attributeParser = nil
-        self.attributeStart = nil
-        self.attributeSlices = nil
-        pos = ep + 1
-      elseif status == "fail" then
-        self:reparse_attributes()
-        pos = sp  -- we'll want to go over the whole failed portion again,
-                  -- as no slice was added for it
-      elseif status == "continue" then
-        if #self.attributeSlices == 0 then
-          self.attributeSlices = {}
-        end
-        self.attributeSlices[#self.attributeSlices + 1] = {sp,ep}
-        pos = ep + 1
-      end
-    else
-      -- find next interesting character:
-      local newpos = bounded_find(subject, special, pos, endpos) or endpos + 1
-      if newpos > pos then
-        self:add_match(pos, newpos - 1, "str")
-        pos = newpos
-        if pos > endpos then
-          break -- otherwise, fall through:
-        end
-      end
-      -- if we get here, then newpos = pos,
-      -- i.e. we have something interesting at pos
-      local c = byte(subject, pos)
-
-      if c == 13 or c == 10 then -- cr or lf
-        if c == 13 and bounded_find(subject, "^[%n]", pos + 1, endpos) then
-          self:add_match(pos, pos + 1, "softbreak")
-          pos = pos + 2
-        else
-          self:add_match(pos, pos, "softbreak")
-          pos = pos + 1
-        end
-      elseif self.verbatim > 0 then
-        if c == 96 then
-          local _, endchar = bounded_find(subject, "^`+", pos, endpos)
-          if endchar and endchar - pos + 1 == self.verbatim then
-            -- check for raw attribute
-            local sp, ep =
-              bounded_find(subject, "^%{%=[^%s{}`]+%}", endchar + 1, endpos)
-            if sp and self.verbatim_type == "verbatim" then -- raw
-              self:add_match(pos, endchar, "-" .. self.verbatim_type)
-              self:add_match(sp, ep, "raw_format")
-              pos = ep + 1
-            else
-              self:add_match(pos, endchar, "-" .. self.verbatim_type)
-              pos = endchar + 1
-            end
-            self.verbatim = 0
-            self.verbatim_type = nil
-          else
-            endchar = endchar or endpos
-            self:add_match(pos, endchar, "str")
-            pos = endchar + 1
-          end
-        else
-          self:add_match(pos, pos, "str")
-          pos = pos + 1
-        end
-      else
-        local matcher = matchers[c]
-        pos = (matcher and matcher(self, pos, endpos)) or self:single_char(pos)
-      end
-    end
-  end
-end
-
 */
+}
 
 class InlineParser {
   warn : (message : string, pos : number) => void;
@@ -569,6 +469,7 @@ class InlineParser {
   attributeParser : null | AttributeParser; // attribute parser
   attributeStart : null | number; // start pos of potential attribute
   attributeSlices : null | {startpos : number, endpos : number}[]; // slices we've tried to parse as atttributes
+  matchers :  { [codepoint : number] : (self : InlineParser, sp : number, ep : number) => null | number }; // functions to handle different code points
 
   constructor(subject : string, warn : (message : string, pos : number) => void) {
     this.warn = warn;
@@ -584,6 +485,7 @@ class InlineParser {
     this.attributeParser = null;
     this.attributeStart = null;
     this.attributeSlices = null;
+    this.matchers = matchers;
   }
 
   addMatch(startpos : number, endpos : number, annot : string) : void {
@@ -714,6 +616,111 @@ class InlineParser {
 
 
   feed(startpos : number, endpos : number) : void {
+
+    // Feed a slice to the parser, updating state.
+    /*
+    local special = "[][\\`{}_*()!<>~^:=+$\r\n'\".-]"
+    local subject = self.subject
+    local matchers = self.matchers
+    local pos
+    if self.firstpos == 0 or spos < self.firstpos then
+      self.firstpos = spos
+    end
+    if self.lastpos == 0 or endpos > self.lastpos then
+      self.lastpos = endpos
+    end
+    pos = spos
+    while pos <= endpos do
+      if self.attributeParser then
+        local sp = pos
+        local ep2 = bounded_find(subject, special, pos, endpos)
+        if not ep2 or ep2 > endpos then
+          ep2 = endpos
+        end
+        local status, ep = self.attributeParser:feed(sp, ep2)
+        if status == "done" then
+          local attributeStart = self.attributeStart
+          -- add attribute matches
+          self:add_match(attributeStart, attributeStart, "+attributes")
+          self:add_match(ep, ep, "-attributes")
+          local attr_matches = self.attributeParser:get_matches()
+          -- add attribute matches
+          for i=1,#attr_matches do
+            self:add_match(unpack(attr_matches[i]))
+          end
+          -- restore state to prior to adding attribute parser:
+          self.attributeParser = nil
+          self.attributeStart = nil
+          self.attributeSlices = nil
+          pos = ep + 1
+        elseif status == "fail" then
+          self:reparse_attributes()
+          pos = sp  -- we'll want to go over the whole failed portion again,
+                    -- as no slice was added for it
+        elseif status == "continue" then
+          if #self.attributeSlices == 0 then
+            self.attributeSlices = {}
+          end
+          self.attributeSlices[#self.attributeSlices + 1] = {sp,ep}
+          pos = ep + 1
+        end
+      else
+        -- find next interesting character:
+        local newpos = bounded_find(subject, special, pos, endpos) or endpos + 1
+        if newpos > pos then
+          self:add_match(pos, newpos - 1, "str")
+          pos = newpos
+          if pos > endpos then
+            break -- otherwise, fall through:
+          end
+        end
+        -- if we get here, then newpos = pos,
+        -- i.e. we have something interesting at pos
+        local c = byte(subject, pos)
+  
+        if c == 13 or c == 10 then -- cr or lf
+          if c == 13 and bounded_find(subject, "^[%n]", pos + 1, endpos) then
+            self:add_match(pos, pos + 1, "softbreak")
+            pos = pos + 2
+          else
+            self:add_match(pos, pos, "softbreak")
+            pos = pos + 1
+          end
+        elseif self.verbatim > 0 then
+          if c == 96 then
+            local _, endchar = bounded_find(subject, "^`+", pos, endpos)
+            if endchar and endchar - pos + 1 == self.verbatim then
+              -- check for raw attribute
+              local sp, ep =
+                bounded_find(subject, "^%{%=[^%s{}`]+%}", endchar + 1, endpos)
+              if sp and self.verbatim_type == "verbatim" then -- raw
+                self:add_match(pos, endchar, "-" .. self.verbatim_type)
+                self:add_match(sp, ep, "raw_format")
+                pos = ep + 1
+              else
+                self:add_match(pos, endchar, "-" .. self.verbatim_type)
+                pos = endchar + 1
+              end
+              self.verbatim = 0
+              self.verbatim_type = nil
+            else
+              endchar = endchar or endpos
+              self:add_match(pos, endchar, "str")
+              pos = endchar + 1
+            end
+          else
+            self:add_match(pos, pos, "str")
+            pos = pos + 1
+          end
+        else
+          local matcher = matchers[c]
+          pos = (matcher and matcher(self, pos, endpos)) or self:single_char(pos)
+        end
+      end
+    end
+  */
+
+
     return; // TODO
   }
 
