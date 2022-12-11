@@ -498,7 +498,7 @@ class InlineParser {
     this.verbatim = 0;
     this.verbatimType = "";
     this.destination = false;
-    this.firstpos = 0;
+    this.firstpos = -1;
     this.lastpos = 0;
     this.allowAttributes = false;
     this.attributeParser = null;
@@ -540,22 +540,20 @@ class InlineParser {
 
   getMatches() : Event[] {
     let sorted = [];
-    const subject = this.subject
-    let lastsp, lastep, lastannot
+    const subject = this.subject;
+    let lastsp, lastep, lastannot;
     if (this.attributeParser) {
       // we're still in an attribute parse
       this.reparseAttributes();
     }
-    for (let i = this.firstpos; this.lastpos; i++) {
-      if (this.matches[i] !== null) {
+    for (let i = this.firstpos; i <= this.lastpos; i++) {
+      if (i in this.matches) {
         let {startpos: sp, endpos: ep, annot: annot} = this.matches[i];
-        if (annot === "str" && lastannot === "str" && lastep && lastsp &&
-            lastep + 1 == sp) {
+        let lastsorted = sorted[sorted.length - 1];
+        if (annot == "str" && lastsorted && lastsorted.annot === "str" &&
+            lastsorted.endpos === sp - 1) {
           // consolidate adjacent strs
-          sorted.push({startpos: lastsp, endpos: ep, annot: annot});
-          lastsp = lastsp;
-          lastep = ep;
-          lastannot = annot;
+          lastsorted.endpos = ep;
         } else {
           sorted.push(this.matches[i]);
           lastsp = sp;
@@ -639,7 +637,7 @@ class InlineParser {
     // Feed a slice to the parser, updating state.
     let subject = this.subject;
     let matchers = this.matchers;
-    if (this.firstpos == 0 || startpos < this.firstpos) {
+    if (this.firstpos == -1 || startpos < this.firstpos) {
       this.firstpos = startpos;
     }
     if (this.lastpos == 0 || endpos > this.lastpos) {
