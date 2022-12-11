@@ -34,6 +34,11 @@ type Opener = {
 type OpenerMap =
   { [opener: string]: Opener[] } // in reverse order
 
+const matchesPattern = function(match : Event, patt : RegExp) : boolean {
+  return (match && patt.exec(match.annot) !== null);
+}
+
+
 /*
 
 function InlineParser:str_matches(startpos, endpos)
@@ -47,13 +52,6 @@ function InlineParser:str_matches(startpos, endpos)
     end
   end
 end
-
-local function matches_pattern(match, patt)
-  if match then
-    return string.find(match[3], patt)
-  end
-end
-
 
 function InlineParser.between_matched(c, annotation, defaultmatch, opentest)
   return function(self, pos, endpos)
