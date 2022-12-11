@@ -5,8 +5,8 @@ describe("find", () => {
     let m1 = find("hello there", pattern("^(he)\\w+"), 0);
     expect(m1).not.toBeNull;
     if (m1 !== null) {
-      expect(m1.sp).toBe(0);
-      expect(m1.ep).toBe(5);
+      expect(m1.startpos).toBe(0);
+      expect(m1.endpos).toBe(5);
       expect(m1.captures).toStrictEqual(["he"]);
     }
   });
@@ -21,8 +21,8 @@ describe("boundedFind", () => {
     let m1 = boundedFind("hello there", pattern("^(he)\\w+"), 0, 5);
     expect(m1).not.toBeNull;
     if (m1 !== null) {
-      expect(m1.sp).toBe(0);
-      expect(m1.ep).toBe(5);
+      expect(m1.startpos).toBe(0);
+      expect(m1.endpos).toBe(5);
       expect(m1.captures).toStrictEqual(["he"]);
     }
   });

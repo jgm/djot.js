@@ -34,6 +34,23 @@ type Opener = {
 type OpenerMap =
   { [opener: string]: Opener[] } // in reverse order
 
+const C_DOUBLE_QUOTE = 34;
+const C_SINGLE_QUOTE = 39;
+const C_LEFT_PAREN = 40;
+const C_RIGHT_PAREN = 41;
+const C_ASTERISK = 42;
+const C_PLUS = 43;
+const C_HYPHEN = 45;
+const C_PERIOD = 46;
+const C_COLON = 58;
+const C_LESSTHAN = 60;
+const C_EQUALS = 61;
+const C_LEFT_BRACKET = 91;
+const C_BACKSLASH = 92;
+const C_RIGHT_BRACKET = 93;
+const C_HAT = 94;
+const C_UNDERSCORE = 95;
+const C_BACKTICK = 96;
 const C_RIGHT_BRACE = 125;
 
 const matchesPattern = function(match : Event, patt : RegExp) : boolean {
@@ -120,34 +137,34 @@ const betweenMatched = function(
 
 // handlers for specific code points:
 const matchers = {
-  [96]: function(self : InlineParser, pos : number, endpos : number) {
-    return null; // TODO
+  [C_BACKTICK]: function(self : InlineParser, pos : number, endpos : number) {
+    /*
+    let subject = self.subject;
+    let _, endchar = bounded_find(subject, "^`*", pos, endpos)
+    if (not endchar) {
+      return null
+    }
+    if (find(subject, "^%$%$", pos - 2) and
+        not find(subject, "^\\", pos - 3)) {
+      self.matches[pos - 2] = null
+      self.matches[pos - 1] = null
+      self:add_match(pos - 2, endchar, "+display_math")
+      self.verbatim_type = "display_math"
+    } else if (find(subject, "^%$", pos - 1)) {
+      self.matches[pos - 1] = null
+      self:add_match(pos - 1, endchar, "+inline_math")
+      self.verbatim_type = "inline_math"
+    } else {
+      self:add_match(pos, endchar, "+verbatim")
+      self.verbatim_type = "verbatim"
+    }
+    self.verbatim = endchar - pos + 1
+    return endchar + 1
+    */
+   return null;
   }
 
 /*
-    -- 96 = `
-    [96] = function(self, pos, endpos)
-      local subject = self.subject
-      local _, endchar = bounded_find(subject, "^`*", pos, endpos)
-      if not endchar then
-        return nil
-      end
-      if find(subject, "^%$%$", pos - 2) and
-          not find(subject, "^\\", pos - 3) then
-        self.matches[pos - 2] = nil
-        self.matches[pos - 1] = nil
-        self:add_match(pos - 2, endchar, "+display_math")
-        self.verbatim_type = "display_math"
-      elseif find(subject, "^%$", pos - 1) then
-        self.matches[pos - 1] = nil
-        self:add_match(pos - 1, endchar, "+inline_math")
-        self.verbatim_type = "inline_math"
-      else
-        self:add_match(pos, endchar, "+verbatim")
-        self.verbatim_type = "verbatim"
-      end
-      self.verbatim = endchar - pos + 1
-      return endchar + 1
     end,
 
     -- 92 = \
