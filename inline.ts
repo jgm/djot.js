@@ -34,6 +34,8 @@ type Opener = {
 type OpenerMap =
   { [opener: string]: Opener[] } // in reverse order
 
+const C_LF = 10;
+const C_CR = 13;
 const C_DOUBLE_QUOTE = 34;
 const C_SINGLE_QUOTE = 39;
 const C_LEFT_PAREN = 40;
@@ -647,93 +649,107 @@ class InlineParser {
     while (pos <= endpos) {
       if (this.attributeParser !== null) {
         let sp = pos;
-        /*
-        let ep2 = bounded_find(subject, pattSpecial, pos, endpos);
-        if (ep2 === null || ep2 > endpos) {
+        let m = boundedFind(subject, pattSpecial, pos, endpos);
+        let ep2;
+        if (m === null || m.endpos > endpos) {
           ep2 = endpos;
+        } else {
+          ep2 = m.endpos;
         }
-        let status, ep = this.attributeParser:feed(sp, ep2)
-        if (status === "done") {
-          let attributeStart = this.attributeStart
+        let result = this.attributeParser.feed(sp, ep2);
+        let ep = result.position;
+        if (result.status === "done") {
+          let attributeStart = this.attributeStart;
           // add attribute matches
-          this.addMatch(attributeStart, attributeStart, "+attributes")
-          this.addMatch(ep, ep, "-attributes")
-          let attr_matches = this.attributeParser:get_matches()
+          if (attributeStart !== null) {
+            this.addMatch(attributeStart, attributeStart, "+attributes");
+            this.addMatch(ep, ep, "-attributes");
+          }
+          let attrMatches = this.attributeParser.matches;
           // add attribute matches
-          for i=1,#attr_matches do
-            this.addMatch(unpack(attr_matches[i]))
+          attrMatches.forEach( (match) => {
+            this.addMatch(match.startpos, match.endpos, match.annot);
+          });
+          // restore state to prior to adding attribute parser
+          this.attributeParser = null;
+          this.attributeStart = null;
+          this.attributeSlices = null;
+          pos = ep + 1;
+        } else if (result.status === "fail") {
+          this.reparseAttributes();
+          pos = sp;  // we'll want to go over the whole failed portion again,
+                     // as no slice was added for it
+        } else if (result.status === "continue") {
+          if (this.attributeSlices !== null) {
+            if (this.attributeSlices && this.attributeSlices.length == 0) {
+              this.attributeSlices = [];
+            }
+            this.attributeSlices.push({startpos: sp, endpos: ep});
           }
-          // restore state to prior to adding attribute parser:
-          this.attributeParser = nil
-          this.attributeStart = nil
-          this.attributeSlices = nil
-          pos = ep + 1
-        elseif (status === "fail") {
-          this:reparse_attributes()
-          pos = sp  // we'll want to go over the whole failed portion again,
-                    // as no slice was added for it
-        elseif (status === "continue") {
-          if (this.attributeSlices.length == 0) {
-            this.attributeSlices = {}
-          }
-          this.attributeSlices[#this.attributeSlices + 1] = {sp,ep}
-          pos = ep + 1
+          pos = ep + 1;
         }
-        */
       } else {
         // find next interesting character:
-        /*
-        let newpos = bounded_find(subject, pattSpecial, pos, endpos) || endpos + 1
+        let m = boundedFind(subject, pattSpecial, pos, endpos);
+        boundedFind(subject, pattSpecial, pos, endpos);
+        let newpos = (m && m.startpos) || endpos + 1;
         if (newpos > pos) {
-          this.addMatch(pos, newpos - 1, "str")
-          pos = newpos
+          this.addMatch(pos, newpos - 1, "str");
+          pos = newpos;
           if (pos > endpos) {
-            break // otherwise, fall through:
+            break; // otherwise, fall through:
           }
         }
         // if we get here, then newpos = pos,
         // i.e. we have something interesting at pos
-        let c = byte(subject, pos)
-  
-        if (c === 13 || c === 10) then // cr or lf
-          if (c === 13 && bounded_find(subject, "^[%n]", pos + 1, endpos)) {
-            this.addMatch(pos, pos + 1, "softbreak")
-            pos = pos + 2
+        let c = subject.codePointAt(pos);
+        if (c === undefined) {
+          throw("code point at " + pos + " is undefined.");
+        }
+
+        if (c === C_CR || c === C_LF) { // cr or lf
+          if (c === C_CR && subject.codePointAt(pos + 1) === C_LF &&
+               pos + 1 <= endpos) {
+            this.addMatch(pos, pos + 1, "softbreak");
+            pos = pos + 2;
           } else {
-            this.addMatch(pos, pos, "softbreak")
-            pos = pos + 1
+            this.addMatch(pos, pos, "softbreak");
+            pos = pos + 1;
           }
-        elseif (this.verbatim > 0) {
+        } else if (this.verbatim > 0) {
           if (c === 96) {
-            let _, endchar = bounded_find(subject, "^`+", pos, endpos)
-            if (endchar && endchar - pos + 1 === this.verbatim) {
-              // check for raw attribute
-              let sp, ep =
-                bounded_find(subject, "^%{%=[^%s{}`]+%}", endchar + 1, endpos)
-              if (sp && this.verbatim_type == "verbatim") { // raw
-                this.addMatch(pos, endchar, "-" .. this.verbatim_type)
-                this.addMatch(sp, ep, "raw_format")
-                pos = ep + 1
+            let m = boundedFind(subject, pattern("^`+"), pos, endpos);
+            if (m) {
+              let endchar = m.endpos;
+              if (m.endpos - pos + 1 === this.verbatim) {
+                // check for raw attribute
+                let m2 = boundedFind(subject, pattern("^\\{=[^\\s{}`]+\\}"), endchar + 1, endpos);
+                if (m2 && this.verbatimType == "verbatim") { // raw
+                  this.addMatch(pos, endchar, "-" + this.verbatimType);
+                  this.addMatch(m2.startpos, m2.endpos, "raw_format");
+                  pos = m2.endpos + 1;
+                } else {
+                  this.addMatch(pos, endchar, "-" + this.verbatimType);
+                  pos = endchar + 1;
+                }
+                this.verbatim = 0;
+                this.verbatimType = "verbatim";
               } else {
-                this.addMatch(pos, endchar, "-" .. this.verbatim_type)
-                pos = endchar + 1
+                this.addMatch(pos, endchar, "str");
+                pos = endchar + 1;
               }
-              this.verbatim = 0
-              this.verbatim_type = nil
             } else {
-              endchar = endchar || endpos
-              this.addMatch(pos, endchar, "str")
-              pos = endchar + 1
+              this.addMatch(pos, endpos, "str");
+              pos = endpos + 1;
             }
           } else {
             this.addMatch(pos, pos, "str");
             pos = pos + 1;
           }
         } else {
-          let matcher = matchers[c];
-          pos = (matcher && matcher(this, pos, endpos)) || this:single_char(pos);
+          let matcher = this.matchers[c];
+          pos = (matcher && matcher(this, pos, endpos)) || this.singleChar(pos);
         }
-        */
       }
     }
 

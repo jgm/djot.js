@@ -216,7 +216,7 @@ class AttributeParser {
    * final '}'), "fail" (position should point to first character
    * that could not be parsed), or "continue" (position should
    * point to last character parsed). */
-  feed(startpos : number, endpos : number) {
+  feed(startpos : number, endpos : number) : { status : string, position : number } {
     var pos = startpos;
     while (pos <= endpos) {
       this.state = handlers[this.state](this, pos);
