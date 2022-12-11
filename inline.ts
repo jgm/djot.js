@@ -59,6 +59,8 @@ const matchesPattern = function(match : Event, patt : RegExp) : boolean {
 
 const pattNonspace = pattern("^\S");
 
+const pattSpecial = pattern("[\\]\\[\\\\`{}_*()!<>~^:=+$\\r\\n'\\\".-]");
+
 const betweenMatched = function(
              c : string,
              annotation : string,
@@ -138,30 +140,28 @@ const betweenMatched = function(
 // handlers for specific code points:
 const matchers = {
   [C_BACKTICK]: function(self : InlineParser, pos : number, endpos : number) {
-    /*
     let subject = self.subject;
-    let _, endchar = bounded_find(subject, "^`*", pos, endpos)
-    if (not endchar) {
-      return null
+    let m = boundedFind(subject, pattern("^`*"), pos, endpos);
+    if (m === null) {
+      return null;
     }
-    if (find(subject, "^%$%$", pos - 2) and
-        not find(subject, "^\\", pos - 3)) {
-      self.matches[pos - 2] = null
-      self.matches[pos - 1] = null
-      self:add_match(pos - 2, endchar, "+display_math")
-      self.verbatim_type = "display_math"
-    } else if (find(subject, "^%$", pos - 1)) {
-      self.matches[pos - 1] = null
-      self:add_match(pos - 1, endchar, "+inline_math")
-      self.verbatim_type = "inline_math"
+    let endchar = m.endpos;
+    if (find(subject, pattern("^\\$\\$"), pos - 2) &&
+        !find(subject, pattern("^\\\\"), pos - 3)) {
+      delete self.matches[pos - 2];
+      delete self.matches[pos - 1];
+      self.addMatch(pos - 2, endchar, "+display_math");
+      self.verbatimType = "display_math"
+    } else if (find(subject, pattern("^\\$"), pos - 1)) {
+      delete self.matches[pos - 1];
+      self.addMatch(pos - 1, endchar, "+inline_math");
+      self.verbatimType = "inline_math";
     } else {
-      self:add_match(pos, endchar, "+verbatim")
-      self.verbatim_type = "verbatim"
+      self.addMatch(pos, endchar, "+verbatim");
+      self.verbatimType = "verbatim";
     }
-    self.verbatim = endchar - pos + 1
-    return endchar + 1
-    */
-   return null;
+    self.verbatim = endchar - pos + 1;
+    return endchar + 1;
   }
 
 /*
@@ -635,107 +635,107 @@ class InlineParser {
   feed(startpos : number, endpos : number) : void {
 
     // Feed a slice to the parser, updating state.
-    /*
-    local special = "[][\\`{}_*()!<>~^:=+$\r\n'\".-]"
-    local subject = self.subject
-    local matchers = self.matchers
-    local pos
-    if self.firstpos == 0 or spos < self.firstpos then
-      self.firstpos = spos
-    end
-    if self.lastpos == 0 or endpos > self.lastpos then
-      self.lastpos = endpos
-    end
-    pos = spos
-    while pos <= endpos do
-      if self.attributeParser then
-        local sp = pos
-        local ep2 = bounded_find(subject, special, pos, endpos)
-        if not ep2 or ep2 > endpos then
-          ep2 = endpos
-        end
-        local status, ep = self.attributeParser:feed(sp, ep2)
-        if status == "done" then
-          local attributeStart = self.attributeStart
-          -- add attribute matches
-          self:add_match(attributeStart, attributeStart, "+attributes")
-          self:add_match(ep, ep, "-attributes")
-          local attr_matches = self.attributeParser:get_matches()
-          -- add attribute matches
+    let subject = this.subject;
+    let matchers = this.matchers;
+    if (this.firstpos == 0 || startpos < this.firstpos) {
+      this.firstpos = startpos;
+    }
+    if (this.lastpos == 0 || endpos > this.lastpos) {
+      this.lastpos = endpos;
+    }
+    let pos = startpos;
+    while (pos <= endpos) {
+      if (this.attributeParser !== null) {
+        let sp = pos;
+        /*
+        let ep2 = bounded_find(subject, pattSpecial, pos, endpos);
+        if (ep2 === null || ep2 > endpos) {
+          ep2 = endpos;
+        }
+        let status, ep = this.attributeParser:feed(sp, ep2)
+        if (status === "done") {
+          let attributeStart = this.attributeStart
+          // add attribute matches
+          this.addMatch(attributeStart, attributeStart, "+attributes")
+          this.addMatch(ep, ep, "-attributes")
+          let attr_matches = this.attributeParser:get_matches()
+          // add attribute matches
           for i=1,#attr_matches do
-            self:add_match(unpack(attr_matches[i]))
-          end
-          -- restore state to prior to adding attribute parser:
-          self.attributeParser = nil
-          self.attributeStart = nil
-          self.attributeSlices = nil
+            this.addMatch(unpack(attr_matches[i]))
+          }
+          // restore state to prior to adding attribute parser:
+          this.attributeParser = nil
+          this.attributeStart = nil
+          this.attributeSlices = nil
           pos = ep + 1
-        elseif status == "fail" then
-          self:reparse_attributes()
-          pos = sp  -- we'll want to go over the whole failed portion again,
-                    -- as no slice was added for it
-        elseif status == "continue" then
-          if #self.attributeSlices == 0 then
-            self.attributeSlices = {}
-          end
-          self.attributeSlices[#self.attributeSlices + 1] = {sp,ep}
+        elseif (status === "fail") {
+          this:reparse_attributes()
+          pos = sp  // we'll want to go over the whole failed portion again,
+                    // as no slice was added for it
+        elseif (status === "continue") {
+          if (this.attributeSlices.length == 0) {
+            this.attributeSlices = {}
+          }
+          this.attributeSlices[#this.attributeSlices + 1] = {sp,ep}
           pos = ep + 1
-        end
-      else
-        -- find next interesting character:
-        local newpos = bounded_find(subject, special, pos, endpos) or endpos + 1
-        if newpos > pos then
-          self:add_match(pos, newpos - 1, "str")
+        }
+        */
+      } else {
+        // find next interesting character:
+        /*
+        let newpos = bounded_find(subject, pattSpecial, pos, endpos) || endpos + 1
+        if (newpos > pos) {
+          this.addMatch(pos, newpos - 1, "str")
           pos = newpos
-          if pos > endpos then
-            break -- otherwise, fall through:
-          end
-        end
-        -- if we get here, then newpos = pos,
-        -- i.e. we have something interesting at pos
-        local c = byte(subject, pos)
+          if (pos > endpos) {
+            break // otherwise, fall through:
+          }
+        }
+        // if we get here, then newpos = pos,
+        // i.e. we have something interesting at pos
+        let c = byte(subject, pos)
   
-        if c == 13 or c == 10 then -- cr or lf
-          if c == 13 and bounded_find(subject, "^[%n]", pos + 1, endpos) then
-            self:add_match(pos, pos + 1, "softbreak")
+        if (c === 13 || c === 10) then // cr or lf
+          if (c === 13 && bounded_find(subject, "^[%n]", pos + 1, endpos)) {
+            this.addMatch(pos, pos + 1, "softbreak")
             pos = pos + 2
-          else
-            self:add_match(pos, pos, "softbreak")
+          } else {
+            this.addMatch(pos, pos, "softbreak")
             pos = pos + 1
-          end
-        elseif self.verbatim > 0 then
-          if c == 96 then
-            local _, endchar = bounded_find(subject, "^`+", pos, endpos)
-            if endchar and endchar - pos + 1 == self.verbatim then
-              -- check for raw attribute
-              local sp, ep =
+          }
+        elseif (this.verbatim > 0) {
+          if (c === 96) {
+            let _, endchar = bounded_find(subject, "^`+", pos, endpos)
+            if (endchar && endchar - pos + 1 === this.verbatim) {
+              // check for raw attribute
+              let sp, ep =
                 bounded_find(subject, "^%{%=[^%s{}`]+%}", endchar + 1, endpos)
-              if sp and self.verbatim_type == "verbatim" then -- raw
-                self:add_match(pos, endchar, "-" .. self.verbatim_type)
-                self:add_match(sp, ep, "raw_format")
+              if (sp && this.verbatim_type == "verbatim") { // raw
+                this.addMatch(pos, endchar, "-" .. this.verbatim_type)
+                this.addMatch(sp, ep, "raw_format")
                 pos = ep + 1
-              else
-                self:add_match(pos, endchar, "-" .. self.verbatim_type)
+              } else {
+                this.addMatch(pos, endchar, "-" .. this.verbatim_type)
                 pos = endchar + 1
-              end
-              self.verbatim = 0
-              self.verbatim_type = nil
-            else
-              endchar = endchar or endpos
-              self:add_match(pos, endchar, "str")
+              }
+              this.verbatim = 0
+              this.verbatim_type = nil
+            } else {
+              endchar = endchar || endpos
+              this.addMatch(pos, endchar, "str")
               pos = endchar + 1
-            end
-          else
-            self:add_match(pos, pos, "str")
-            pos = pos + 1
-          end
-        else
-          local matcher = matchers[c]
-          pos = (matcher and matcher(self, pos, endpos)) or self:single_char(pos)
-        end
-      end
-    end
-  */
+            }
+          } else {
+            this.addMatch(pos, pos, "str");
+            pos = pos + 1;
+          }
+        } else {
+          let matcher = matchers[c];
+          pos = (matcher && matcher(this, pos, endpos)) || this:single_char(pos);
+        }
+        */
+      }
+    }
 
 
     return; // TODO
