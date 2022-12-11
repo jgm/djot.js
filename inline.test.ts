@@ -9,5 +9,16 @@ describe("InlineParser", () => {
       { annot: "str", startpos: 0, endpos: 6 },
       { annot: "str", startpos: 8, endpos: 10 }
     ]);
+  });
+  it("parses verbatim", () => {
+    let parser = new InlineParser("x ``` hello ``there ``` x", () => {});
+    parser.feed(0,24);
+    expect(parser.getMatches()).toStrictEqual([
+      { annot: "str", startpos: 0, endpos: 1 },
+      { annot: "+verbatim", startpos: 2, endpos: 4 },
+      { annot: "str", startpos: 5, endpos: 19 },
+      { annot: "-verbatim", startpos: 20, endpos: 22 },
+      { annot: "str", startpos: 23, endpos: 23 }
+    ]);
   })
 })

@@ -59,9 +59,9 @@ const matchesPattern = function(match : Event, patt : RegExp) : boolean {
   return (match && patt.exec(match.annot) !== null);
 }
 
-const pattNonspace = pattern("^\S");
+const pattNonspace = pattern("\S");
 
-const pattSpecial = pattern("[\\]\\[\\\\`{}_*()!<>~^:=+$\\r\\n'\\\".-]");
+const pattSpecial = pattern("[^][\\\\`{}_*()!<>~^:=+$\\r\\n'\\\".-]*.");
 
 const betweenMatched = function(
              c : string,
@@ -77,7 +77,7 @@ const betweenMatched = function(
     let can_open = find(subject, pattNonspace, pos + 1) !== null;
     let can_close = find(subject, pattNonspace, pos - 1) !== null;
     let has_open_marker = matchesPattern(self.matches[pos - 1],
-                                          pattern("^open_marker"));
+                                          pattern("open_marker"));
     let has_close_marker = pos + 1 <= endpos &&
                               subject.codePointAt(pos + 1) === C_RIGHT_BRACE;
     let endcloser = pos;
@@ -143,18 +143,18 @@ const betweenMatched = function(
 const matchers = {
   [C_BACKTICK]: function(self : InlineParser, pos : number, endpos : number) {
     let subject = self.subject;
-    let m = boundedFind(subject, pattern("^`*"), pos, endpos);
+    let m = boundedFind(subject, pattern("`*"), pos, endpos);
     if (m === null) {
       return null;
     }
     let endchar = m.endpos;
-    if (find(subject, pattern("^\\$\\$"), pos - 2) &&
-        !find(subject, pattern("^\\\\"), pos - 3)) {
+    if (find(subject, pattern("\\$\\$"), pos - 2) &&
+        !find(subject, pattern("\\\\"), pos - 3)) {
       delete self.matches[pos - 2];
       delete self.matches[pos - 1];
       self.addMatch(pos - 2, endchar, "+display_math");
       self.verbatimType = "display_math"
-    } else if (find(subject, pattern("^\\$"), pos - 1)) {
+    } else if (find(subject, pattern("\\$"), pos - 1)) {
       delete self.matches[pos - 1];
       self.addMatch(pos - 1, endchar, "+inline_math");
       self.verbatimType = "inline_math";
@@ -172,7 +172,7 @@ const matchers = {
     -- 92 = \
     [92] = function(self, pos, endpos)
       local subject = self.subject
-      local _, endchar = bounded_find(subject, "^[ \t]*\r?\n",  pos + 1, endpos)
+      local _, endchar = bounded_find(subject, "[ \t]*\r?\n",  pos + 1, endpos)
       self:add_match(pos, pos, "escape")
       if endchar then
         -- see if there were preceding spaces
@@ -192,13 +192,13 @@ const matchers = {
         self:add_match(pos + 1, endchar, "hardbreak")
         return endchar + 1
       else
-        local _, ec = bounded_find(subject, "^[%p ]", pos + 1, endpos)
+        local _, ec = bounded_find(subject, "[%p ]", pos + 1, endpos)
         if not ec then
           self:add_match(pos, pos, "str")
           return pos + 1
         else
           self:add_match(pos, pos, "escape")
-          if find(subject, "^ ", pos + 1) then
+          if find(subject, " ", pos + 1) then
             self:add_match(pos + 1, ec, "nbsp")
           else
             self:add_match(pos + 1, ec, "str")
@@ -212,10 +212,10 @@ const matchers = {
     [60] = function(self, pos, endpos)
       local subject = self.subject
       local starturl, endurl =
-              bounded_find(subject, "^%<[^<>%s]+%>", pos, endpos)
+              bounded_find(subject, "%<[^<>%s]+%>", pos, endpos)
       if starturl then
-        local is_url = bounded_find(subject, "^%a+:", pos + 1, endurl)
-        local is_email = bounded_find(subject, "^[^:]+%@", pos + 1, endurl)
+        local is_url = bounded_find(subject, "%a+:", pos + 1, endurl)
+        local is_email = bounded_find(subject, "[^:]+%@", pos + 1, endurl)
         if is_email then
           self:add_match(starturl, starturl, "+email")
           self:add_match(starturl + 1, endurl - 1, "str")
@@ -238,7 +238,7 @@ const matchers = {
 
     -- 91 = [
     [91] = function(self, pos, endpos)
-      local sp, ep = bounded_find(self.subject, "^%^([^]]+)%]", pos + 1, endpos)
+      local sp, ep = bounded_find(self.subject, "%^([^]]+)%]", pos + 1, endpos)
       if sp then -- footnote ref
         self:add_match(pos, ep, "footnote_reference")
         return ep + 1
@@ -258,8 +258,8 @@ const matchers = {
         if opener[3] == "reference_link" then
           -- found a reference link
           -- add the matches
-          local is_image = bounded_find(subject, "^!", opener[1] - 1, endpos)
-                  and not bounded_find(subject, "^[\\]", opener[1] - 2, endpos)
+          local is_image = bounded_find(subject, "!", opener[1] - 1, endpos)
+                  and not bounded_find(subject, "[\\]", opener[1] - 2, endpos)
           if is_image then
             self:add_match(opener[1] - 1, opener[1] - 1, "image_marker")
             self:add_match(opener[1], opener[2], "+imagetext")
@@ -275,7 +275,7 @@ const matchers = {
           -- remove from openers
           self:clear_openers(opener[1], pos)
           return pos + 1
-        elseif bounded_find(subject, "^%[", pos + 1, endpos) then
+        elseif bounded_find(subject, "%[", pos + 1, endpos) then
           opener[3] = "reference_link"
           opener[4] = pos  -- intermediate ]
           opener[5] = pos + 1  -- intermediate [
@@ -283,7 +283,7 @@ const matchers = {
           -- remove any openers between [ and ]
           self:clear_openers(opener[1] + 1, pos - 1)
           return pos + 2
-        elseif bounded_find(subject, "^%(", pos + 1, endpos) then
+        elseif bounded_find(subject, "%(", pos + 1, endpos) then
           self.openers["("] = {} -- clear ( openers
           opener[3] = "explicit_link"
           opener[4] = pos  -- intermediate ]
@@ -293,7 +293,7 @@ const matchers = {
           -- remove any openers between [ and ]
           self:clear_openers(opener[1] + 1, pos - 1)
           return pos + 2
-        elseif bounded_find(subject, "^%{", pos + 1, endpos) then
+        elseif bounded_find(subject, "%{", pos + 1, endpos) then
           -- assume this is attributes, bracketed span
           self:add_match(opener[1], opener[2], "+span")
           self:add_match(pos, pos, "-span")
@@ -328,8 +328,8 @@ const matchers = {
             and openers[#openers][3] == "explicit_link" then
           local opener = openers[#openers]
           -- we have inline link
-          local is_image = bounded_find(subject, "^!", opener[1] - 1, endpos)
-                 and not bounded_find(subject, "^[\\]", opener[1] - 2, endpos)
+          local is_image = bounded_find(subject, "!", opener[1] - 1, endpos)
+                 and not bounded_find(subject, "[\\]", opener[1] - 2, endpos)
           if is_image then
             self:add_match(opener[1] - 1, opener[1] - 1, "image_marker")
             self:add_match(opener[1], opener[2], "+imagetext")
@@ -358,7 +358,7 @@ const matchers = {
 
     -- 123 = {
     [123] = function(self, pos, endpos)
-      if bounded_find(self.subject, "^[_*~^+='\"-]", pos + 1, endpos) then
+      if bounded_find(self.subject, "[_*~^+='\"-]", pos + 1, endpos) then
         self:add_match(pos, pos, "open_marker")
         return pos + 1
       elseif self.allowAttributes then
@@ -374,7 +374,7 @@ const matchers = {
 
     -- 58 = :
     [58] = function(self, pos, endpos)
-      local sp, ep = bounded_find(self.subject, "^%:[%w_+-]+%:", pos, endpos)
+      local sp, ep = bounded_find(self.subject, "%:[%w_+-]+%:", pos, endpos)
       if sp then
         self:add_match(sp, ep, "emoji")
         return ep + 1
@@ -387,22 +387,22 @@ const matchers = {
     -- 43 = +
     [43] = between_matched("+", "insert", "str",
                            function(self, pos)
-                             return find(self.subject, "^%{", pos - 1) or
-                                    find(self.subject, "^%}", pos + 1)
+                             return find(self.subject, "%{", pos - 1) or
+                                    find(self.subject, "%}", pos + 1)
                            end),
 
     -- 61 = =
     [61] = between_matched("=", "mark", "str",
                            function(self, pos)
-                             return find(self.subject, "^%{", pos - 1) or
-                                    find(self.subject, "^%}", pos + 1)
+                             return find(self.subject, "%{", pos - 1) or
+                                    find(self.subject, "%}", pos + 1)
                            end),
 
     -- 39 = '
     [39] = between_matched("'", "single_quoted", "right_single_quote",
                            function(self, pos) -- test to open
                              return pos == 1 or
-                               find(self.subject, "^[%s\"'-([]", pos - 1)
+                               find(self.subject, "[%s\"'-([]", pos - 1)
                              end),
 
     -- 34 = "
@@ -416,13 +416,13 @@ const matchers = {
          byte(subject, pos + 1) == 125 then -- (123 = { 125 = })
         nextpos = between_matched("-", "delete", "str",
                            function(slf, p)
-                             return find(slf.subject, "^%{", p - 1) or
-                                    find(slf.subject, "^%}", p + 1)
+                             return find(slf.subject, "%{", p - 1) or
+                                    find(slf.subject, "%}", p + 1)
                            end)(self, pos, endpos)
         return nextpos
       end
       -- didn't match a del, try for smart hyphens:
-      local _, ep = find(subject, "^%-*", pos)
+      local _, ep = find(subject, "%-*", pos)
       if endpos < ep then
         ep = endpos
       end
@@ -465,7 +465,7 @@ const matchers = {
 
     -- 46 = .
     [46] = function(self, pos, endpos)
-      if bounded_find(self.subject, "^%.%.", pos + 1, endpos) then
+      if bounded_find(self.subject, "%.%.", pos + 1, endpos) then
         self:add_match(pos, pos +2, "ellipses")
         return pos + 3
       end
@@ -689,8 +689,7 @@ class InlineParser {
       } else {
         // find next interesting character:
         let m = boundedFind(subject, pattSpecial, pos, endpos);
-        boundedFind(subject, pattSpecial, pos, endpos);
-        let newpos = (m && m.startpos) || endpos + 1;
+        let newpos = (m && m.endpos) || endpos + 1;
         if (newpos > pos) {
           this.addMatch(pos, newpos - 1, "str");
           pos = newpos;
@@ -716,12 +715,12 @@ class InlineParser {
           }
         } else if (this.verbatim > 0) {
           if (c === 96) {
-            let m = boundedFind(subject, pattern("^`+"), pos, endpos);
+            let m = boundedFind(subject, pattern("`+"), pos, endpos);
             if (m) {
               let endchar = m.endpos;
               if (m.endpos - pos + 1 === this.verbatim) {
                 // check for raw attribute
-                let m2 = boundedFind(subject, pattern("^\\{=[^\\s{}`]+\\}"), endchar + 1, endpos);
+                let m2 = boundedFind(subject, pattern("\\{=[^\\s{}`]+\\}"), endchar + 1, endpos);
                 if (m2 && this.verbatimType == "verbatim") { // raw
                   this.addMatch(pos, endchar, "-" + this.verbatimType);
                   this.addMatch(m2.startpos, m2.endpos, "raw_format");
