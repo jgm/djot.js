@@ -16,7 +16,7 @@ const find = function(subj : string, patt : RegExp, startpos : number) : null | 
       capts.push(subj.substring(result.indices[idx][0], result.indices[idx][1]));
       idx++;
     }
-    return { startpos: result.indices[0][0], endpos: result.indices[0][1], captures: capts };
+    return { startpos: result.indices[0][0], endpos: result.indices[0][1] - 1, captures: capts };
   } else {
     return null;
   }

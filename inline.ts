@@ -55,13 +55,52 @@ const C_UNDERSCORE = 95;
 const C_BACKTICK = 96;
 const C_RIGHT_BRACE = 125;
 
+const isSpecial = function(cp : number) {
+  return (cp === C_LF ||
+          cp === C_CR ||
+          cp === C_DOUBLE_QUOTE ||
+          cp === C_SINGLE_QUOTE ||
+          cp === C_LEFT_PAREN ||
+          cp === C_RIGHT_PAREN ||
+          cp === C_ASTERISK ||
+          cp === C_PLUS ||
+          cp === C_HYPHEN ||
+          cp === C_PERIOD ||
+          cp === C_COLON ||
+          cp === C_LESSTHAN ||
+          cp === C_EQUALS ||
+          cp === C_LEFT_BRACKET ||
+          cp === C_BACKSLASH ||
+          cp === C_RIGHT_BRACKET ||
+          cp === C_HAT ||
+          cp === C_UNDERSCORE ||
+          cp === C_BACKTICK ||
+          cp === C_RIGHT_BRACE);
+}
+
+// find first special character starting from startpos, and not
+// going beyond endpos, or null if none found.
+const findSpecial = function(s : string, startpos : number, endpos : number) {
+  let i = startpos;
+  while (i <= endpos) {
+    let cp = s.codePointAt(i);
+    if (!cp) {
+      return null;
+    }
+    if (isSpecial(cp)) {
+      return i;
+    }
+    i++;
+    cp = s.codePointAt(i);
+  }
+  return null;
+}
+
 const matchesPattern = function(match : Event, patt : RegExp) : boolean {
   return (match && patt.exec(match.annot) !== null);
 }
 
 const pattNonspace = pattern("\S");
-
-const pattSpecial = pattern("[^][\\\\`{}_*()!<>~^:=+$\\r\\n'\\\".-]*.");
 
 const betweenMatched = function(
              c : string,
@@ -647,12 +686,12 @@ class InlineParser {
     while (pos <= endpos) {
       if (this.attributeParser !== null) {
         let sp = pos;
-        let m = boundedFind(subject, pattSpecial, pos, endpos);
+        let nextSpecial = findSpecial(subject, pos, endpos);
         let ep2;
-        if (m === null || m.endpos > endpos) {
+        if (nextSpecial === null) {
           ep2 = endpos;
         } else {
-          ep2 = m.endpos;
+          ep2 = nextSpecial;
         }
         let result = this.attributeParser.feed(sp, ep2);
         let ep = result.position;
@@ -688,8 +727,13 @@ class InlineParser {
         }
       } else {
         // find next interesting character:
-        let m = boundedFind(subject, pattSpecial, pos, endpos);
-        let newpos = (m && m.endpos) || endpos + 1;
+        let nextSpecial = findSpecial(subject, pos, endpos);
+        let newpos;
+        if (nextSpecial === null) {
+          newpos = endpos + 1;
+        } else {
+          newpos = nextSpecial;
+        }
         if (newpos > pos) {
           this.addMatch(pos, newpos - 1, "str");
           pos = newpos;

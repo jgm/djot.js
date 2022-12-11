@@ -12,13 +12,14 @@ describe("InlineParser", () => {
   });
   it("parses verbatim", () => {
     let parser = new InlineParser("x ``` hello ``there ``` x", () => {});
+    //                             0123456789012345678901234
     parser.feed(0,24);
     expect(parser.getMatches()).toStrictEqual([
       { annot: "str", startpos: 0, endpos: 1 },
       { annot: "+verbatim", startpos: 2, endpos: 4 },
       { annot: "str", startpos: 5, endpos: 19 },
       { annot: "-verbatim", startpos: 20, endpos: 22 },
-      { annot: "str", startpos: 23, endpos: 23 }
+      { annot: "str", startpos: 23, endpos: 24 }
     ]);
   })
 })
