@@ -1,6 +1,6 @@
 import { Event } from "./event.js";
 import { AttributeParser } from "./attributes.js";
-import { find, boundedFind } from "./find.js";
+import { pattern, find, boundedFind } from "./find.js";
 
 // General note on the parsing strategy:  our objective is to
 // parse without backtracking. To that end, we keep a stack of
@@ -34,81 +34,92 @@ type Opener = {
 type OpenerMap =
   { [opener: string]: Opener[] } // in reverse order
 
+const C_RIGHT_BRACE = 125;
+
 const matchesPattern = function(match : Event, patt : RegExp) : boolean {
   return (match && patt.exec(match.annot) !== null);
 }
 
+const pattNonspace = pattern("^\S");
+
+const betweenMatched = function(
+             c : string,
+             annotation : string,
+             defaultmatch : string | null,
+             opentest : null |
+                        ((self : InlineParser, pos : number) => boolean)) {
+  return function(self : InlineParser, pos : number, endpos : number) : number {
+    if (defaultmatch === null) {
+      defaultmatch = "str";
+    }
+    let subject = self.subject;
+    let can_open = find(subject, pattNonspace, pos + 1) !== null;
+    let can_close = find(subject, pattNonspace, pos - 1) !== null;
+    let has_open_marker = matchesPattern(self.matches[pos - 1],
+                                          pattern("^open_marker"));
+    let has_close_marker = pos + 1 <= endpos &&
+                              subject.codePointAt(pos + 1) === C_RIGHT_BRACE;
+    let endcloser = pos;
+    let startopener = pos;
+
+    if (typeof(opentest) == "function") {
+      can_open = can_open && opentest(self, pos);
+    }
+
+    // Allow explicit open/close markers to override:
+    if (has_open_marker) {
+      can_open = true;
+      can_close = false;
+      startopener = pos - 1;
+    }
+    if (!has_open_marker && has_close_marker) {
+      can_close = true;
+      can_open = false;
+      endcloser = pos + 1;
+    }
+
+    if (has_open_marker && defaultmatch.match(/^right/)) {
+      defaultmatch = defaultmatch.replace(/^right/, "left");
+    } else if (has_close_marker && defaultmatch.match(/^left/)) {
+      defaultmatch = defaultmatch.replace(/^left/, "right");
+    }
+
+    let d = c;
+    if (has_close_marker) {
+      d = "{" + d;
+    }
+    let openers = self.openers[d];
+
+    if (can_close && openers !== null && openers.length > 0) {
+      // check openers for a match
+      let opener = openers[openers.length - 1];
+      if (opener.endpos !== pos - 1) { // exclude empty emph
+        self.clearOpeners(opener.startpos, pos);
+        self.addMatch(opener.startpos, opener.endpos, "+" + annotation);
+        self.addMatch(pos, endcloser, "-" + annotation);
+        return endcloser + 1;
+      }
+    }
+
+    // If we get here, we didn't match an opener:
+    if (can_open) {
+      let e = c;
+      if (has_open_marker) {
+        e = "{" + e;
+      }
+      self.addOpener(e, { startpos: startopener, endpos: pos,
+                          annot: null, substartpos: null, subendpos: null });
+      self.addMatch(startopener, pos, defaultmatch);
+      return pos + 1;
+    } else {
+      self.addMatch(pos, endcloser, defaultmatch);
+      return endcloser + 1;
+    }
+  }
+}
+
 
 /*
-
-function InlineParser.between_matched(c, annotation, defaultmatch, opentest)
-  return function(self, pos, endpos)
-    defaultmatch = defaultmatch or "str"
-    local subject = self.subject
-    local can_open = find(subject, "^%S", pos + 1)
-    local can_close = find(subject, "^%S", pos - 1)
-    local has_open_marker = matches_pattern(self.matches[pos - 1], "^open%_marker")
-    local has_close_marker = pos + 1 <= endpos and
-                              byte(subject, pos + 1) == 125 -- }
-    local endcloser = pos
-    local startopener = pos
-
-    if type(opentest) == "function" then
-      can_open = can_open and opentest(self, pos)
-    end
-
-    -- allow explicit open/close markers to override:
-    if has_open_marker then
-      can_open = true
-      can_close = false
-      startopener = pos - 1
-    end
-    if not has_open_marker and has_close_marker then
-      can_close = true
-      can_open = false
-      endcloser = pos + 1
-    end
-
-    if has_open_marker and defaultmatch:match("^right") then
-      defaultmatch = defaultmatch:gsub("^right", "left")
-    elseif has_close_marker and defaultmatch:match("^left") then
-      defaultmatch = defaultmatch:gsub("^left", "right")
-    end
-
-    local d
-    if has_close_marker then
-      d = "{" .. c
-    else
-      d = c
-    end
-    local openers = self.openers[d]
-    if can_close and openers and #openers > 0 then
-       -- check openers for a match
-      local openpos, openposend = unpack(openers[#openers])
-      if openposend ~= pos - 1 then -- exclude empty emph
-        self:clear_openers(openpos, pos)
-        self:add_match(openpos, openposend, "+" .. annotation)
-        self:add_match(pos, endcloser, "-" .. annotation)
-        return endcloser + 1
-      end
-    end
-
-    -- if we get here, we didn't match an opener
-    if can_open then
-      if has_open_marker then
-        d = "{" .. c
-      else
-        d = c
-      end
-      self:add_opener(d, startopener, pos)
-      self:add_match(startopener, pos, defaultmatch)
-      return pos + 1
-    else
-      self:add_match(pos, endcloser, defaultmatch)
-      return endcloser + 1
-    end
-  end
-end
 
 InlineParser.matchers = {
     -- 96 = `
@@ -198,10 +209,10 @@ InlineParser.matchers = {
     end,
 
     -- 126 = ~
-    [126] = InlineParser.between_matched('~', 'subscript'),
+    [126] = between_matched('~', 'subscript'),
 
     -- 94 = ^
-    [94] = InlineParser.between_matched('^', 'superscript'),
+    [94] = between_matched('^', 'superscript'),
 
     -- 91 = [
     [91] = function(self, pos, endpos)
@@ -318,10 +329,10 @@ InlineParser.matchers = {
     end,
 
     -- 95 = _
-    [95] = InlineParser.between_matched('_', 'emph'),
+    [95] = between_matched('_', 'emph'),
 
     -- 42 = *
-    [42] = InlineParser.between_matched('*', 'strong'),
+    [42] = between_matched('*', 'strong'),
 
     -- 123 = {
     [123] = function(self, pos, endpos)
@@ -352,28 +363,28 @@ InlineParser.matchers = {
     end,
 
     -- 43 = +
-    [43] = InlineParser.between_matched("+", "insert", "str",
+    [43] = between_matched("+", "insert", "str",
                            function(self, pos)
                              return find(self.subject, "^%{", pos - 1) or
                                     find(self.subject, "^%}", pos + 1)
                            end),
 
     -- 61 = =
-    [61] = InlineParser.between_matched("=", "mark", "str",
+    [61] = between_matched("=", "mark", "str",
                            function(self, pos)
                              return find(self.subject, "^%{", pos - 1) or
                                     find(self.subject, "^%}", pos + 1)
                            end),
 
     -- 39 = '
-    [39] = InlineParser.between_matched("'", "single_quoted", "right_single_quote",
+    [39] = between_matched("'", "single_quoted", "right_single_quote",
                            function(self, pos) -- test to open
                              return pos == 1 or
                                find(self.subject, "^[%s\"'-([]", pos - 1)
                              end),
 
     -- 34 = "
-    [34] = InlineParser.between_matched('"', "double_quoted", "left_double_quote"),
+    [34] = between_matched('"', "double_quoted", "left_double_quote"),
 
     -- 45 = -
     [45] = function(self, pos, endpos)
@@ -381,7 +392,7 @@ InlineParser.matchers = {
       local nextpos
       if byte(subject, pos - 1) == 123 or
          byte(subject, pos + 1) == 125 then -- (123 = { 125 = })
-        nextpos = InlineParser.between_matched("-", "delete", "str",
+        nextpos = between_matched("-", "delete", "str",
                            function(slf, p)
                              return find(slf.subject, "^%{", p - 1) or
                                     find(slf.subject, "^%}", p + 1)
