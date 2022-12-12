@@ -97,6 +97,41 @@ describe("InlineParser", () => {
     ]);
   });
 
+  it("parses mark", () => {
+    let parser = new InlineParser('{=hello=}', () => {});
+    //                             012345678
+    parser.feed(0,8);
+    expect(parser.getMatches()).toStrictEqual([
+      { annot: "+mark", startpos: 0, endpos: 1 },
+      { annot: "str", startpos: 2, endpos: 6 },
+      { annot: "-mark", startpos: 7, endpos: 8 },
+    ]);
+  });
+
+  it("parses inserted", () => {
+    let parser = new InlineParser('{+hello+}', () => {});
+    //                             012345678
+    parser.feed(0,8);
+    expect(parser.getMatches()).toStrictEqual([
+      { annot: "+insert", startpos: 0, endpos: 1 },
+      { annot: "str", startpos: 2, endpos: 6 },
+      { annot: "-insert", startpos: 7, endpos: 8 },
+    ]);
+  });
+
+  it("parses quoted", () => {
+    let parser = new InlineParser('"dog\'s breakfast"', () => {});
+    //                             0123 4567890123456
+    parser.feed(0,16);
+    expect(parser.getMatches()).toStrictEqual([
+      { annot: "+double_quoted", startpos: 0, endpos: 0 },
+      { annot: "str", startpos: 1, endpos: 3 },
+      { annot: "right_single_quote", startpos: 4, endpos: 4 },
+      { annot: "str", startpos: 5, endpos: 15 },
+      { annot: "-double_quoted", startpos: 16, endpos: 16 },
+    ]);
+  });
+
   it("parses attributes", () => {
     let parser = new InlineParser('{#foo .bar baz="bim"}', () => {});
     //                             012345678901234567890

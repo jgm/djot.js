@@ -113,6 +113,13 @@ const pattAutolink = pattern("\\<([^<>\\s]+)\\>");
 const pattDelim = pattern("[_*~^+='\"-]");
 const pattEmoji = pattern(":[\\w_+-]+:");
 
+const hasBrace = function(self : InlineParser, pos : number) : boolean {
+  return ((pos > 0 && self.subject.codePointAt(pos - 1) === C_LEFT_BRACE) ||
+          self.subject.codePointAt(pos + 1) === C_RIGHT_BRACE);
+}
+
+const alwaysTrue = function() { return true; };
+
 const betweenMatched = function(
              c : string,
              annotation : string,
@@ -275,13 +282,39 @@ const matchers = {
       return null;
     },
 
-    [C_TILDE]: betweenMatched('~', 'subscript', 'str', () => { return true; }),
+    [C_TILDE]: betweenMatched('~', 'subscript', 'str', alwaysTrue),
 
-    [C_HAT]: betweenMatched('^', 'superscript', 'str', () => { return true; }),
+    [C_HAT]: betweenMatched('^', 'superscript', 'str', alwaysTrue),
 
-    [C_UNDERSCORE]: betweenMatched('_', 'emph', 'str', () => { return true; }),
+    [C_UNDERSCORE]: betweenMatched('_', 'emph', 'str', alwaysTrue),
 
-    [C_ASTERISK]: betweenMatched('*', 'strong', 'str', () => { return true; }),
+    [C_ASTERISK]: betweenMatched('*', 'strong', 'str', alwaysTrue),
+
+    [C_PLUS]: betweenMatched("+", "insert", "str", hasBrace),
+
+    [C_EQUALS]: betweenMatched("=", "mark", "str", hasBrace),
+
+    [C_SINGLE_QUOTE]: betweenMatched("'", "single_quoted", "right_single_quote",
+                         function(self : InlineParser, pos : number) : boolean {
+                            if (pos === 0) {
+                              return true;
+                            } else {
+                              let cp = self.subject.codePointAt(pos - 1);
+                              return (cp === C_SPACE ||
+                                      cp === C_TAB ||
+                                      cp === C_CR ||
+                                      cp === C_LF ||
+                                      cp === C_DOUBLE_QUOTE ||
+                                      cp === C_SINGLE_QUOTE ||
+                                      cp === C_HYPHEN ||
+                                      cp === C_LEFT_PAREN ||
+                                      cp === C_LEFT_BRACKET ||
+                                      cp === C_RIGHT_BRACKET);
+                            }
+                          }),
+
+    [C_DOUBLE_QUOTE]: betweenMatched('"', "double_quoted", "left_double_quote",
+                                     alwaysTrue),
 
     [C_LEFT_BRACE]: function(self : InlineParser, pos : number, endpos : number) : number | null {
       if (boundedFind(self.subject, pattDelim, pos + 1, endpos)) {
@@ -424,37 +457,13 @@ const matchers = {
       }
     end,
 
-    -- 43 = +
-    [43]: between_matched("+", "insert", "str",
-                           function(self, pos)
-                             return find(self.subject, "%{", pos - 1) or
-                                    find(self.subject, "%}", pos + 1)
-                           end),
-
-    -- 61 = =
-    [61]: between_matched("=", "mark", "str",
-                           function(self, pos)
-                             return find(self.subject, "%{", pos - 1) or
-                                    find(self.subject, "%}", pos + 1)
-                           end),
-
-    -- 39 = '
-    [39]: between_matched("'", "single_quoted", "right_single_quote",
-                           function(self, pos) -- test to open
-                             return pos == 1 or
-                               find(self.subject, "[%s\"'-([]", pos - 1)
-                             end),
-
-    -- 34 = "
-    [34]: between_matched('"', "double_quoted", "left_double_quote"),
-
     -- 45 = -
     [45]: function(self, pos, endpos)
       let subject = self.subject
       let nextpos
       if byte(subject, pos - 1) == 123 or
          byte(subject, pos + 1) == 125 then -- (123 = { 125 = })
-        nextpos = between_matched("-", "delete", "str",
+        nextpos = betweenMatched("-", "delete", "str",
                            function(slf, p)
                              return find(slf.subject, "%{", p - 1) or
                                     find(slf.subject, "%}", p + 1)
