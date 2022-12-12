@@ -112,6 +112,13 @@ const pattPunctuation = pattern("['!\"#$%&\\\\'()\\*+,\\-\\.\\/:;<=>?@\\[\\]\^_`
 const pattAutolink = pattern("\\<([^<>\\s]+)\\>");
 const pattDelim = pattern("[_*~^+='\"-]");
 const pattEmoji = pattern(":[\\w_+-]+:");
+const pattTwoPeriods = pattern("\\.\\.");
+const pattBackticks0 = pattern("`*");
+const pattBackticks1 = pattern("`+");
+const pattDoubleDollars = pattern("\\$\\$");
+const pattSingleDollar = pattern("\\$");
+const pattBackslash = pattern("\\\\");
+const pattRawAttribute = pattern("\\{=[^\\s{}`]+\\}");;
 
 const hasBrace = function(self : InlineParser, pos : number) : boolean {
   return ((pos > 0 && self.subject.codePointAt(pos - 1) === C_LEFT_BRACE) ||
@@ -193,18 +200,18 @@ const betweenMatched = function(
 const matchers = {
   [C_BACKTICK]: function(self : InlineParser, pos : number, endpos : number) : number | null {
     let subject = self.subject;
-    let m = boundedFind(subject, pattern("`*"), pos, endpos);
+    let m = boundedFind(subject, pattBackticks0, pos, endpos);
     if (m === null) {
       return null;
     }
     let endchar = m.endpos;
-    if (find(subject, pattern("\\$\\$"), pos - 2) &&
-        !find(subject, pattern("\\\\"), pos - 3)) {
+    if (find(subject, pattDoubleDollars, pos - 2) &&
+        !find(subject, pattBackslash, pos - 3)) {
       delete self.matches[pos - 2];
       delete self.matches[pos - 1];
       self.addMatch(pos - 2, endchar, "+display_math");
       self.verbatimType = "display_math"
-    } else if (find(subject, pattern("\\$"), pos - 1)) {
+    } else if (find(subject, pattSingleDollar, pos - 1)) {
       delete self.matches[pos - 1];
       self.addMatch(pos - 1, endchar, "+inline_math");
       self.verbatimType = "inline_math";
@@ -339,6 +346,15 @@ const matchers = {
       } else {
         self.addMatch(pos, pos, "str");
         return pos + 1;
+      }
+    },
+
+    [C_PERIOD]: function(self : InlineParser, pos : number, endpos : number) : number | null {
+      if (boundedFind(self.subject, pattTwoPeriods, pos + 1, endpos)) {
+        self.addMatch(pos, pos + 2, "ellipses");
+        return pos + 3;
+      } else {
+        return null;
       }
     },
 
@@ -512,13 +528,6 @@ const matchers = {
       return pos
     },
 
-    -- 46 = .
-    [46]: function(self, pos, endpos)
-      if bounded_find(self.subject, "%.%.", pos + 1, endpos) {
-        self.addMatch(pos, pos +2, "ellipses")
-        return pos + 3
-      }
-    }
   }
 */
 }
@@ -769,12 +778,12 @@ class InlineParser {
           }
         } else if (this.verbatim > 0) {
           if (c === 96) {
-            let m = boundedFind(subject, pattern("`+"), pos, endpos);
+            let m = boundedFind(subject, pattBackticks1, pos, endpos);
             if (m) {
               let endchar = m.endpos;
               if (m.endpos - pos + 1 === this.verbatim) {
                 // check for raw attribute
-                let m2 = boundedFind(subject, pattern("\\{=[^\\s{}`]+\\}"), endchar + 1, endpos);
+                let m2 = boundedFind(subject, pattRawAttribute, endchar + 1, endpos);
                 if (m2 && this.verbatimType == "verbatim") { // raw
                   this.addMatch(pos, endchar, "-" + this.verbatimType);
                   this.addMatch(m2.startpos, m2.endpos, "raw_format");

@@ -155,4 +155,14 @@ describe("InlineParser", () => {
     ]);
   });
 
+  it("parses ellipses", () => {
+    let parser = new InlineParser('...', () => {});
+    //                             0123
+    parser.feed(0,2);
+    expect(parser.getMatches()).toStrictEqual([
+      { annot: "ellipses", startpos: 0, endpos: 2 }
+    ]);
+  });
+
+
 })
