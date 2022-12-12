@@ -25,8 +25,8 @@ describe("InlineParser", () => {
   });
 
   it("parses escapes", () => {
-    let parser = new InlineParser('\\"\\*\\ \\a \\n', () => {});
-    parser.feed(0,11);
+    let parser = new InlineParser('\\"\\*\\ \\a \\\n', () => {});
+    parser.feed(0,10);
     expect(parser.getMatches()).toStrictEqual([
       { annot: "escape", startpos: 0, endpos: 0 },
       { annot: "str", startpos: 1, endpos: 1 },

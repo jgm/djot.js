@@ -106,7 +106,7 @@ const pattNonspace = pattern("\S");
 
 const pattLineEnd = pattern("[ \\t]*\\r?\\n");
 
-const pattPunctuation = pattern("[ '!\"#$%&\\\\'()\\*+,\\-\\.\\/:;<=>?@\\[\\]\^_`{|}~']");
+const pattPunctuation = pattern("['!\"#$%&\\\\'()\\*+,\\-\\.\\/:;<=>?@\\[\\]\^_`{|}~']");
 
 const betweenMatched = function(
              c : string,
@@ -213,34 +213,37 @@ const matchers = {
 
     [C_BACKSLASH]: function(self : InlineParser, pos : number, endpos : number) : number | null {
       let subject = self.subject;
-      let mSpace = boundedFind(subject, pattLineEnd, pos + 1, endpos);
-      if (mSpace !== null) {
+      let mLineEnd = boundedFind(subject, pattLineEnd, pos + 1, endpos);
+      if (mLineEnd !== null) {
         // see if there were preceding spaces and remove them
         if (self.matches.length > 0) {
           let lastmatch = self.matches[self.matches.length - 1];
           if (lastmatch.annot === "str") {
             let ep = lastmatch.endpos;
             let sp = lastmatch.startpos;
-            while (subject.codePointAt(ep) === C_SPACE ||
-                   subject.codePointAt(ep) === C_TAB) {
+            while (ep >= sp &&
+                    (subject.codePointAt(ep) === C_SPACE ||
+                     subject.codePointAt(ep) === C_TAB)) {
               ep = ep - 1;
             }
-            if (sp === ep) {
+            if (ep < sp) {
               delete self.matches[self.matches.length - 1];
             } else {
               self.addMatch(sp, ep, "str");
             }
           }
         }
-        self.addMatch(pos + 1, mSpace.endpos, "hardbreak");
-        return mSpace.endpos + 1;
+        self.addMatch(pos, pos, "escape");
+        self.addMatch(pos + 1, mLineEnd.endpos, "hardbreak");
+        return mLineEnd.endpos + 1;
       } else {
         let mPunct = boundedFind(subject, pattPunctuation, pos + 1, endpos);
         if (mPunct !== null) {
           self.addMatch(pos, pos, "escape");
           self.addMatch(mPunct.startpos, mPunct.endpos, "str");
           return mPunct.endpos + 1;
-        } else if (subject.codePointAt(pos + 1) == C_SPACE) {
+        } else if (pos + 1 <= endpos &&
+                  subject.codePointAt(pos + 1) === C_SPACE) {
           self.addMatch(pos, pos, "escape");
           self.addMatch(pos + 1, pos + 1, "nbsp");
           return pos + 2;
