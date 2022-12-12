@@ -114,6 +114,8 @@ const pattPunctuation = pattern("['!\"#$%&\\\\'()\\*+,\\-\\.\\/:;<=>?@\\[\\]\^_`
 
 const pattAutolink = pattern("\\<([^<>\\s]+)\\>");
 
+const pattDelim = pattern("[_*~^+='\"-]");
+
 const betweenMatched = function(
              c : string,
              annotation : string,
@@ -284,6 +286,21 @@ const matchers = {
 
     [C_ASTERISK]: betweenMatched('*', 'strong', 'str', () => { return true; }),
 
+    [C_LEFT_BRACE]: function(self : InlineParser, pos : number, endpos : number) : number | null {
+      if (boundedFind(self.subject, pattDelim, pos + 1, endpos)) {
+        self.addMatch(pos, pos, "open_marker");
+        return pos + 1;
+      } else if (self.allowAttributes) {
+        self.attributeParser = new AttributeParser(self.subject);
+        self.attributeStart = pos;
+        self.attributeSlices = [];
+        return pos;
+      } else {
+        self.addMatch(pos, pos, "str");
+        return pos + 1;
+      }
+    },
+
     /*
 
     [91]: function(self, pos, endpos)
@@ -396,22 +413,6 @@ const matchers = {
           self:clear_openers(opener[1], pos)
           return pos + 1
         }
-      }
-    end,
-
-    -- 123 = {
-    [123] = function(self, pos, endpos)
-      if bounded_find(self.subject, "[_*~^+='\"-]", pos + 1, endpos) {
-        self.addMatch(pos, pos, "open_marker")
-        return pos + 1
-      } else if self.allowAttributes {
-        self.attributeParser = attributes.AttributeParser:new(self.subject)
-        self.attributeStart = pos
-        self.attributeSlices = {}
-        return pos
-      } else {
-        self.addMatch(pos, pos, "str")
-        return pos + 1
       }
     end,
 
@@ -543,7 +544,7 @@ class InlineParser {
     this.destination = false;
     this.firstpos = -1;
     this.lastpos = 0;
-    this.allowAttributes = false;
+    this.allowAttributes = true;
     this.attributeParser = null;
     this.attributeStart = null;
     this.attributeSlices = null;
@@ -793,7 +794,16 @@ class InlineParser {
           }
         } else {
           let matcher = this.matchers[c];
-          pos = (matcher && matcher(this, pos, endpos)) || this.singleChar(pos);
+          if (matcher) {
+            let res = matcher(this, pos, endpos);
+            if (res === null) {
+              pos = this.singleChar(pos);
+            } else {
+              pos = res;
+            }
+          } else {
+            pos = this.singleChar(pos);
+          }
         }
       }
     }

@@ -97,4 +97,18 @@ describe("InlineParser", () => {
     ]);
   });
 
+  it("parses attributes", () => {
+    let parser = new InlineParser('{#foo .bar baz="bim"}', () => {});
+    //                             012345678901234567890
+    parser.feed(0,20);
+    expect(parser.getMatches()).toStrictEqual([
+      { annot: "+attributes", startpos: 0, endpos: 0 },
+      { annot: "id", startpos: 2, endpos: 4 },
+      { annot: "class", startpos: 7, endpos: 9 },
+      { annot: "key", startpos: 11, endpos: 13 },
+      { annot: "value", startpos: 16, endpos: 18 },
+      { annot: "-attributes", startpos: 20, endpos: 20 }
+    ]);
+  });
+
 })
