@@ -62,5 +62,39 @@ describe("InlineParser", () => {
     ]);
   });
 
+  it("parses super/subscript", () => {
+    let parser = new InlineParser('H~2~O e=mc^2^ test{^two words^}', () => {});
+    //                             0123456789012345678901234567890
+    parser.feed(0,30);
+    expect(parser.getMatches()).toStrictEqual([
+      { annot: "str", startpos: 0, endpos: 0 },
+      { annot: "+subscript", startpos: 1, endpos: 1 },
+      { annot: "str", startpos: 2, endpos: 2 },
+      { annot: "-subscript", startpos: 3, endpos: 3 },
+      { annot: "str", startpos: 4, endpos: 9 },
+      { annot: "+superscript", startpos: 10, endpos: 10 },
+      { annot: "str", startpos: 11, endpos: 11 },
+      { annot: "-superscript", startpos: 12, endpos: 12 },
+      { annot: "str", startpos: 13, endpos: 17 },
+      { annot: "+superscript", startpos: 18, endpos: 19 },
+      { annot: "str", startpos: 20, endpos: 28 },
+      { annot: "-superscript", startpos: 29, endpos: 30 }
+    ]);
+  });
+
+  it("parses emphasis", () => {
+    let parser = new InlineParser('_hello *there*_ world', () => {});
+    //                             012345678901234567890
+    parser.feed(0,20);
+    expect(parser.getMatches()).toStrictEqual([
+      { annot: "+emph", startpos: 0, endpos: 0 },
+      { annot: "str", startpos: 1, endpos: 6 },
+      { annot: "+strong", startpos: 7, endpos: 7 },
+      { annot: "str", startpos: 8, endpos: 12 },
+      { annot: "-strong", startpos: 13, endpos: 13 },
+      { annot: "-emph", startpos: 14, endpos: 14 },
+      { annot: "str", startpos: 15, endpos: 20 }
+    ]);
+  });
 
 })

@@ -55,7 +55,9 @@ const C_RIGHT_BRACKET = 93;
 const C_HAT = 94;
 const C_UNDERSCORE = 95;
 const C_BACKTICK = 96;
+const C_LEFT_BRACE = 123;
 const C_RIGHT_BRACE = 125;
+const C_TILDE = 126;
 
 const isSpecial = function(cp : number) {
   return (cp === C_LF ||
@@ -77,7 +79,9 @@ const isSpecial = function(cp : number) {
           cp === C_HAT ||
           cp === C_UNDERSCORE ||
           cp === C_BACKTICK ||
-          cp === C_RIGHT_BRACE);
+          cp === C_LEFT_BRACE ||
+          cp === C_RIGHT_BRACE ||
+          cp === C_TILDE);
 }
 
 // find first special character starting from startpos, and not
@@ -102,7 +106,7 @@ const matchesPattern = function(match : Event, patt : RegExp) : boolean {
   return (match && patt.exec(match.annot) !== null);
 }
 
-const pattNonspace = pattern("\S");
+const pattNonspace = pattern("[^ \t\r\n]");
 
 const pattLineEnd = pattern("[ \\t]*\\r?\\n");
 
@@ -113,15 +117,12 @@ const pattAutolink = pattern("\\<([^<>\\s]+)\\>");
 const betweenMatched = function(
              c : string,
              annotation : string,
-             defaultmatch : string | null,
-             opentest : null |
-                        ((self : InlineParser, pos : number) => boolean)) {
+             defaultmatch : string,
+             opentest : ((self : InlineParser, pos : number) => boolean)) {
   return function(self : InlineParser, pos : number, endpos : number) : number {
-    if (defaultmatch === null) {
-      defaultmatch = "str";
-    }
     let subject = self.subject;
-    let can_open = find(subject, pattNonspace, pos + 1) !== null;
+    let can_open = find(subject, pattNonspace, pos + 1) !== null &&
+                   opentest(self, pos);
     let can_close = find(subject, pattNonspace, pos - 1) !== null;
     let has_open_marker = matchesPattern(self.matches[pos - 1],
                                           pattern("open_marker"));
@@ -129,10 +130,6 @@ const betweenMatched = function(
                               subject.codePointAt(pos + 1) === C_RIGHT_BRACE;
     let endcloser = pos;
     let startopener = pos;
-
-    if (typeof(opentest) == "function") {
-      can_open = can_open && opentest(self, pos);
-    }
 
     // Allow explicit open/close markers to override:
     if (has_open_marker) {
@@ -158,7 +155,7 @@ const betweenMatched = function(
     }
     let openers = self.openers[d];
 
-    if (can_close && openers !== null && openers.length > 0) {
+    if (can_close && openers && openers.length > 0) {
       // check openers for a match
       let opener = openers[openers.length - 1];
       if (opener.endpos !== pos - 1) { // exclude empty emph
@@ -278,15 +275,18 @@ const matchers = {
       }
       return null;
     },
-/*
-    -- 126 = ~
-    [126] = between_matched('~', 'subscript'),
 
-    -- 94 = ^
-    [94] = between_matched('^', 'superscript'),
+    [C_TILDE]: betweenMatched('~', 'subscript', 'str', () => { return true; }),
 
-    -- 91 = [
-    [91] = function(self, pos, endpos)
+    [C_HAT]: betweenMatched('^', 'superscript', 'str', () => { return true; }),
+
+    [C_UNDERSCORE]: betweenMatched('_', 'emph', 'str', () => { return true; }),
+
+    [C_ASTERISK]: betweenMatched('*', 'strong', 'str', () => { return true; }),
+
+    /*
+
+    [91]: function(self, pos, endpos)
       let sp, ep = bounded_find(self.subject, "%^([^]]+)%]", pos + 1, endpos)
       if sp then -- footnote ref
         self.addMatch(pos, ep, "footnote_reference")
@@ -296,7 +296,7 @@ const matchers = {
         self.addMatch(pos, pos, "str")
         return pos + 1
       }
-    end,
+    },
 
     -- 93 = ]
     [93] = function(self, pos, endpos)
@@ -399,12 +399,6 @@ const matchers = {
       }
     end,
 
-    -- 95 = _
-    [95] = between_matched('_', 'emph'),
-
-    -- 42 = *
-    [42] = between_matched('*', 'strong'),
-
     -- 123 = {
     [123] = function(self, pos, endpos)
       if bounded_find(self.subject, "[_*~^+='\"-]", pos + 1, endpos) {
@@ -431,34 +425,34 @@ const matchers = {
         self.addMatch(pos, pos, "str")
         return pos + 1
       }
-    end,
+    },
 
     -- 43 = +
-    [43] = between_matched("+", "insert", "str",
+    [43]: between_matched("+", "insert", "str",
                            function(self, pos)
                              return find(self.subject, "%{", pos - 1) or
                                     find(self.subject, "%}", pos + 1)
                            end),
 
     -- 61 = =
-    [61] = between_matched("=", "mark", "str",
+    [61]: between_matched("=", "mark", "str",
                            function(self, pos)
                              return find(self.subject, "%{", pos - 1) or
                                     find(self.subject, "%}", pos + 1)
                            end),
 
     -- 39 = '
-    [39] = between_matched("'", "single_quoted", "right_single_quote",
+    [39]: between_matched("'", "single_quoted", "right_single_quote",
                            function(self, pos) -- test to open
                              return pos == 1 or
                                find(self.subject, "[%s\"'-([]", pos - 1)
                              end),
 
     -- 34 = "
-    [34] = between_matched('"', "double_quoted", "left_double_quote"),
+    [34]: between_matched('"', "double_quoted", "left_double_quote"),
 
     -- 45 = -
-    [45] = function(self, pos, endpos)
+    [45]: function(self, pos, endpos)
       let subject = self.subject
       let nextpos
       if byte(subject, pos - 1) == 123 or
@@ -510,10 +504,10 @@ const matchers = {
         }
       }
       return pos
-    end,
+    },
 
     -- 46 = .
-    [46] = function(self, pos, endpos)
+    [46]: function(self, pos, endpos)
       if bounded_find(self.subject, "%.%.", pos + 1, endpos) {
         self.addMatch(pos, pos +2, "ellipses")
         return pos + 3
@@ -654,7 +648,7 @@ class InlineParser {
       while (v[i]) {
         let opener = v[i];
         if (opener.startpos >= startpos && opener.endpos <= endpos) {
-          delete v[i];
+          v.splice(i, 1);
         } else if ((opener.substartpos && opener.substartpos >= startpos) &&
                    (opener.subendpos && opener.subendpos <= endpos)) {
           v[i].substartpos = null;
