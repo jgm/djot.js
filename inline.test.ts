@@ -39,4 +39,28 @@ describe("InlineParser", () => {
       { annot: "hardbreak", startpos: 10, endpos: 10 }
     ]);
   });
+
+  it("parses autolinks", () => {
+    let parser = new InlineParser('<http://example.com?foo=bar&baz=&amp;x2>', () => {});
+    //                             0123456789012345678901234567890123456789
+    parser.feed(0,39);
+    expect(parser.getMatches()).toStrictEqual([
+      { annot: "+url", startpos: 0, endpos: 0 },
+      { annot: "str", startpos: 1, endpos: 38 },
+      { annot: "-url", startpos: 39, endpos: 39 }
+    ]);
+  });
+
+  it("parses email autolinks", () => {
+    let parser = new InlineParser('<me@example.com>', () => {});
+    //                             0123456789012345
+    parser.feed(0,15);
+    expect(parser.getMatches()).toStrictEqual([
+      { annot: "+email", startpos: 0, endpos: 0 },
+      { annot: "str", startpos: 1, endpos: 14 },
+      { annot: "-email", startpos: 15, endpos: 15 }
+    ]);
+  });
+
+
 })

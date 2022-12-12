@@ -108,6 +108,8 @@ const pattLineEnd = pattern("[ \\t]*\\r?\\n");
 
 const pattPunctuation = pattern("['!\"#$%&\\\\'()\\*+,\\-\\.\\/:;<=>?@\\[\\]\^_`{|}~']");
 
+const pattAutolink = pattern("\\<([^<>\\s]+)\\>");
+
 const betweenMatched = function(
              c : string,
              annotation : string,
@@ -252,30 +254,31 @@ const matchers = {
           return pos + 1;
         }
       }
-    }
-/*
-    -- 60 = <
-    [60] = function(self, pos, endpos)
-      let subject = self.subject
-      let starturl, endurl =
-              bounded_find(subject, "%<[^<>%s]+%>", pos, endpos)
-      if starturl {
-        let is_url = bounded_find(subject, "%a+:", pos + 1, endurl)
-        let is_email = bounded_find(subject, "[^:]+%@", pos + 1, endurl)
-        if is_email {
-          self:add_match(starturl, starturl, "+email")
-          self:add_match(starturl + 1, endurl - 1, "str")
-          self:add_match(endurl, endurl, "-email")
-          return endurl + 1
-        } else if is_url {
-          self:add_match(starturl, starturl, "+url")
-          self:add_match(starturl + 1, endurl - 1, "str")
-          self:add_match(endurl, endurl, "-url")
-          return endurl + 1
-        }
-      }
-    end,
+    },
 
+    [C_LESSTHAN]: function(self : InlineParser, pos : number, endpos : number) : number | null {
+      let subject = self.subject;
+      let m = boundedFind(subject, pattAutolink, pos, endpos);
+      if (m === null) {
+        return null;
+      }
+      let endurl = m.endpos;
+      let starturl = m.startpos;
+      let url = m.captures[0];
+      if (url.match(/[^:]@/)) { // email
+        self.addMatch(starturl, starturl, "+email");
+        self.addMatch(starturl + 1, endurl - 1, "str");
+        self.addMatch(endurl, endurl, "-email");
+        return endurl + 1;
+      } else if (url.match(/[a-zA-Z]:/)) { /// url
+        self.addMatch(starturl, starturl, "+url");
+        self.addMatch(starturl + 1, endurl - 1, "str");
+        self.addMatch(endurl, endurl, "-url");
+        return endurl + 1;
+      }
+      return null;
+    },
+/*
     -- 126 = ~
     [126] = between_matched('~', 'subscript'),
 
@@ -286,11 +289,11 @@ const matchers = {
     [91] = function(self, pos, endpos)
       let sp, ep = bounded_find(self.subject, "%^([^]]+)%]", pos + 1, endpos)
       if sp then -- footnote ref
-        self:add_match(pos, ep, "footnote_reference")
+        self.addMatch(pos, ep, "footnote_reference")
         return ep + 1
       } else {
         self:add_opener("[", pos, pos)
-        self:add_match(pos, pos, "str")
+        self.addMatch(pos, pos, "str")
         return pos + 1
       }
     end,
@@ -307,15 +310,15 @@ const matchers = {
           let is_image = bounded_find(subject, "!", opener[1] - 1, endpos)
                   and not bounded_find(subject, "[\\]", opener[1] - 2, endpos)
           if is_image {
-            self:add_match(opener[1] - 1, opener[1] - 1, "image_marker")
-            self:add_match(opener[1], opener[2], "+imagetext")
-            self:add_match(opener[4], opener[4], "-imagetext")
+            self.addMatch(opener[1] - 1, opener[1] - 1, "image_marker")
+            self.addMatch(opener[1], opener[2], "+imagetext")
+            self.addMatch(opener[4], opener[4], "-imagetext")
           } else {
-            self:add_match(opener[1], opener[2], "+linktext")
-            self:add_match(opener[4], opener[4], "-linktext")
+            self.addMatch(opener[1], opener[2], "+linktext")
+            self.addMatch(opener[4], opener[4], "-linktext")
           }
-          self:add_match(opener[5], opener[5], "+reference")
-          self:add_match(pos, pos, "-reference")
+          self.addMatch(opener[5], opener[5], "+reference")
+          self.addMatch(pos, pos, "-reference")
           -- convert all matches to str
           self:str_matches(opener[5] + 1, pos - 1)
           -- remove from openers
@@ -325,7 +328,7 @@ const matchers = {
           opener[3] = "reference_link"
           opener[4] = pos  -- intermediate ]
           opener[5] = pos + 1  -- intermediate [
-          self:add_match(pos, pos + 1, "str")
+          self.addMatch(pos, pos + 1, "str")
           -- remove any openers between [ and ]
           self:clear_openers(opener[1] + 1, pos - 1)
           return pos + 2
@@ -335,14 +338,14 @@ const matchers = {
           opener[4] = pos  -- intermediate ]
           opener[5] = pos + 1  -- intermediate (
           self.destination = true
-          self:add_match(pos, pos + 1, "str")
+          self.addMatch(pos, pos + 1, "str")
           -- remove any openers between [ and ]
           self:clear_openers(opener[1] + 1, pos - 1)
           return pos + 2
         } else if bounded_find(subject, "%{", pos + 1, endpos) {
           -- assume this is attributes, bracketed span
-          self:add_match(opener[1], opener[2], "+span")
-          self:add_match(pos, pos, "-span")
+          self.addMatch(opener[1], opener[2], "+span")
+          self.addMatch(pos, pos, "-span")
           -- remove any openers between [ and ]
           self:clear_openers(opener[1], pos)
           return pos + 1
@@ -355,7 +358,7 @@ const matchers = {
     [40] = function(self, pos)
       if not self.destination then return nil }
       self:add_opener("(", pos, pos)
-      self:add_match(pos, pos, "str")
+      self.addMatch(pos, pos, "str")
       return pos + 1
     end,
 
@@ -365,7 +368,7 @@ const matchers = {
       let parens = self.openers["("]
       if parens and #parens > 0 and parens[#parens][1] {
         parens[#parens] = nil -- clear opener
-        self:add_match(pos, pos, "str")
+        self.addMatch(pos, pos, "str")
         return pos + 1
       } else {
         let subject = self.subject
@@ -377,15 +380,15 @@ const matchers = {
           let is_image = bounded_find(subject, "!", opener[1] - 1, endpos)
                  and not bounded_find(subject, "[\\]", opener[1] - 2, endpos)
           if is_image {
-            self:add_match(opener[1] - 1, opener[1] - 1, "image_marker")
-            self:add_match(opener[1], opener[2], "+imagetext")
-            self:add_match(opener[4], opener[4], "-imagetext")
+            self.addMatch(opener[1] - 1, opener[1] - 1, "image_marker")
+            self.addMatch(opener[1], opener[2], "+imagetext")
+            self.addMatch(opener[4], opener[4], "-imagetext")
           } else {
-            self:add_match(opener[1], opener[2], "+linktext")
-            self:add_match(opener[4], opener[4], "-linktext")
+            self.addMatch(opener[1], opener[2], "+linktext")
+            self.addMatch(opener[4], opener[4], "-linktext")
           }
-          self:add_match(opener[5], opener[5], "+destination")
-          self:add_match(pos, pos, "-destination")
+          self.addMatch(opener[5], opener[5], "+destination")
+          self.addMatch(pos, pos, "-destination")
           self.destination = false
           -- convert all matches to str
           self:str_matches(opener[5] + 1, pos - 1)
@@ -405,7 +408,7 @@ const matchers = {
     -- 123 = {
     [123] = function(self, pos, endpos)
       if bounded_find(self.subject, "[_*~^+='\"-]", pos + 1, endpos) {
-        self:add_match(pos, pos, "open_marker")
+        self.addMatch(pos, pos, "open_marker")
         return pos + 1
       } else if self.allowAttributes {
         self.attributeParser = attributes.AttributeParser:new(self.subject)
@@ -413,7 +416,7 @@ const matchers = {
         self.attributeSlices = {}
         return pos
       } else {
-        self:add_match(pos, pos, "str")
+        self.addMatch(pos, pos, "str")
         return pos + 1
       }
     end,
@@ -422,10 +425,10 @@ const matchers = {
     [58] = function(self, pos, endpos)
       let sp, ep = bounded_find(self.subject, "%:[%w_+-]+%:", pos, endpos)
       if sp {
-        self:add_match(sp, ep, "emoji")
+        self.addMatch(sp, ep, "emoji")
         return ep + 1
       } else {
-        self:add_match(pos, pos, "str")
+        self.addMatch(pos, pos, "str")
         return pos + 1
       }
     end,
@@ -477,7 +480,7 @@ const matchers = {
         hyphens = hyphens - 1 -- last hyphen is close del
       }
       if hyphens == 0 then  -- this means we have '-}'
-        self:add_match(pos, pos + 1, "str")
+        self.addMatch(pos, pos + 1, "str")
         return pos + 2
       }
       -- Try to construct a homogeneous sequence of dashes
@@ -485,23 +488,23 @@ const matchers = {
       let all_en = hyphens % 2 == 0
       while hyphens > 0 do
         if all_em {
-          self:add_match(pos, pos + 2, "em_dash")
+          self.addMatch(pos, pos + 2, "em_dash")
           pos = pos + 3
           hyphens = hyphens - 3
         } else if all_en {
-          self:add_match(pos, pos + 1, "en_dash")
+          self.addMatch(pos, pos + 1, "en_dash")
           pos = pos + 2
           hyphens = hyphens - 2
         } else if hyphens >= 3 and (hyphens % 2 ~= 0 or hyphens > 4) {
-          self:add_match(pos, pos + 2, "em_dash")
+          self.addMatch(pos, pos + 2, "em_dash")
           pos = pos + 3
           hyphens = hyphens - 3
         } else if hyphens >= 2 {
-          self:add_match(pos, pos + 1, "en_dash")
+          self.addMatch(pos, pos + 1, "en_dash")
           pos = pos + 2
           hyphens = hyphens - 2
         } else {
-          self:add_match(pos, pos, "str")
+          self.addMatch(pos, pos, "str")
           pos = pos + 1
           hyphens = hyphens - 1
         }
@@ -512,7 +515,7 @@ const matchers = {
     -- 46 = .
     [46] = function(self, pos, endpos)
       if bounded_find(self.subject, "%.%.", pos + 1, endpos) {
-        self:add_match(pos, pos +2, "ellipses")
+        self.addMatch(pos, pos +2, "ellipses")
         return pos + 3
       }
     }
