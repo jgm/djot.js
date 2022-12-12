@@ -107,14 +107,11 @@ const matchesPattern = function(match : Event, patt : RegExp) : boolean {
 }
 
 const pattNonspace = pattern("[^ \t\r\n]");
-
 const pattLineEnd = pattern("[ \\t]*\\r?\\n");
-
 const pattPunctuation = pattern("['!\"#$%&\\\\'()\\*+,\\-\\.\\/:;<=>?@\\[\\]\^_`{|}~']");
-
 const pattAutolink = pattern("\\<([^<>\\s]+)\\>");
-
 const pattDelim = pattern("[_*~^+='\"-]");
+const pattEmoji = pattern(":[\\w_+-]+:");
 
 const betweenMatched = function(
              c : string,
@@ -301,6 +298,17 @@ const matchers = {
       }
     },
 
+    [C_COLON]: function(self : InlineParser, pos : number, endpos : number) : number | null {
+      let m = boundedFind(self.subject, pattEmoji, pos, endpos)
+      if (m !== null) {
+        self.addMatch(m.startpos, m.endpos, "emoji");
+        return m.endpos + 1;
+      } else {
+        self.addMatch(pos, pos, "str");
+        return pos + 1;
+      }
+    },
+
     /*
 
     [91]: function(self, pos, endpos)
@@ -415,18 +423,6 @@ const matchers = {
         }
       }
     end,
-
-    -- 58 = :
-    [58] = function(self, pos, endpos)
-      let sp, ep = bounded_find(self.subject, "%:[%w_+-]+%:", pos, endpos)
-      if sp {
-        self.addMatch(sp, ep, "emoji")
-        return ep + 1
-      } else {
-        self.addMatch(pos, pos, "str")
-        return pos + 1
-      }
-    },
 
     -- 43 = +
     [43]: between_matched("+", "insert", "str",
