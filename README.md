@@ -5,4 +5,12 @@ lua implementation](https://github.com/jgm/djot).
 
 Use `tsc` to compile the ts files to js.
 
-So far, only the attribute parser has been ported.
+Status:
+
+- [X] attributes
+- [X] inline
+- [ ] block
+- [ ] ast
+- [ ] html
+- [ ] filter
+
