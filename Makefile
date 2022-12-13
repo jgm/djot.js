@@ -1,4 +1,4 @@
-MODULES=attributes.js event.js inline.js find.js
+MODULES=attributes.js event.js inline.js block.js find.js
 
 test:
 	tsc && yarn test

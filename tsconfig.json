@@ -13,6 +13,7 @@
     "attributes.ts",
     "find.ts",
     "inline.ts",
+    "block.ts",
     "event.ts"
   ]
 }
