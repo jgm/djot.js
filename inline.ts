@@ -118,7 +118,8 @@ const pattBackticks1 = pattern("`+");
 const pattDoubleDollars = pattern("\\$\\$");
 const pattSingleDollar = pattern("\\$");
 const pattBackslash = pattern("\\\\");
-const pattRawAttribute = pattern("\\{=[^\\s{}`]+\\}");;
+const pattRawAttribute = pattern("\\{=[^\\s{}`]+\\}");
+const pattNoteReference = pattern("%^([^]]+)%]");
 
 const hasBrace = function(self : InlineParser, pos : number) : boolean {
   return ((pos > 0 && self.subject.codePointAt(pos - 1) === C_LEFT_BRACE) ||
@@ -358,19 +359,20 @@ const matchers = {
       }
     },
 
-    /*
-
-    [91]: function(self, pos, endpos)
-      let sp, ep = bounded_find(self.subject, "%^([^]]+)%]", pos + 1, endpos)
-      if sp then -- footnote ref
-        self.addMatch(pos, ep, "footnote_reference")
-        return ep + 1
+    [C_LEFT_BRACKET]: function(self : InlineParser, pos : number, endpos : number) : number {
+      let m = boundedFind(self.subject, pattNoteReference, pos + 1, endpos);
+      if (m !== null) { // footnote ref
+        self.addMatch(pos, m.endpos, "footnote_reference");
+        return m.endpos + 1;
       } else {
-        self:add_opener("[", pos, pos)
-        self.addMatch(pos, pos, "str")
-        return pos + 1
+        self.addOpener("[", { startpos: pos, endpos: pos, annot: null,
+                               substartpos: null, subendpos: null } );
+        self.addMatch(pos, pos, "str");
+        return pos + 1;
       }
     },
+
+    /*
 
     -- 93 = ]
     [93] = function(self, pos, endpos)
@@ -431,7 +433,7 @@ const matchers = {
     -- 40 = (
     [40] = function(self, pos)
       if not self.destination then return nil }
-      self:add_opener("(", pos, pos)
+      self.addOpener("(", pos, pos)
       self.addMatch(pos, pos, "str")
       return pos + 1
     end,
