@@ -38,6 +38,7 @@ const C_TAB = 9;
 const C_LF = 10;
 const C_CR = 13;
 const C_SPACE = 32;
+const C_BANG = 33;
 const C_DOUBLE_QUOTE = 34;
 const C_SINGLE_QUOTE = 39;
 const C_LEFT_PAREN = 40;
@@ -372,64 +373,70 @@ const matchers = {
       }
     },
 
-    /*
-
-    -- 93 = ]
-    [93] = function(self, pos, endpos)
-      let openers = self.openers["["]
-      let subject = self.subject
-      if openers and #openers > 0 {
-        let opener = openers[#openers]
-        if opener[3] == "reference_link" {
-          -- found a reference link
-          -- add the matches
-          let is_image = bounded_find(subject, "!", opener[1] - 1, endpos)
-                  and not bounded_find(subject, "[\\]", opener[1] - 2, endpos)
-          if is_image {
-            self.addMatch(opener[1] - 1, opener[1] - 1, "image_marker")
-            self.addMatch(opener[1], opener[2], "+imagetext")
-            self.addMatch(opener[4], opener[4], "-imagetext")
+    [C_RIGHT_BRACKET]: function(self : InlineParser, pos : number, endpos: number) : number | null {
+      let openers = self.openers["["];
+      let subject = self.subject;
+      if (openers && openers.length > 0) {
+        let opener = openers[openers.length - 1];
+        if (opener.annot === "reference_link") {
+          // found a reference link
+          // add the matches
+          let isImage =
+                  subject.codePointAt(opener.startpos - 1) === C_BANG &&
+                  subject.codePointAt(opener.startpos - 2) !== C_BACKSLASH;
+          if (isImage) {
+            self.addMatch(opener.startpos - 1, opener.startpos - 1,
+                           "image_marker");
+            self.addMatch(opener.startpos, opener.endpos, "+imagetext");
+            self.addMatch(opener.substartpos || opener.startpos,
+                          opener.substartpos || opener.startpos, "-imagetext");
           } else {
-            self.addMatch(opener[1], opener[2], "+linktext")
-            self.addMatch(opener[4], opener[4], "-linktext")
+            self.addMatch(opener.startpos, opener.endpos, "+linktext");
+            self.addMatch(opener.substartpos || opener.startpos,
+                          opener.substartpos || opener.startpos, "-linktext");
           }
-          self.addMatch(opener[5], opener[5], "+reference")
-          self.addMatch(pos, pos, "-reference")
-          -- convert all matches to str
-          self:str_matches(opener[5] + 1, pos - 1)
-          -- remove from openers
-          self:clear_openers(opener[1], pos)
-          return pos + 1
-        } else if bounded_find(subject, "%[", pos + 1, endpos) {
-          opener[3] = "reference_link"
-          opener[4] = pos  -- intermediate ]
-          opener[5] = pos + 1  -- intermediate [
-          self.addMatch(pos, pos + 1, "str")
-          -- remove any openers between [ and ]
-          self:clear_openers(opener[1] + 1, pos - 1)
-          return pos + 2
-        } else if bounded_find(subject, "%(", pos + 1, endpos) {
-          self.openers["("] = {} -- clear ( openers
-          opener[3] = "explicit_link"
-          opener[4] = pos  -- intermediate ]
-          opener[5] = pos + 1  -- intermediate (
-          self.destination = true
-          self.addMatch(pos, pos + 1, "str")
-          -- remove any openers between [ and ]
-          self:clear_openers(opener[1] + 1, pos - 1)
-          return pos + 2
-        } else if bounded_find(subject, "%{", pos + 1, endpos) {
-          -- assume this is attributes, bracketed span
-          self.addMatch(opener[1], opener[2], "+span")
-          self.addMatch(pos, pos, "-span")
-          -- remove any openers between [ and ]
-          self:clear_openers(opener[1], pos)
-          return pos + 1
+          self.addMatch(opener.subendpos || opener.endpos,
+                        opener.subendpos || opener.endpos, "+reference");
+          self.addMatch(pos, pos, "-reference");
+          // convert all matches to str
+          self.strMatches((opener.subendpos || opener.endpos) + 1, pos - 1);
+          // remove from openers
+          self.clearOpeners(opener.startpos, pos);
+          return pos + 1;
+        } else if (pos + 1 <= endpos &&
+                   subject.codePointAt(pos + 1) === C_LEFT_BRACKET) {
+          opener.annot = "reference_link";
+          opener.substartpos = pos;  // intermediate ]
+          opener.subendpos = pos + 1;  // intermediate [
+          self.addMatch(pos, pos + 1, "str");
+          // remove any openers between [ and ]
+          self.clearOpeners(opener.startpos + 1, pos - 1);
+          return pos + 2;
+        } else if (pos + 1 <= endpos &&
+                   subject.codePointAt(pos + 1) === C_LEFT_PAREN) {
+          self.openers["("] = []; // clear ( openers
+          opener.annot = "explicit_link";
+          opener.substartpos = pos;  // intermediate ]
+          opener.subendpos = pos + 1;  // intermediate (
+          self.destination = true;
+          self.addMatch(pos, pos + 1, "str");
+          // remove any openers between [ and ]
+          self.clearOpeners(opener.startpos + 1, pos - 1);
+          return pos + 2;
+        } else if (pos + 1 <= endpos &&
+                   subject.codePointAt(pos + 1) === C_LEFT_BRACE) {
+          // assume this is attributes, bracketed span
+          self.addMatch(opener.startpos, opener.endpos, "+span");
+          self.addMatch(pos, pos, "-span");
+          // remove any openers between [ and ]
+          self.clearOpeners(opener.startpos, pos);
+          return pos + 1;
         }
       }
-    end,
+      return null;
+    },
 
-
+    /*
     -- 40 = (
     [40] = function(self, pos)
       if not self.destination then return nil }
