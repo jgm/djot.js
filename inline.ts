@@ -436,15 +436,17 @@ const matchers = {
       return null;
     },
 
-    /*
-    -- 40 = (
-    [40] = function(self, pos)
-      if not self.destination then return nil }
-      self.addOpener("(", pos, pos)
-      self.addMatch(pos, pos, "str")
-      return pos + 1
-    end,
+    [C_LEFT_PAREN]: function(self : InlineParser, pos : number, endpos : number) : number | null {
+      if (!self.destination) {
+        return null;
+      }
+      self.addOpener("(", {startpos: pos, endpos: pos, annot: null,
+                           substartpos: null, subendpos: null});
+      self.addMatch(pos, pos, "str");
+      return pos + 1;
+    },
 
+    /*
     -- 41 = )
     [41] = function(self, pos, endpos)
       if not self.destination then return nil }
