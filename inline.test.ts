@@ -207,5 +207,20 @@ describe("InlineParser", () => {
     ]);
   });
 
+  it("parses dashes", () => {
+    let parser = new InlineParser('a---b--c', () => {});
+    //                             01234567
+    parser.feed(0,7);
+    expect(parser.getMatches()).toStrictEqual([
+      { annot: "str", startpos: 0, endpos: 0 },
+      { annot: "em_dash", startpos: 1, endpos: 3 },
+      { annot: "str", startpos: 4, endpos: 4 },
+      { annot: "en_dash", startpos: 5, endpos: 6 },
+      { annot: "str", startpos: 7, endpos: 7 }
+    ]);
+  });
+
+
+
 
 })

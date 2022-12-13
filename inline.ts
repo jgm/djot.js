@@ -488,65 +488,58 @@ const matchers = {
       return null;
     },
 
-    /*
-    -- 45 = -
-    [45]: function(self, pos, endpos)
-      let subject = self.subject
-      let nextpos
-      if byte(subject, pos - 1) == 123 or
-         byte(subject, pos + 1) == 125 then -- (123 = { 125 = })
-        nextpos = betweenMatched("-", "delete", "str",
-                           function(slf, p)
-                             return find(slf.subject, "%{", p - 1) or
-                                    find(slf.subject, "%}", p + 1)
-                           end)(self, pos, endpos)
-        return nextpos
+    [C_HYPHEN]: function(self : InlineParser, pos : number, endpos : number): number | null {
+      let subject = self.subject;
+      if (subject.codePointAt(pos - 1) === C_LEFT_BRACE ||
+          subject.codePointAt(pos + 1) === C_RIGHT_BRACE) {
+        betweenMatched("-", "delete", "str", hasBrace);
       }
-      -- didn't match a del, try for smart hyphens:
-      let _, ep = find(subject, "%-*", pos)
-      if endpos < ep {
+      // didn't match a del, try for smart hyphens:
+      let ep = pos;
+      let hyphens = 0;
+      while (ep <= endpos && subject.codePointAt(ep) === C_HYPHEN) {
+        ep++;
+        hyphens++;
+      }
+      if (ep > endpos) {
         ep = endpos
       }
-      let hyphens = 1 + ep - pos
-      if byte(subject, ep + 1) == 125 then -- 125 = }
-        hyphens = hyphens - 1 -- last hyphen is close del
+      if (subject.codePointAt(ep + 1) === C_RIGHT_BRACE) {
+        hyphens--;  // last hyphen is close del
       }
-      if hyphens == 0 then  -- this means we have '-}'
-        self.addMatch(pos, pos + 1, "str")
-        return pos + 2
+      if (hyphens === 0) { // this means we have '-}'
+        self.addMatch(pos, pos + 1, "str");
+        return pos + 2;
       }
-      -- Try to construct a homogeneous sequence of dashes
-      let all_em = hyphens % 3 == 0
-      let all_en = hyphens % 2 == 0
-      while hyphens > 0 do
-        if all_em {
-          self.addMatch(pos, pos + 2, "em_dash")
-          pos = pos + 3
-          hyphens = hyphens - 3
-        } else if all_en {
-          self.addMatch(pos, pos + 1, "en_dash")
-          pos = pos + 2
-          hyphens = hyphens - 2
-        } else if hyphens >= 3 and (hyphens % 2 ~= 0 or hyphens > 4) {
-          self.addMatch(pos, pos + 2, "em_dash")
-          pos = pos + 3
-          hyphens = hyphens - 3
-        } else if hyphens >= 2 {
-          self.addMatch(pos, pos + 1, "en_dash")
-          pos = pos + 2
-          hyphens = hyphens - 2
+      // Try to construct a homogeneous sequence of dashes
+      let all_em = hyphens % 3 == 0;
+      let all_en = hyphens % 2 == 0;
+      while (hyphens > 0) {
+        if (all_em) {
+          self.addMatch(pos, pos + 2, "em_dash");
+          pos = pos + 3;
+          hyphens = hyphens - 3;
+        } else if (all_en) {
+          self.addMatch(pos, pos + 1, "en_dash");
+          pos = pos + 2;
+          hyphens = hyphens - 2;
+        } else if (hyphens >= 3 && (hyphens % 2 !== 0 || hyphens > 4)) {
+          self.addMatch(pos, pos + 2, "em_dash");
+          pos = pos + 3;
+          hyphens = hyphens - 3;
+        } else if (hyphens >= 2) {
+          self.addMatch(pos, pos + 1, "en_dash");
+          pos = pos + 2;
+          hyphens = hyphens - 2;
         } else {
-          self.addMatch(pos, pos, "str")
-          pos = pos + 1
-          hyphens = hyphens - 1
+          self.addMatch(pos, pos, "str");
+          pos = pos + 1;
+          hyphens = hyphens - 1;
         }
       }
-      return pos
-    },
-
-  }
-*/
-}
+      return pos;
+    }
+  };
 
 class InlineParser {
   warn : (message : string, pos : number) => void;
