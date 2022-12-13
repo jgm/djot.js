@@ -342,7 +342,7 @@ const matchers = {
 
     [C_COLON]: function(self : InlineParser, pos : number, endpos : number) : number | null {
       let m = boundedFind(self.subject, pattEmoji, pos, endpos)
-      if (m !== null) {
+      if (m) {
         self.addMatch(m.startpos, m.endpos, "emoji");
         return m.endpos + 1;
       } else {
@@ -362,7 +362,7 @@ const matchers = {
 
     [C_LEFT_BRACKET]: function(self : InlineParser, pos : number, endpos : number) : number {
       let m = boundedFind(self.subject, pattNoteReference, pos + 1, endpos);
-      if (m !== null) { // footnote ref
+      if (m) { // footnote ref
         self.addMatch(pos, m.endpos, "footnote_reference");
         return m.endpos + 1;
       } else {
@@ -446,44 +446,49 @@ const matchers = {
       return pos + 1;
     },
 
-    /*
-    -- 41 = )
-    [41] = function(self, pos, endpos)
-      if not self.destination then return nil }
-      let parens = self.openers["("]
-      if parens and #parens > 0 and parens[#parens][1] {
-        parens[#parens] = nil -- clear opener
-        self.addMatch(pos, pos, "str")
-        return pos + 1
+    [41]: function(self : InlineParser, pos : number, endpos : number) : number | null {
+      if (!self.destination) {
+        return null;
+      }
+      let parens = self.openers["("];
+      if (parens && parens.length > 0) {
+        parens.pop(); // clear opener
+        self.addMatch(pos, pos, "str");
+        return pos + 1;
       } else {
-        let subject = self.subject
-        let openers = self.openers["["]
-        if openers and #openers > 0
-            and openers[#openers][3] == "explicit_link" {
-          let opener = openers[#openers]
-          -- we have inline link
-          let is_image = bounded_find(subject, "!", opener[1] - 1, endpos)
-                 and not bounded_find(subject, "[\\]", opener[1] - 2, endpos)
-          if is_image {
-            self.addMatch(opener[1] - 1, opener[1] - 1, "image_marker")
-            self.addMatch(opener[1], opener[2], "+imagetext")
-            self.addMatch(opener[4], opener[4], "-imagetext")
+        let subject = self.subject;
+        let openers = self.openers["["];
+        let opener = openers[openers.length - 1];
+        if (openers && openers.length > 0 && opener.annot === "explicit_link") {
+          // we have inline link
+          let isImage =
+                  subject.codePointAt(opener.startpos - 1) === C_BANG &&
+                  subject.codePointAt(opener.startpos - 2) !== C_BACKSLASH;
+          if (isImage) {
+            self.addMatch(opener.startpos - 1, opener.startpos - 1, "image_marker");
+            self.addMatch(opener.startpos, opener.endpos, "+imagetext");
+            self.addMatch(opener.substartpos || opener.startpos,
+                          opener.substartpos || opener.startpos, "-imagetext");
           } else {
-            self.addMatch(opener[1], opener[2], "+linktext")
-            self.addMatch(opener[4], opener[4], "-linktext")
+            self.addMatch(opener.startpos, opener.endpos, "+linktext");
+            self.addMatch(opener.substartpos || opener.startpos,
+                          opener.substartpos || opener.startpos, "-linktext");
           }
-          self.addMatch(opener[5], opener[5], "+destination")
-          self.addMatch(pos, pos, "-destination")
-          self.destination = false
-          -- convert all matches to str
-          self:str_matches(opener[5] + 1, pos - 1)
-          -- remove from openers
-          self:clear_openers(opener[1], pos)
-          return pos + 1
+          self.addMatch(opener.subendpos || opener.endpos,
+                        opener.subendpos || opener.endpos, "+destination");
+          self.addMatch(pos, pos, "-destination");
+          self.destination = false;
+          // convert all matches to str
+          self.strMatches((opener.subendpos || opener.endpos) + 1, pos - 1);
+          // remove from openers
+          self.clearOpeners(opener.startpos, pos);
+          return pos + 1;
         }
       }
-    end,
+      return null;
+    },
 
+    /*
     -- 45 = -
     [45]: function(self, pos, endpos)
       let subject = self.subject
@@ -692,7 +697,7 @@ class InlineParser {
     // convert matches between startpos and endpos to str
     for (let i = startpos; i <= endpos; i++) {
       let m = this.matches[i];
-      if (m !== null) {
+      if (m) {
         if (m.annot !== "str" && m.annot !== "escape") {
           m.annot = "str";
         }
@@ -832,9 +837,7 @@ class InlineParser {
         }
       }
     }
-
-
-    return; // TODO
+    return;
   }
 
 

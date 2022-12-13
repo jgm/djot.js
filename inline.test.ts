@@ -146,6 +146,49 @@ describe("InlineParser", () => {
     ]);
   });
 
+  it("parses inline links", () => {
+    let parser = new InlineParser('[foobar](url)', () => {});
+    //                             0123456789012
+    parser.feed(0,12);
+    expect(parser.getMatches()).toStrictEqual([
+      { annot: "+linktext", startpos: 0, endpos: 0 },
+      { annot: "str", startpos: 1, endpos: 6 },
+      { annot: "-linktext", startpos: 7, endpos: 7 },
+      { annot: "+destination", startpos: 8, endpos: 8 },
+      { annot: "str", startpos: 9, endpos: 11 },
+      { annot: "-destination", startpos: 12, endpos: 12 }
+    ]);
+  });
+
+  it("parses reference links", () => {
+    let parser = new InlineParser('[foobar][1]', () => {});
+    //                             01234567890
+    parser.feed(0,10);
+    expect(parser.getMatches()).toStrictEqual([
+      { annot: "+linktext", startpos: 0, endpos: 0 },
+      { annot: "str", startpos: 1, endpos: 6 },
+      { annot: "-linktext", startpos: 7, endpos: 7 },
+      { annot: "+reference", startpos: 8, endpos: 8 },
+      { annot: "str", startpos: 9, endpos: 9 },
+      { annot: "-reference", startpos: 10, endpos: 10 }
+    ]);
+  });
+
+  it("parses inline images", () => {
+    let parser = new InlineParser('![foobar](url)', () => {});
+    //                             01234567890123
+    parser.feed(0,13);
+    expect(parser.getMatches()).toStrictEqual([
+      { annot: "image_marker", startpos: 0, endpos: 0 },
+      { annot: "+imagetext", startpos: 1, endpos: 1 },
+      { annot: "str", startpos: 2, endpos: 7 },
+      { annot: "-imagetext", startpos: 8, endpos: 8 },
+      { annot: "+destination", startpos: 9, endpos: 9 },
+      { annot: "str", startpos: 10, endpos: 12 },
+      { annot: "-destination", startpos: 13, endpos: 13 }
+    ]);
+  });
+
   it("parses emojis", () => {
     let parser = new InlineParser(':+1:', () => {});
     //                             0123
