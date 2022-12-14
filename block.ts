@@ -36,8 +36,8 @@ const isSpaceOrTab = function(cp : number) {
 }
 
 const pattNonNewlines = pattern("[^\\n\\r]*");
-const pattWord = pattern("^\w+\s");
-const pattNonWhitespace = pattern("[^ \t\r\n]");
+const pattWord = pattern("^\\w+\\s");
+const pattWhitespace = pattern("[ \\t\\r\\n]");
 
 type EventIterator = {
   next : () => { value: Event, done: boolean };
@@ -116,7 +116,7 @@ class Parser {
        isPara: true,
        content: ContentType.Inline,
        continue: () => {
-         if (this.find(pattNonWhitespace)) {
+         if (this.find(pattWhitespace) === null) {
            return true;
          } else {
            return false;
@@ -190,10 +190,10 @@ class Parser {
     let newpos = this.pos;
     while (newpos) {
       let cp = subject.codePointAt(newpos);
-      if (cp && !isSpaceOrTab(cp)) {
+      if (cp && isSpaceOrTab(cp)) {
         newpos++;
       } else {
-        return;
+        break;
       }
     }
     this.indent = newpos - this.startline;
@@ -229,7 +229,6 @@ class Parser {
 
       while (self.pos < subjectlen) {
 
-        console.log("pos", self.pos);
         // return any accumulated matches
         if (self.matches.length > 0 && self.returned < self.matches.length) {
           self.returned = self.returned + 1;
@@ -243,8 +242,8 @@ class Parser {
         self.getEol();
 
         // check open containers for continuation
-        self.lastMatchedContainer = 0
-        let idx = 0
+        self.lastMatchedContainer = -1;
+        let idx = 0;
         while (idx < self.containers.length) {
           let container = self.containers[idx];
           // skip any indentation
@@ -321,6 +320,7 @@ class Parser {
             if (!isLazy) {
               self.closeUnmatchedContainers();
             }
+            tip = self.tip();
 
             // add para by default if there's text
             if (!tip || tip.content === ContentType.Block) {
