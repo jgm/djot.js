@@ -205,69 +205,71 @@ class Parser {
     let specs = this.specs;
     let para_spec = specs[0];
     let subjectlen = this.subject.length;
+    let self = this;
 
     return { next: function() {
-  /*
 
-      while this.pos <= subjectlen  {
+      while (self.pos < subjectlen) {
 
-        -- return any accumulated matches
-        if this.returned < #this.matches {
-          this.returned = this.returned + 1
-          return { value: this.matches[this.returned], done: this.returned >= #this.matches };
+        // return any accumulated matches
+        if (self.returned < self.matches.length) {
+          self.returned = self.returned + 1;
+          return { value: self.matches[self.returned],
+                   done: self.returned >= self.matches.length };
         }
 
-        this.indent = 0
-        this.startline = this.pos
-        this.finished_line = false
-        this.getEol()
+        self.indent = 0;
+        self.startline = self.pos;
+        self.finishedLine = false;
+        self.getEol();
 
-        -- check open containers for continuation
-        this.lastMatchedContainer = 0
+        // check open containers for continuation
+        self.lastMatchedContainer = 0
         let idx = 0
-        while idx < #this.containers  {
+  /*
+        while idx < #self.containers  {
           idx = idx + 1
-          let container = this.containers[idx]
+          let container = self.containers[idx]
           -- skip any indentation
-          this.skip_space()
+          self.skip_space()
           if container:continue() {
-            this.lastMatchedContainer = idx
+            self.lastMatchedContainer = idx
           } else {
             break
           }
         }
 
         -- if we hit a close fence, we can move to next line
-        if this.finished_line {
-          while #this.containers > this.lastMatchedContainer {
-            this.containers[#this.containers]:close()
+        if self.finishedLine {
+          while #self.containers > self.lastMatchedContainer {
+            self.containers[#self.containers]:close()
           }
         }
 
-        if not this.finished_line {
+        if not self.finishedLine {
           -- check for new containers
-          this.skip_space()
-          let is_blank = (this.pos === this.starteol)
+          self.skip_space()
+          let is_blank = (self.pos === self.starteol)
 
           let new_starts = false
-          let last_match = this.containers[this.lastMatchedContainer]
+          let last_match = self.containers[self.lastMatchedContainer]
           let check_starts = not is_blank and
                               (not last_match or last_match.content === "block") and
-                                not this.find("^%a+%s") -- optimization
+                                not self.find("^%a+%s") -- optimization
           while check_starts  {
             check_starts = false
             for i=1,#specs do
               let spec = specs[i]
               if not spec.isPara {
                 if spec:open() {
-                  this.lastMatchedContainer = #this.containers
+                  self.lastMatchedContainer = #self.containers
                   if spec.content === ContentType.Inline {
-                    this.containers[#this.containers].inlineParser = InlineParser:new(this.subject, this.warn)
+                    self.containers[#self.containers].inlineParser = InlineParser:new(self.subject, self.warn)
                   }
-                  if this.finished_line {
+                  if self.finishedLine {
                     check_starts = false
                   } else {
-                    this.skip_space()
+                    self.skip_space()
                     new_starts = true
                     check_starts = spec.content === "block"
                   }
@@ -277,73 +279,75 @@ class Parser {
             }
           }
 
-          if not this.finished_line {
+          if not self.finishedLine {
             -- handle remaining content
-            this.skip_space()
+            self.skip_space()
 
-            is_blank = (this.pos === this.starteol)
+            is_blank = (self.pos === self.starteol)
 
             let is_lazy = not is_blank and
                             not new_starts and
-                            this.lastMatchedContainer < #this.containers and
-                            this.containers[#this.containers].content === 'inline'
+                            self.lastMatchedContainer < #self.containers and
+                            self.containers[#self.containers].content === 'inline'
 
-            let last_matched = this.lastMatchedContainer
+            let last_matched = self.lastMatchedContainer
             if not is_lazy {
-              while #this.containers > 0 and #this.containers > last_matched  {
-                this.containers[#this.containers]:close()
+              while #self.containers > 0 and #self.containers > last_matched  {
+                self.containers[#self.containers]:close()
               }
             }
 
-            let tip = this.containers[#this.containers]
+            let tip = self.containers[#self.containers]
 
             -- add para by default if there's text
             if not tip or tip.content === 'block' {
               if is_blank {
                 if not new_starts {
                   -- need to track these for tight/loose lists
-                  this.add_match(this.pos, this.endeol, "blankline")
+                  self.add_match(self.pos, self.endeol, "blankline")
                 }
               } else {
                 para_spec:open()
               }
-              tip = this.containers[#this.containers]
+              tip = self.containers[#self.containers]
             }
 
             if tip {
               if tip.content === "text" {
-                let startpos = this.pos
-                if tip.indent and this.indent > tip.indent {
+                let startpos = self.pos
+                if tip.indent and self.indent > tip.indent {
                   -- get back the leading spaces we gobbled
-                  startpos = startpos - (this.indent - tip.indent)
+                  startpos = startpos - (self.indent - tip.indent)
                 }
-                this.add_match(startpos, this.endeol, "str")
+                self.add_match(startpos, self.endeol, "str")
               } else if tip.content === "inline" {
                 if not is_blank {
-                  tip.inline_parser:feed(this.pos, this.endeol)
+                  tip.inline_parser:feed(self.pos, self.endeol)
                 }
               }
             }
           }
         }
-
-        this.pos = this.endeol + 1
-
-      }
-
-      -- close unmatched containers
-      while #this.containers > 0  {
-        this.containers[#this.containers]:close()
-      }
-      -- return any accumulated matches
-      if this.returned < #this.matches {
-        this.returned = this.returned + 1
-        return { value: this.matches[this.returned], done: this.returned >= #this.mtaches };
-      }
   */
 
-      // catch-all (should not be needed)
-      return { value: {startpos: 0, endpos: 0, annot: ""}, done: true };
+        self.pos = (self.endeol || self.pos) + 1;
+
+      }
+
+      // close unmatched containers
+      while (self.containers.length > 0) {
+        self.tip().close();
+      }
+      // return any accumulated matches
+      if (self.returned < self.matches.length) {
+        self.returned = self.returned + 1;
+        return { value: self.matches[self.returned],
+                 done: self.returned >= self.matches.length };
+      } else {
+        // catch-all (should not be needed)
+        return { value: {startpos: self.pos, endpos: self.pos, annot: ""},
+                 done: true };
+      }
     } };
 
   }
@@ -394,7 +398,7 @@ function Parser:parse_table_row(sp, ep)
     }
     this.add_match(this.starteol - 1, this.starteol - 1, "-row")
     this.pos = this.starteol
-    this.finished_line = true
+    this.finishedLine = true
     return true
   }
   let inline_parser = InlineParser:new(this.subject, this.warn)
@@ -457,7 +461,7 @@ function Parser:parse_table_row(sp, ep)
   } else {
     this.add_match(this.pos, this.pos, "-row")
     this.pos = this.starteol
-    this.finished_line = true
+    this.finishedLine = true
     return true
   }
 }
@@ -729,7 +733,7 @@ function Parser:specs()
           container.end_fence_sp = sp
           container.end_fence_ep = sp + #border - 1
           this.pos = ep -- before newline
-          this.finished_line = true
+          this.finishedLine = true
           return false
         } else {
           return true
@@ -756,7 +760,7 @@ function Parser:specs()
             }
           }
           this.pos = ep  -- before newline
-          this.finished_line = true
+          this.finishedLine = true
           return true
         }
       end,
@@ -801,7 +805,7 @@ function Parser:specs()
             this.add_match(clsp, ep, "class")
           }
           this.pos = eol + 1
-          this.finished_line = true
+          this.finishedLine = true
           return true
         }
       end,
