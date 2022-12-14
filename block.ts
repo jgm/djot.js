@@ -3,6 +3,34 @@ import { AttributeParser } from "./attributes.js";
 import { pattern, find, boundedFind } from "./find.js";
 import { InlineParser } from "./inline.js";
 
+// Return array of list styles that match a marker.
+// In ambiguous cases we return multiple values.
+const getListStyles = function(marker : string) : string[] {
+  if (marker === "+" || marker === "-" || marker === "*" || marker === ":") {
+    return [marker];
+  } else if (/^[+*-] \[[Xx ]\]/.exec(marker)) {
+    return ["X"]; // task list
+  } else if (/^\[[Xx ]\]/.exec(marker)) {
+    return ["X"];
+  } else if (/^[(]?\d+[).]/.exec(marker)) {
+    return [marker.replace(/\d+/,"1")];
+  } else if (/^[(]?[ivxlcdm][).]/.exec(marker)) {
+    return [marker.replace(/[a-z]+/, "a"), marker.replace(/[a-z]+/, "i")];
+  } else if (/^[(]?[IVXLCDM][).]/.exec(marker)) {
+    return [marker.replace(/[A-Z]+/, "A"), marker.replace(/[A-Z]+/, "I")];
+  } else if (/^[(]?[a-z][).]/.exec(marker)) {
+    return [marker.replace(/[a-z]/, "a")];
+  } else if (/^[(]?[A-Z][).]/.exec(marker)) {
+    return [marker.replace(/[A-Z]/, "A")];
+  } else if (/^[(]?[ivxlcdm]+[).]/.exec(marker)) {
+    return [marker.replace("[a-z]+", "i")];
+  } else if (/^[(]?[IVXLCDM]+[).]/.exec(marker)) {
+    return [marker.replace("[A-Z]+", "I")];
+  } else { // doesn't match any list style
+    return []
+  }
+}
+
 enum ContentType {
   InlineContent = 0,
   BlockContent,
@@ -34,63 +62,41 @@ class Container {
 }
 
 class Parser {
+  warn : (message : string, pos : number) => void;
+  subject : string;
+  indent : number;
+  startline : number | null;
+  starteol : number | null;
+  endeol : number | null;
+  matches : Event[];
+  containers : Container[];
+  pos : number;
+  lastMatchedContainer : number;
+  finishedLine : boolean;
+  returned : number
 
-}
-
-// Return array of list styles that match a marker.
-// In ambiguous cases we return multiple values.
-const getListStyles = function(marker : string) : string[] {
-  if (marker === "+" || marker === "-" || marker === "*" || marker === ":") {
-    return [marker];
-  } else if (/^[+*-] \[[Xx ]\]/.exec(marker)) {
-    return ["X"]; // task list
-  } else if (/^\[[Xx ]\]/.exec(marker)) {
-    return ["X"];
-  } else if (/^[(]?\d+[).]/.exec(marker)) {
-    return [marker.replace(/\d+/,"1")];
-  } else if (/^[(]?[ivxlcdm][).]/.exec(marker)) {
-    return [marker.replace(/[a-z]+/, "a"), marker.replace(/[a-z]+/, "i")];
-  } else if (/^[(]?[IVXLCDM][).]/.exec(marker)) {
-    return [marker.replace(/[A-Z]+/, "A"), marker.replace(/[A-Z]+/, "I")];
-  } else if (/^[(]?[a-z][).]/.exec(marker)) {
-    return [marker.replace(/[a-z]/, "a")];
-  } else if (/^[(]?[A-Z][).]/.exec(marker)) {
-    return [marker.replace(/[A-Z]/, "A")];
-  } else if (/^[(]?[ivxlcdm]+[).]/.exec(marker)) {
-    return [marker.replace("[a-z]+", "i")];
-  } else if (/^[(]?[IVXLCDM]+[).]/.exec(marker)) {
-    return [marker.replace("[A-Z]+", "I")];
-  } else { // doesn't match any list style
-    return []
+  constructor(subject : string, warn : (message : string, pos : number) => void) {
+   // Ensure the subject ends with a newline character
+   if (subject.charAt(subject.length - 1) !== '\n') {
+     subject = subject + "\n";
+   }
+   this.subject = subject;
+   this.warn = warn;
+   this.indent = 0;
+   this.startline = null;
+   this.starteol = null;
+   this.endeol = null;
+   this.matches = [];
+   this.containers = [];
+   this.pos = 1;
+   this.lastMatchedContainer = 0;
+   this.finishedLine = false;
+   this.returned = 0;
   }
 }
 
 
 /*
-
-function Parser:new(subject, warn)
-  -- ensure the subject ends with a newline character
-  if not subject:find("[\r\n]$") {
-    subject = subject .. "\n"
-  }
-  local state = {
-    warn = warn or function() end,
-    subject = subject,
-    indent = 0,
-    startline = nil,
-    starteol = nil,
-    endeol = nil,
-    matches = {},
-    containers = {},
-    pos = 1,
-    last_matched_container = 0,
-    timer = {},
-    finished_line = false,
-    returned = 0 }
-  setmetatable(state, self)
-  self.__index = self
-  return state
-}
 
 -- parameters are start and end position
 function Parser:parse_table_row(sp, ep)
