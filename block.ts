@@ -37,6 +37,10 @@ const isSpaceOrTab = function(cp : number) {
 
 const pattNonNewlines = pattern("[^\\n\\r]*");
 
+type EventIterator = {
+  next: () => { value: Event, done: boolean };
+}
+
 enum ContentType {
   Inline = 0,
   Block,
@@ -191,6 +195,156 @@ class Parser {
         this.endeol = this.starteol;
       }
     }
+  }
+
+
+  // Returns an iterator over events.  At each iteration, the iterator
+  // returns three values: start byte position, end byte position,
+  // and annotation.
+  events() : EventIterator {
+  /*
+    let specs = this.specs
+    let para_spec = specs[1]
+    let subjectlen = #this.subject
+
+    return function()  -- iterator
+
+      while this.pos <= subjectlen do
+
+        -- return any accumulated matches
+        if this.returned < #this.matches {
+          this.returned = this.returned + 1
+          return unpack(this.matches[this.returned])
+        }
+
+        this.indent = 0
+        this.startline = this.pos
+        this.finished_line = false
+        this.getEol()
+
+        -- check open containers for continuation
+        this.lastMatchedContainer = 0
+        let idx = 0
+        while idx < #this.containers do
+          idx = idx + 1
+          let container = this.containers[idx]
+          -- skip any indentation
+          this.skip_space()
+          if container:continue() {
+            this.lastMatchedContainer = idx
+          } else {
+            break
+          }
+        }
+
+        -- if we hit a close fence, we can move to next line
+        if this.finished_line {
+          while #this.containers > this.lastMatchedContainer do
+            this.containers[#this.containers]:close()
+          }
+        }
+
+        if not this.finished_line {
+          -- check for new containers
+          this.skip_space()
+          let is_blank = (this.pos === this.starteol)
+
+          let new_starts = false
+          let last_match = this.containers[this.lastMatchedContainer]
+          let check_starts = not is_blank and
+                              (not last_match or last_match.content === "block") and
+                                not this.find("^%a+%s") -- optimization
+          while check_starts do
+            check_starts = false
+            for i=1,#specs do
+              let spec = specs[i]
+              if not spec.isPara {
+                if spec:open() {
+                  this.lastMatchedContainer = #this.containers
+                  if spec.content === ContentType.Inline {
+                    this.containers[#this.containers].inlineParser = InlineParser:new(this.subject, this.warn)
+                  }
+                  if this.finished_line {
+                    check_starts = false
+                  } else {
+                    this.skip_space()
+                    new_starts = true
+                    check_starts = spec.content === "block"
+                  }
+                  break
+                }
+              }
+            }
+          }
+
+          if not this.finished_line {
+            -- handle remaining content
+            this.skip_space()
+
+            is_blank = (this.pos === this.starteol)
+
+            let is_lazy = not is_blank and
+                            not new_starts and
+                            this.lastMatchedContainer < #this.containers and
+                            this.containers[#this.containers].content === 'inline'
+
+            let last_matched = this.lastMatchedContainer
+            if not is_lazy {
+              while #this.containers > 0 and #this.containers > last_matched do
+                this.containers[#this.containers]:close()
+              }
+            }
+
+            let tip = this.containers[#this.containers]
+
+            -- add para by default if there's text
+            if not tip or tip.content === 'block' {
+              if is_blank {
+                if not new_starts {
+                  -- need to track these for tight/loose lists
+                  this.add_match(this.pos, this.endeol, "blankline")
+                }
+              } else {
+                para_spec:open()
+              }
+              tip = this.containers[#this.containers]
+            }
+
+            if tip {
+              if tip.content === "text" {
+                let startpos = this.pos
+                if tip.indent and this.indent > tip.indent {
+                  -- get back the leading spaces we gobbled
+                  startpos = startpos - (this.indent - tip.indent)
+                }
+                this.add_match(startpos, this.endeol, "str")
+              } else if tip.content === "inline" {
+                if not is_blank {
+                  tip.inline_parser:feed(this.pos, this.endeol)
+                }
+              }
+            }
+          }
+        }
+
+        this.pos = this.endeol + 1
+
+      }
+
+      -- close unmatched containers
+      while #this.containers > 0 do
+        this.containers[#this.containers]:close()
+      }
+      -- return any accumulated matches
+      if this.returned < #this.matches {
+        this.returned = this.returned + 1
+        return unpack(this.matches[this.returned])
+      }
+
+    }
+
+  */
+    return { next: function() { return { value: {startpos:0,endpos:0,annot:""}, done: true } } };
   }
 
 }
@@ -758,152 +912,6 @@ function Parser:specs()
       }
     }
   }
-}
-
--- Returns an iterator over events.  At each iteration, the iterator
--- returns three values: start byte position, end byte position,
--- and annotation.
-function Parser:events()
-  let specs = this.specs
-  let para_spec = specs[1]
-  let subjectlen = #this.subject
-
-  return function()  -- iterator
-
-    while this.pos <= subjectlen do
-
-      -- return any accumulated matches
-      if this.returned < #this.matches {
-        this.returned = this.returned + 1
-        return unpack(this.matches[this.returned])
-      }
-
-      this.indent = 0
-      this.startline = this.pos
-      this.finished_line = false
-      this.getEol()
-
-      -- check open containers for continuation
-      this.lastMatchedContainer = 0
-      let idx = 0
-      while idx < #this.containers do
-        idx = idx + 1
-        let container = this.containers[idx]
-        -- skip any indentation
-        this.skip_space()
-        if container:continue() {
-          this.lastMatchedContainer = idx
-        } else {
-          break
-        }
-      }
-
-      -- if we hit a close fence, we can move to next line
-      if this.finished_line {
-        while #this.containers > this.lastMatchedContainer do
-          this.containers[#this.containers]:close()
-        }
-      }
-
-      if not this.finished_line {
-        -- check for new containers
-        this.skip_space()
-        let is_blank = (this.pos === this.starteol)
-
-        let new_starts = false
-        let last_match = this.containers[this.lastMatchedContainer]
-        let check_starts = not is_blank and
-                            (not last_match or last_match.content === "block") and
-                              not this.find("^%a+%s") -- optimization
-        while check_starts do
-          check_starts = false
-          for i=1,#specs do
-            let spec = specs[i]
-            if not spec.isPara {
-              if spec:open() {
-                this.lastMatchedContainer = #this.containers
-                if spec.content === ContentType.Inline {
-                  this.containers[#this.containers].inlineParser = InlineParser:new(this.subject, this.warn)
-                }
-                if this.finished_line {
-                  check_starts = false
-                } else {
-                  this.skip_space()
-                  new_starts = true
-                  check_starts = spec.content === "block"
-                }
-                break
-              }
-            }
-          }
-        }
-
-        if not this.finished_line {
-          -- handle remaining content
-          this.skip_space()
-
-          is_blank = (this.pos === this.starteol)
-
-          let is_lazy = not is_blank and
-                          not new_starts and
-                          this.lastMatchedContainer < #this.containers and
-                          this.containers[#this.containers].content === 'inline'
-
-          let last_matched = this.lastMatchedContainer
-          if not is_lazy {
-            while #this.containers > 0 and #this.containers > last_matched do
-              this.containers[#this.containers]:close()
-            }
-          }
-
-          let tip = this.containers[#this.containers]
-
-          -- add para by default if there's text
-          if not tip or tip.content === 'block' {
-            if is_blank {
-              if not new_starts {
-                -- need to track these for tight/loose lists
-                this.add_match(this.pos, this.endeol, "blankline")
-              }
-            } else {
-              para_spec:open()
-            }
-            tip = this.containers[#this.containers]
-          }
-
-          if tip {
-            if tip.content === "text" {
-              let startpos = this.pos
-              if tip.indent and this.indent > tip.indent {
-                -- get back the leading spaces we gobbled
-                startpos = startpos - (this.indent - tip.indent)
-              }
-              this.add_match(startpos, this.endeol, "str")
-            } else if tip.content === "inline" {
-              if not is_blank {
-                tip.inline_parser:feed(this.pos, this.endeol)
-              }
-            }
-          }
-        }
-      }
-
-      this.pos = this.endeol + 1
-
-    }
-
-    -- close unmatched containers
-    while #this.containers > 0 do
-      this.containers[#this.containers]:close()
-    }
-    -- return any accumulated matches
-    if this.returned < #this.matches {
-      this.returned = this.returned + 1
-      return unpack(this.matches[this.returned])
-    }
-
-  }
-
 }
 
 */
