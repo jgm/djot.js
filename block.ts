@@ -39,6 +39,7 @@ const pattNonNewlines = pattern("[^\\n\\r]*");
 const pattWord = pattern("^\\w+\\s");
 const pattWhitespace = pattern("[ \\t\\r\\n]");
 const pattBlockquotePrefix = pattern("[>]\\s");
+const pattBangs = pattern("#+");
 
 type EventIterator = {
   next : () => { value: Event, done: boolean };
@@ -56,14 +57,14 @@ type BlockSpec =
   { name : string,
     isPara : boolean,
     content : ContentType,
-    continue : () => boolean,
+    continue : (container : Container) => boolean,
     open : (spec : BlockSpec) => boolean,
     close: () => void }
 
 class Container {
   name : string;
   content : ContentType;
-  continue : () => boolean;
+  continue : (container : Container) => boolean;
   close: () => void;
   indent : number;
   inlineParser: InlineParser | null;
@@ -116,7 +117,7 @@ class Parser {
      { name: "para",
        isPara: true,
        content: ContentType.Inline,
-       continue: () => {
+       continue: (container) => {
          if (this.find(pattWhitespace) === null) {
            return true;
          } else {
@@ -138,7 +139,7 @@ class Parser {
     { name: "blockquote",
       isPara: false,
       content: ContentType.Block,
-      continue: () => {
+      continue: (container) => {
         if (this.find(pattBlockquotePrefix) !== null) {
           this.pos = this.pos + 1;
           return true;
@@ -161,6 +162,41 @@ class Parser {
         this.containers.pop();
       }
     },
+
+    { name: "heading",
+      isPara: false,
+      content: ContentType.Inline,
+      continue: (container) => {
+        let m = this.find(pattBangs);
+        if (m && container.extra.level == (m.endpos - m.startpos + 1) &&
+              find(this.subject, pattWhitespace, m.endpos + 1)) {
+          this.pos = m.endpos + 1;
+          return true;
+        } else {
+          return false;
+        }
+      },
+      open: (spec) => {
+        let m = this.find(pattBangs);
+        if (m && find(this.subject, pattWhitespace, m.endpos + 1)) {
+          let level = m.endpos - m.startpos + 1;
+          this.addContainer(new Container(spec, {level: level}));
+          this.addMatch(m.startpos, m.endpos, "+heading");
+          this.pos = m.endpos + 1;
+          return true;
+        } else {
+          return false;
+        }
+      },
+      close: () => {
+        this.getInlineMatches()
+        let last = this.matches[this.matches.length - 1]
+        let ep = (last && last.endpos + 1) || this.pos - 1;
+        this.addMatch(ep, ep, "-heading")
+        this.containers.pop();
+      }
+    },
+
 
    ];
 
@@ -277,7 +313,7 @@ class Parser {
           let container = self.containers[idx];
           // skip any indentation
           self.skipSpace()
-          if (container.continue()) {
+          if (container.continue(container)) {
             self.lastMatchedContainer = idx;
           } else {
             break;
@@ -519,7 +555,7 @@ function Parser:specs()
     { name = "caption",
       isPara = false,
       content = "inline",
-      continue = function()
+      continue = function(container)
         return this.find("^%S")
       end,
       open = function(spec)
@@ -534,7 +570,7 @@ function Parser:specs()
         }
       end,
       close = function()
-        this.get_inline_matches()
+        this.getInlineMatches()
         this.addMatch(this.pos - 1, this.pos - 1, "-caption")
         this.containers.pop();
       }
@@ -688,37 +724,6 @@ function Parser:specs()
       end,
       close = function(_container)
         this.addMatch(this.pos, this.pos, "-reference_definition")
-        this.containers.pop();
-      }
-    },
-
-    { name = "heading",
-      content = "inline",
-      continue = function(container)
-        let sp, ep = this.find("^%#+%s")
-        if sp and ep and container.level === ep - sp {
-          this.pos = ep
-          return true
-        } else {
-          return false
-        }
-      end,
-      open = function(spec)
-        let sp, ep = this.find("^#+")
-        if ep and find(this.subject, "^%s", ep + 1) {
-          let level = ep - sp + 1
-          this.addContainer(Container:new(spec, {level = level,
-               inline_parser = InlineParser:new(this.subject, this.warn) }))
-          this.addMatch(sp, ep, "+heading")
-          this.pos = ep + 1
-          return true
-        }
-      end,
-      close = function(_container)
-        this.get_inline_matches()
-        let last = this.matches[#this.matches] or this.pos - 1
-        let sp, ep, annot = unpack(last)
-        this.addMatch(ep, ep, "-heading")
         this.containers.pop();
       }
     },

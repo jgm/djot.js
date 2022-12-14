@@ -43,6 +43,23 @@ describe("Parser", () => {
     ]);
   });
 
+  it("parses headings", () => {
+    let events = [];
+    for (const event of new Parser("## hello\n## there\nlazy\n", () => {})) {
+      //                            012345678 901234567 89012
+      events.push(event);
+    }
+    expect(events).toStrictEqual([
+      { startpos: 0, endpos: 1, annot: "+heading" },
+      { startpos: 3, endpos: 7, annot: "str" },
+      { startpos: 8, endpos: 8, annot: "softbreak" },
+      { startpos: 12, endpos: 16, annot: "str" },
+      { startpos: 17, endpos: 17, annot: "softbreak" },
+      { startpos: 18, endpos: 21, annot: "str" },
+      { startpos: 22, endpos: 22, annot: "-heading" }
+    ]);
+  });
+
 
 });
 
