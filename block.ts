@@ -38,6 +38,7 @@ const isSpaceOrTab = function(cp : number) {
 const pattNonNewlines = pattern("[^\\n\\r]*");
 const pattWord = pattern("^\\w+\\s");
 const pattWhitespace = pattern("[ \\t\\r\\n]");
+const pattBlockquotePrefix = pattern("[>]\\s");
 
 type EventIterator = {
   next : () => { value: Event, done: boolean };
@@ -133,6 +134,34 @@ class Parser {
          this.containers.pop();
        }
      },
+
+    { name: "blockquote",
+      isPara: false,
+      content: ContentType.Block,
+      continue: () => {
+        if (this.find(pattBlockquotePrefix) !== null) {
+          this.pos = this.pos + 1;
+          return true;
+        } else {
+          return false;
+        }
+      },
+      open: (spec) => {
+        if (this.find(pattBlockquotePrefix) !== null) {
+          this.addContainer(new Container(spec, {}));
+          this.addMatch(this.pos, this.pos, "+blockquote");
+          this.pos = this.pos + 1;
+          return true;
+        } else {
+          return false;
+        }
+      },
+      close: () => {
+        this.addMatch(this.pos, this.pos, "-blockquote");
+        this.containers.pop();
+      }
+    },
+
    ];
 
 
@@ -487,30 +516,6 @@ function Parser:parse_table_row(sp, ep)
 
 function Parser:specs()
   return {
-    { name = "para",
-      isPara = true,
-      content = "inline",
-      continue = function()
-        if this.find("^%S") {
-          return true
-        } else {
-          return false
-        }
-      end,
-      open = function(spec)
-        this.addContainer(Container:new(spec,
-            { inline_parser =
-                InlineParser:new(this.subject, this.warn) }))
-        this.addMatch(this.pos, this.pos, "+para")
-        return true
-      end,
-      close = function()
-        this.get_inline_matches()
-        this.addMatch(this.pos - 1, this.pos - 1, "-para")
-        this.containers.pop();
-      }
-    },
-
     { name = "caption",
       isPara = false,
       content = "inline",
@@ -531,30 +536,6 @@ function Parser:specs()
       close = function()
         this.get_inline_matches()
         this.addMatch(this.pos - 1, this.pos - 1, "-caption")
-        this.containers.pop();
-      }
-    },
-
-    { name = "blockquote",
-      content = "block",
-      continue = function()
-        if this.find("^%>%s") {
-          this.pos = this.pos + 1
-          return true
-        } else {
-          return false
-        }
-      end,
-      open = function(spec)
-        if this.find("^%>%s") {
-          this.addContainer(Container:new(spec))
-          this.addMatch(this.pos, this.pos, "+blockquote")
-          this.pos = this.pos + 1
-          return true
-        }
-      end,
-      close = function()
-        this.addMatch(this.pos, this.pos, "-blockquote")
         this.containers.pop();
       }
     },
