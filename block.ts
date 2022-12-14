@@ -32,16 +32,16 @@ const getListStyles = function(marker : string) : string[] {
 }
 
 enum ContentType {
-  InlineContent = 0,
-  BlockContent,
-  TextContent,
-  CellsContent,
-  AttributesContent,
+  Inline = 0,
+  Block,
+  Text,
+  Cells,
+  Attributes
 }
 
 type BlockSpec =
   { name : string,
-    is_para : boolean,
+    isPara : boolean,
     content : ContentType,
     continue : () => boolean,
     open : (spec : BlockSpec) => boolean,
@@ -52,12 +52,16 @@ class Container {
   content : ContentType;
   continue : () => boolean;
   close: () => void;
+  inlineParser: InlineParser | null;
+  extra: undefined | object;
 
-  constructor(spec : BlockSpec) {
+  constructor(spec : BlockSpec, extra : undefined | object) {
     this.name = spec.name;
     this.content = spec.content;
     this.continue = spec.continue;
     this.close = spec.close;
+    this.inlineParser = null;
+    this.extra = extra;
  }
 }
 
@@ -73,7 +77,8 @@ class Parser {
   pos : number;
   lastMatchedContainer : number;
   finishedLine : boolean;
-  returned : number
+  returned : number;
+  specs : BlockSpec[];
 
   constructor(subject : string, warn : (message : string, pos : number) => void) {
    // Ensure the subject ends with a newline character
@@ -88,12 +93,56 @@ class Parser {
    this.endeol = null;
    this.matches = [];
    this.containers = [];
-   this.pos = 1;
+   this.pos = 0;
    this.lastMatchedContainer = 0;
    this.finishedLine = false;
    this.returned = 0;
+   this.specs = [
+     { name: "para",
+       isPara: true,
+       content: ContentType.Inline,
+       continue: () => {
+         if (this.find(pattern("[^ \t\r\n]"))) {
+           return true;
+         } else {
+           return false;
+         }
+       },
+       open: (spec) => {
+         // this.addContainer(new Container(spec));
+         this.addMatch(this.pos, this.pos, "+para");
+         return true;
+       },
+       close: () => {
+         this.getInlineMatches();
+         this.addMatch(this.pos - 1, this.pos - 1, "-para");
+         this.containers.pop();
+       }
+     },
+   ];
+
+
   }
+
+  find(patt : RegExp) : null | { startpos : number, endpos : number, captures : string[] } {
+    return find(this.subject, patt, this.pos);
+  }
+
+  addMatch(startpos : number, endpos : number, annot : string) : void {
+    this.matches.push({startpos, endpos, annot});
+  }
+
+  getInlineMatches() : void {
+    let ilparser = this.containers[this.containers.length - 1].inlineParser;
+    let matches = this.matches;
+    if (ilparser) {
+      ilparser.getMatches().forEach(match => matches.push(match));
+    }
+  }
+
 }
+
+
 
 
 /*
@@ -127,7 +176,7 @@ function Parser:parse_table_row(sp, ep)
         sepfound = true
         break
       }
-    } else
+    } else {
       break
     }
   }
@@ -155,13 +204,13 @@ function Parser:parse_table_row(sp, ep)
         inline_parser:feed(self.pos, nextbar)
         self.pos = nextbar + 1
         nextbar = nil
-      } else
+      } else {
         inline_parser:feed(self.pos, nextbar - 1)
         if inline_parser:in_verbatim() {
           inline_parser:feed(nextbar, nextbar)
           self.pos = nextbar + 1
           nextbar = nil
-        } else
+        } else {
           self.pos = nextbar + 1
         }
       }
@@ -197,7 +246,7 @@ function Parser:parse_table_row(sp, ep)
       self.matches[i] = nil
     }
     return false
-  } else
+  } else {
     self:add_match(self.pos, self.pos, "-row")
     self.pos = self.starteol
     self.finished_line = true
@@ -208,12 +257,12 @@ function Parser:parse_table_row(sp, ep)
 function Parser:specs()
   return {
     { name = "para",
-      is_para = true,
+      isPara = true,
       content = "inline",
       continue = function()
         if self:find("^%S") {
           return true
-        } else
+        } else {
           return false
         }
       end,
@@ -232,7 +281,7 @@ function Parser:specs()
     },
 
     { name = "caption",
-      is_para = false,
+      isPara = false,
       content = "inline",
       continue = function()
         return self:find("^%S")
@@ -261,7 +310,7 @@ function Parser:specs()
         if self:find("^%>%s") {
           self.pos = self.pos + 1
           return true
-        } else
+        } else {
           return false
         }
       end,
@@ -285,7 +334,7 @@ function Parser:specs()
       continue = function(container)
         if self.indent > container.indent or self:find("^[\r\n]") {
           return true
-        } else
+        } else {
           return false
         }
       end,
@@ -333,7 +382,7 @@ function Parser:specs()
       continue = function(container)
         if self.indent > container.indent or self:find("^[\r\n]") {
           return true
-        } else
+        } else {
           return false
         }
       end,
@@ -384,7 +433,7 @@ function Parser:specs()
         if checkbox {
           if checkbox === " " {
             self:add_match(sp + 2, sp + 4, "checkbox_unchecked")
-          } else
+          } else {
             self:add_match(sp + 2, sp + 4, "checkbox_checked")
           }
           self.pos = sp + 5
@@ -438,7 +487,7 @@ function Parser:specs()
         if sp and ep and container.level === ep - sp {
           self.pos = ep
           return true
-        } else
+        } else {
           return false
         }
       end,
@@ -474,7 +523,7 @@ function Parser:specs()
           self.pos = ep -- before newline
           self.finished_line = true
           return false
-        } else
+        } else {
           return true
         }
       end,
@@ -494,7 +543,7 @@ function Parser:specs()
             local langstart = sp + #border + #ws
             if is_raw {
               self:add_match(langstart, langstart + #lang - 1, "raw_format")
-            } else
+            } else {
               self:add_match(langstart, langstart + #lang - 1, "code_language")
             }
           }
@@ -526,7 +575,7 @@ function Parser:specs()
           container.end_fence_ep = sp + #equals - 1
           self.pos = ep -- before newline
           return false
-        } else
+        } else {
           return true
         }
       end,
@@ -577,7 +626,7 @@ function Parser:specs()
           self:add_match(sp, sp, "+table")
           if self:parse_table_row(sp, ep) {
             return true
-          } else
+          } else {
             self.containers[#self.containers] = nil
             return false
           }
@@ -599,7 +648,7 @@ function Parser:specs()
                  attribute_parser:feed(self.pos, self.endeol)
           if status === 'fail' or ep + 1 < self.endeol {
             return false
-          } else
+          } else {
             self:add_container(Container:new(spec,
                                { status = status,
                                  indent = self.indent,
@@ -658,21 +707,6 @@ function Parser:specs()
   }
 }
 
-function Parser:get_inline_matches()
-  local matches =
-    self.containers[#self.containers].inline_parser:get_matches()
-  for i=1,#matches do
-    self.matches[#self.matches + 1] = matches[i]
-  }
-}
-
-function Parser:find(patt)
-  return find(self.subject, patt, self.pos)
-}
-
-function Parser:add_match(startpos, endpos, annotation)
-  self.matches[#self.matches + 1] = {startpos, endpos, annotation}
-}
 
 function Parser:add_container(container)
   local last_matched = self.last_matched_container
@@ -734,7 +768,7 @@ function Parser:events()
         self:skip_space()
         if container:continue() {
           self.last_matched_container = idx
-        } else
+        } else {
           break
         }
       }
@@ -760,12 +794,15 @@ function Parser:events()
           check_starts = false
           for i=1,#specs do
             local spec = specs[i]
-            if not spec.is_para {
+            if not spec.isPara {
               if spec:open() {
                 self.last_matched_container = #self.containers
+                if spec.content === ContentType.Inline {
+                  self.containers[#self.containers].inlineParser = InlineParser:new(self.subject, self.warn)
+                }
                 if self.finished_line {
                   check_starts = false
-                } else
+                } else {
                   self:skip_space()
                   new_starts = true
                   check_starts = spec.content === "block"
@@ -803,7 +840,7 @@ function Parser:events()
                 -- need to track these for tight/loose lists
                 self:add_match(self.pos, self.endeol, "blankline")
               }
-            } else
+            } else {
               para_spec:open()
             }
             tip = self.containers[#self.containers]
