@@ -202,19 +202,19 @@ class Parser {
   // returns three values: start byte position, end byte position,
   // and annotation.
   events() : EventIterator {
+    let specs = this.specs;
+    let para_spec = specs[0];
+    let subjectlen = this.subject.length;
+
+    return { next: function() {
   /*
-    let specs = this.specs
-    let para_spec = specs[1]
-    let subjectlen = #this.subject
 
-    return function()  -- iterator
-
-      while this.pos <= subjectlen do
+      while this.pos <= subjectlen  {
 
         -- return any accumulated matches
         if this.returned < #this.matches {
           this.returned = this.returned + 1
-          return unpack(this.matches[this.returned])
+          return { value: this.matches[this.returned], done: this.returned >= #this.matches };
         }
 
         this.indent = 0
@@ -225,7 +225,7 @@ class Parser {
         -- check open containers for continuation
         this.lastMatchedContainer = 0
         let idx = 0
-        while idx < #this.containers do
+        while idx < #this.containers  {
           idx = idx + 1
           let container = this.containers[idx]
           -- skip any indentation
@@ -239,7 +239,7 @@ class Parser {
 
         -- if we hit a close fence, we can move to next line
         if this.finished_line {
-          while #this.containers > this.lastMatchedContainer do
+          while #this.containers > this.lastMatchedContainer {
             this.containers[#this.containers]:close()
           }
         }
@@ -254,7 +254,7 @@ class Parser {
           let check_starts = not is_blank and
                               (not last_match or last_match.content === "block") and
                                 not this.find("^%a+%s") -- optimization
-          while check_starts do
+          while check_starts  {
             check_starts = false
             for i=1,#specs do
               let spec = specs[i]
@@ -290,7 +290,7 @@ class Parser {
 
             let last_matched = this.lastMatchedContainer
             if not is_lazy {
-              while #this.containers > 0 and #this.containers > last_matched do
+              while #this.containers > 0 and #this.containers > last_matched  {
                 this.containers[#this.containers]:close()
               }
             }
@@ -332,19 +332,20 @@ class Parser {
       }
 
       -- close unmatched containers
-      while #this.containers > 0 do
+      while #this.containers > 0  {
         this.containers[#this.containers]:close()
       }
       -- return any accumulated matches
       if this.returned < #this.matches {
         this.returned = this.returned + 1
-        return unpack(this.matches[this.returned])
+        return { value: this.matches[this.returned], done: this.returned >= #this.mtaches };
       }
-
-    }
-
   */
-    return { next: function() { return { value: {startpos:0,endpos:0,annot:""}, done: true } } };
+
+      // catch-all (should not be needed)
+      return { value: {startpos: 0, endpos: 0, annot: ""}, done: true };
+    } };
+
   }
 
 }
@@ -407,7 +408,7 @@ function Parser:parse_table_row(sp, ep)
       if not nextbar {
         break
       }
-      if string.find(this.subject, "^\\", nextbar - 1) then -- \|
+      if string.find(this.subject, "^\\", nextbar - 1) { // \|
         inline_parser:feed(this.pos, nextbar)
         this.pos = nextbar + 1
         nextbar = nil
