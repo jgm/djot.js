@@ -12,13 +12,13 @@ console.time("parse events");
 for (const event of new Parser(input, warn)) {
   let pref;
   if (start) {
-    pref = "[ ";
+    pref = "[";
     start = false;
   } else {
-    pref = ", ";
+    pref = ",";
   }
   process.stdout.write(pref);
-  process.stdout.write(`{startpos: ${event.startpos}, endpos: ${event.endpos}, annot: "${event.annot}"}\n`);
+  process.stdout.write(`["${event.annot}",${event.startpos},${event.endpos}]\n`);
 }
 console.log("]");
 console.timeEnd("parse events");
