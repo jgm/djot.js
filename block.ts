@@ -44,13 +44,15 @@ const pattCodeFence = pattern("(~~~~*|````*)([ \\t]*)(\\S*)[ \\t]*[\\r\\n]");
 const pattRowSep = pattern("(%:?)%-%-*(%:?)([ \t]*%|[ \t]*)");
 const pattNextBar = pattern("[^|\\r\\n]*|");
 const pattCaptionStart = pattern("\\^[ \\t]+");
+const pattFootnoteStart = pattern("\\[\\^([^\\]]+)\\]:\\s");
 
 type EventIterator = {
   next : () => { value: Event, done: boolean };
 }
 
 enum ContentType {
-  Inline = 0,
+  None = 0,
+  Inline,
   Block,
   Text,
   Cells,
@@ -221,6 +223,40 @@ class Parser {
       close: (container) => {
         this.getInlineMatches();
         this.addMatch(this.pos - 1, this.pos - 1, "-caption");
+        this.containers.pop();
+      }
+    },
+
+    { name: "footnote",
+      isPara: false,
+      content: ContentType.Block,
+      continue: (container) => {
+        if (this.indent > (container.extra.indent || 0) ||
+             this.pos === this.starteol) {
+          return true;
+        } else {
+          return false;
+        }
+      },
+      open: (spec) => {
+        let m = this.find(pattFootnoteStart);
+        if (m) {
+          let sp = m.startpos;
+          let ep = m.endpos;
+          let label = m.captures[0];
+          // adding container will close others
+          this.addContainer(new Container(spec, {note_label: label,
+                                                 indent: this.indent}));
+          this.addMatch(sp, sp, "+footnote");
+          this.addMatch(sp + 2, ep - 3, "note_label");
+          this.pos = ep;
+          return true;
+        } else {
+          return false;
+        }
+      },
+      close: (container) => {
+        this.addMatch(this.pos, this.pos, "-footnote");
         this.containers.pop();
       }
     },
@@ -645,41 +681,13 @@ class Parser {
 function Parser:specs()
   return {
     // should go before reference definitions
-    { name = "footnote",
-      content = "block",
-      continue = function(container)
-        if this.indent > container.indent or this.find("^[\r\n]") {
-          return true
-        } else {
-          return false
-        }
-      end,
-      open = function(spec)
-        let sp, ep, label = this.find("^%[%^([^]]+)%]:%s")
-        if not sp {
-          return nil
-        }
-        // adding container will close others
-        this.addContainer(Container:new(spec, {note_label = label,
-                                                indent = this.indent}))
-        this.addMatch(sp, sp, "+footnote")
-        this.addMatch(sp + 2, ep - 3, "note_label")
-        this.pos = ep
-        return true
-      end,
-      close = function(_container)
-        this.addMatch(this.pos, this.pos, "-footnote")
-        this.containers.pop();
-      }
-    },
-
     // should go before list_item_spec
-    { name = "thematic_break",
-      content = nil,
-      continue = function()
+    { name: "thematic_break",
+      content: ContentType.None,
+      continue: function()
         return false
-      end,
-      open = function(spec)
+      },
+      open: (spec) => {
         let sp, ep = this.find("^[-*][ \t]*[-*][ \t]*[-*][-* \t]*[\r\n]")
         if ep {
           this.addContainer(Container:new(spec))
@@ -687,22 +695,22 @@ function Parser:specs()
           this.pos = ep
           return true
         }
-      end,
-      close = function(_container)
+      },
+      close: function(_container)
         this.containers.pop();
       }
     },
 
-    { name = "list_item",
-      content = "block",
-      continue = function(container)
+    { name: "list_item",
+      content: ContentType.Block,
+      continue: (container) => {
         if this.indent > container.indent or this.find("^[\r\n]") {
           return true
         } else {
           return false
         }
-      end,
-      open = function(spec)
+      },
+      open: (spec) => {
         let sp, ep = this.find("^[-*+:]%s")
         if not sp {
           sp, ep = this.find("^%d+[.)]%s")
@@ -755,16 +763,16 @@ function Parser:specs()
           this.pos = sp + 5
         }
         return true
-      end,
-      close = function(_container)
+      },
+      close: function(_container)
         this.addMatch(this.pos, this.pos, "-list_item")
         this.containers.pop();
       }
     },
 
-    { name = "reference_definition",
-      content = nil,
-      continue = function(container)
+    { name: "reference_definition",
+      content: ContentType.None,
+      continue: (container) => {
         if container.indent >= this.indent {
           return false
         }
@@ -774,8 +782,8 @@ function Parser:specs()
           this.pos = ep + 1
         }
         return true
-      end,
-      open = function(spec)
+      },
+      open: (spec) => {
         let sp, ep, label, rest = this.find("^%[([^]\r\n]*)%]:[ \t]*(%S*)")
         if sp {
           this.addContainer(Container:new(spec,
@@ -789,16 +797,16 @@ function Parser:specs()
           this.pos = ep + 1
           return true
         }
-      end,
-      close = function(_container)
+      },
+      close: function(_container)
         this.addMatch(this.pos, this.pos, "-reference_definition")
         this.containers.pop();
       }
     },
 
-    { name = "fenced_div",
-      content = "block",
-      continue = function(container)
+    { name: "fenced_div",
+      content: ContentType.Block,
+      continue: (container) => {
         if this.containers[#this.containers].name === "code_block" {
           return true // see #109
         }
@@ -811,8 +819,8 @@ function Parser:specs()
         } else {
           return true
         }
-      end,
-      open = function(spec)
+      },
+      open: (spec) => {
         let sp, ep1, equals = this.find("^(::::*)[ \t]*")
         if not ep1 {
           return false
@@ -829,8 +837,8 @@ function Parser:specs()
           this.finishedLine = true
           return true
         }
-      end,
-      close = function(container)
+      },
+      close: (container) => {
         let sp = container.end_fence_sp or this.pos
         let ep = container.end_fence_ep or this.pos
         // check to make sure the match is in order
@@ -842,16 +850,16 @@ function Parser:specs()
       }
     },
 
-    { name = "table",
-      content = "cells",
-      continue = function(_container)
+    { name: "table",
+      content: ContentType.Cells,
+      continue: function(_container)
         let sp, ep = this.find("^|[^\r\n]*|")
         let eolsp = " *[\r\n]" // make sure at end of line
         if sp and eolsp {
           return this.parseTableRow(sp, ep)
         }
-      end,
-      open = function(spec)
+      },
+      open: (spec) => {
         let sp, ep = this.find("^|[^\r\n]*|")
         let eolsp = " *[\r\n]" // make sure at end of line
         if sp and eolsp {
@@ -864,16 +872,16 @@ function Parser:specs()
             return false
           }
         }
-     end,
-      close = function(_container)
+     },
+      close: function(_container)
         this.addMatch(this.pos, this.pos, "-table")
         this.containers.pop();
       }
     },
 
-    { name = "attributes",
-      content = "attributes",
-      open = function(spec)
+    { name: "attributes",
+      content: ContentType.Attributes,
+      open: (spec) => {
         if this.find("^%{") {
           let attribute_parser =
                   attributes.AttributeParser:new(this.subject)
@@ -895,8 +903,8 @@ function Parser:specs()
           }
 
         }
-      end,
-      continue = function(container)
+      },
+      continue: (container) => {
         if this.indent > container.indent {
           table.insert(container.slices, { this.pos, this.endeol })
           let status, ep =
@@ -926,8 +934,8 @@ function Parser:specs()
           this.pos = para.inlineParser.lastpos + 1
           return true
         }
-      end,
-      close = function(container)
+      },
+      close: (container) => {
         let attr_matches = container.attribute_parser:getMatches()
         this.addMatch(container.startpos, container.startpos, "+block_attributes")
         for i=1,#attr_matches do

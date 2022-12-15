@@ -95,6 +95,32 @@ describe("Parser", () => {
     ]);
   });
 
+  it("parses footnotes", () => {
+    const events = [];
+    for (const event of new Parser(
+          "[^note]: This is a\nnote\n\n  second par\n\nafter note\n", ignoreWarnings)) {
+      //   012345678901234567 89012 3 4567890123456 7 89012345678 9
+      events.push(event);
+    }
+    expect(events).toStrictEqual([
+      { startpos: 0, endpos: 0, annot: "+footnote" },
+      { startpos: 2, endpos: 5, annot: "note_label" },
+      { startpos: 9, endpos: 9, annot: "+para" },
+      { startpos: 9, endpos: 17, annot: "str" },
+      { startpos: 18, endpos: 18, annot: "softbreak" },
+      { startpos: 19, endpos: 22, annot: "str" },
+      { startpos: 23, endpos: 23, annot: "-para" },
+      { startpos: 24, endpos: 24, annot: "blankline" },
+      { startpos: 27, endpos: 27, annot: "+para" },
+      { startpos: 27, endpos: 36, annot: "str" },
+      { startpos: 37, endpos: 37, annot: "-para" },
+      { startpos: 38, endpos: 38, annot: "blankline" },
+      { startpos: 39, endpos: 39, annot: "-footnote" },
+      { startpos: 39, endpos: 39, annot: "+para" },
+      { startpos: 39, endpos: 48, annot: "str" },
+      { startpos: 49, endpos: 49, annot: "-para" },
+    ]);
+  });
 
 });
 
