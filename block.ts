@@ -40,7 +40,7 @@ const pattWord = pattern("^\\w+\\s");
 const pattWhitespace = pattern("[ \\t\\r\\n]");
 const pattBlockquotePrefix = pattern("[>]\\s");
 const pattBangs = pattern("#+");
-const pattCodeFence = pattern("(~~~~*|````*)([ \t]*)(%S*)[ \t]*[\r\n]");
+const pattCodeFence = pattern("(~~~~*|````*)([ \\t]*)(\\S*)[ \\t]*[\\r\\n]");
 
 type EventIterator = {
   next : () => { value: Event, done: boolean };
@@ -67,7 +67,7 @@ class Container {
   content : ContentType;
   continue : (container : Container) => boolean;
   close: (container : Container) => void;
-  indent : number;
+  indent : number | null;
   inlineParser: InlineParser | null;
   extra: {[key : string] : any};
 
@@ -76,7 +76,7 @@ class Container {
     this.content = spec.content;
     this.continue = spec.continue;
     this.close = spec.close;
-    this.indent = 0;
+    this.indent = null;
     this.inlineParser = null;
     this.extra = extra;
  }
@@ -206,7 +206,7 @@ class Parser {
                  pattern("(" + container.extra.border + "*)[ \\t]*[\\r\\n]"));
         if (m) {
           container.extra.end_fence_sp = m.startpos;
-          container.extra.end_fence_ep = m.startpos + m.captures[1].length - 1;
+          container.extra.end_fence_ep = m.startpos + m.captures[0].length - 1;
           this.pos = m.endpos; // before newline
           this.finishedLine = true;
           return false;
@@ -219,7 +219,8 @@ class Parser {
         if (m) {
           let [border, ws, lang] = m.captures;
           let isRaw = lang.charAt(0) === "=" && true || false;
-          this.addContainer(new Container(spec, {border: border}));
+          let cont = this.addContainer(new Container(spec, {border: border}));
+          cont.indent = this.indent;
           this.addMatch(m.startpos, m.startpos + border.length - 1,
                         "+code_block");
           if (lang.length > 0) {
@@ -291,7 +292,7 @@ class Parser {
     }
   }
 
-  addContainer(container : Container) : void {
+  addContainer(container : Container) : Container {
     this.closeUnmatchedContainers();
     // close containers that can't contain this one:
     let tip = this.tip();
@@ -300,6 +301,7 @@ class Parser {
       tip = this.tip();
     }
     this.containers.push(container);
+    return container;
   }
 
   // move parser position to first nonspace, adjusting indent
@@ -399,11 +401,9 @@ class Parser {
             checkStarts = false;
             for (const spec of specs) {
               if (!spec.isPara) {
-                let blockindent = self.indent;
                 if (spec.open(spec)) {
                   let tip = self.tip();
                   if (tip) {
-                    tip.indent = blockindent;
                     self.lastMatchedContainer = self.containers.length - 1;
                     if (spec.content === ContentType.Inline) {
                       tip.inlineParser =
@@ -461,7 +461,7 @@ class Parser {
 
             if (tip && tip.content === ContentType.Text) {
               let startpos = self.pos;
-              if (tip.indent && self.indent > tip.indent) {
+              if (tip.indent !== null && self.indent > tip.indent) {
                 // get back the leading spaces we gobbled
                 startpos = startpos - (self.indent - tip.indent);
               }
