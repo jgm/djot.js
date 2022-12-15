@@ -608,7 +608,6 @@ class InlineParser {
   getMatches() : Event[] {
     const sorted = [];
     const subject = this.subject;
-    let lastsp, lastep, lastannot;
     if (this.attributeParser) {
       // we're still in an attribute parse
       this.reparseAttributes();
@@ -623,9 +622,6 @@ class InlineParser {
           lastsorted.endpos = ep;
         } else {
           sorted.push(this.matches[i]);
-          lastsp = sp;
-          lastep = ep;
-          lastannot = annot;
         }
       }
     }
@@ -703,7 +699,6 @@ class InlineParser {
 
     // Feed a slice to the parser, updating state.
     const subject = this.subject;
-    const matchers = this.matchers;
     if (this.firstpos == -1 || startpos < this.firstpos) {
       this.firstpos = startpos;
     }

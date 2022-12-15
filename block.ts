@@ -437,7 +437,6 @@ class Parser {
                      tip &&
                      tip.content === ContentType.Inline;
 
-            const lastMatched = self.lastMatchedContainer;
             if (!isLazy) {
               self.closeUnmatchedContainers();
             }
