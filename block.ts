@@ -40,6 +40,7 @@ const pattWord = pattern("^\\w+\\s");
 const pattWhitespace = pattern("[ \\t\\r\\n]");
 const pattBlockquotePrefix = pattern("[>]\\s");
 const pattBangs = pattern("#+");
+const pattCodeFence = pattern("(~~~~*|````*)([ \t]*)(%S*)[ \t]*[\r\n]");
 
 type EventIterator = {
   next : () => { value: Event, done: boolean };
@@ -59,13 +60,13 @@ type BlockSpec =
     content : ContentType,
     continue : (container : Container) => boolean,
     open : (spec : BlockSpec) => boolean,
-    close: () => void }
+    close: (container : Container) => void }
 
 class Container {
   name : string;
   content : ContentType;
   continue : (container : Container) => boolean;
-  close: () => void;
+  close: (container : Container) => void;
   indent : number;
   inlineParser: InlineParser | null;
   extra: {[key : string] : any};
@@ -129,7 +130,7 @@ class Parser {
          this.addMatch(this.pos, this.pos, "+para");
          return true;
        },
-       close: () => {
+       close: (container) => {
          this.getInlineMatches();
          this.addMatch(this.pos - 1, this.pos - 1, "-para");
          this.containers.pop();
@@ -157,7 +158,7 @@ class Parser {
           return false;
         }
       },
-      close: () => {
+      close: (container) => {
         this.addMatch(this.pos, this.pos, "-blockquote");
         this.containers.pop();
       }
@@ -188,7 +189,7 @@ class Parser {
           return false;
         }
       },
-      close: () => {
+      close: (container) => {
         this.getInlineMatches()
         let last = this.matches[this.matches.length - 1]
         let ep = (last && last.endpos + 1) || this.pos - 1;
@@ -196,6 +197,58 @@ class Parser {
         this.containers.pop();
       }
     },
+
+    { name: "code_block",
+      isPara: false,
+      content: ContentType.Text,
+      continue: (container) => {
+        let m = this.find(
+                 pattern("(" + container.extra.border + "*)[ \\t]*[\\r\\n]"));
+        if (m) {
+          container.extra.end_fence_sp = m.startpos;
+          container.extra.end_fence_ep = m.startpos + m.captures[1].length - 1;
+          this.pos = m.endpos; // before newline
+          this.finishedLine = true;
+          return false;
+        } else {
+          return true;
+        }
+      },
+      open: (spec) => {
+        let m = this.find(pattCodeFence);
+        if (m) {
+          let [border, ws, lang] = m.captures;
+          let isRaw = lang.charAt(0) === "=" && true || false;
+          this.addContainer(new Container(spec, {border: border}));
+          this.addMatch(m.startpos, m.startpos + border.length - 1,
+                        "+code_block");
+          if (lang.length > 0) {
+            let langstart = m.startpos + border.length + ws.length;
+            if (isRaw) {
+              this.addMatch(langstart, langstart + lang.length - 1,
+                            "raw_format");
+            } else {
+              this.addMatch(langstart, langstart + lang.length - 1,
+                             "code_language");
+            }
+          }
+          this.pos = m.endpos;  // before newline;
+          this.finishedLine = true;
+          return true;
+        } else {
+          return false;
+        }
+      },
+      close: (container) => {
+        let sp = container.extra.end_fence_sp || this.pos;
+        let ep = container.extra.end_fence_ep || this.pos;
+        this.addMatch(sp, ep, "-code_block");
+        if (sp === ep) {
+          this.warn("Unclosed code block", this.pos);
+        }
+        this.containers.pop();
+      }
+    }
 
 
    ];
@@ -233,7 +286,7 @@ class Parser {
     let tip = this.tip();
     while (tip &&
            this.containers.length - 1 > lastMatched) {
-      tip.close();
+      tip.close(tip);
       tip = this.tip();
     }
   }
@@ -243,7 +296,7 @@ class Parser {
     // close containers that can't contain this one:
     let tip = this.tip();
     while (tip && tip.content !== ContentType.Block) {
-      tip.close();
+      tip.close(tip);
       tip = this.tip();
     }
     this.containers.push(container);
@@ -325,7 +378,10 @@ class Parser {
         if (self.finishedLine) {
           while (self.containers.length > 0 &&
                  self.lastMatchedContainer < self.containers.length - 1) {
-            self.containers[self.containers.length - 1].close();
+            let tip = self.tip();
+            if (tip) {
+              tip.close(tip);
+            }
           }
         }
 
@@ -724,58 +780,6 @@ function Parser:specs()
       end,
       close = function(_container)
         this.addMatch(this.pos, this.pos, "-reference_definition")
-        this.containers.pop();
-      }
-    },
-
-    { name = "code_block",
-      content = "text",
-      continue = function(container)
-        let char = sub(container.border, 1, 1)
-        let sp, ep, border = this.find("^(" .. container.border ..
-                                 char .. "*)[ \t]*[\r\n]")
-        if ep {
-          container.end_fence_sp = sp
-          container.end_fence_ep = sp + #border - 1
-          this.pos = ep -- before newline
-          this.finishedLine = true
-          return false
-        } else {
-          return true
-        }
-      end,
-      open = function(spec)
-        let sp, ep, border, ws, lang =
-          this.find("^(~~~~*)([ \t]*)(%S*)[ \t]*[\r\n]")
-        if not ep {
-          sp, ep, border, ws, lang =
-            this.find("^(````*)([ \t]*)([^%s`]*)[ \t]*[\r\n]")
-        }
-        if border {
-          let is_raw = find(lang, "^=") and true or false
-          this.addContainer(Container:new(spec, {border = border,
-                                                  indent = this.indent }))
-          this.addMatch(sp, sp + #border - 1, "+code_block")
-          if #lang > 0 {
-            let langstart = sp + #border + #ws
-            if is_raw {
-              this.addMatch(langstart, langstart + #lang - 1, "raw_format")
-            } else {
-              this.addMatch(langstart, langstart + #lang - 1, "code_language")
-            }
-          }
-          this.pos = ep  -- before newline
-          this.finishedLine = true
-          return true
-        }
-      end,
-      close = function(container)
-        let sp = container.end_fence_sp or this.pos
-        let ep = container.end_fence_ep or this.pos
-        this.addMatch(sp, ep, "-code_block")
-        if sp === ep {
-          this.warn({ pos = this.pos, message = "Unclosed code block" })
-        }
         this.containers.pop();
       }
     },

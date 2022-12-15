@@ -60,6 +60,20 @@ describe("Parser", () => {
     ]);
   });
 
+  it("parses code blocks", () => {
+    let events = [];
+    for (const event of new Parser("```` python\nif x == 3:\n  y = 4\n````\n", () => {})) {
+      //                            01234567890 12345678901 23456789 01234 5
+      events.push(event);
+    }
+    expect(events).toStrictEqual([
+      { startpos: 0, endpos: 3, annot: "+code_block" },
+      { startpos: 5, endpos: 10, annot: "code_language" },
+      { startpos: 12, endpos: 22, annot: "str" },
+      { startpos: 23, endpos: 30, annot: "str" },
+      { startpos: 31, endpos: 34, annot: "-code_block" }
+    ]);
+  });
 
 });
 
