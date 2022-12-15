@@ -410,7 +410,7 @@ class Parser {
           }
         }
       }
-      completeCell = nextbar;
+      completeCell = (nextbar !== null);
       if (!completeCell) {
         break;
       }
@@ -421,18 +421,20 @@ class Parser {
         let { startpos: s, endpos: e, annot: ann } = match;
         if (i === cellMatches.length - 1 && ann === "str") {
           // strip trailing space
-          while (byte(this.subject, e) === 32 && e >= s) {
+          while (this.subject.codePointAt(e) === 32 && e >= s) {
             e = e - 1
           }
         }
         this.addMatch(s,e,ann);
       }
-      this.addMatch(nextbar, nextbar, "-cell");
-      if (nextbar < ep) {
-        // reset inline parser state
-        inlineParser = new InlineParser(this.subject, this.warn);
-        this.addMatch(nextbar, nextbar, "+cell");
-        this.pos = find(this.subject, "%S", this.pos);
+      if (nextbar) {
+        this.addMatch(nextbar, nextbar, "-cell");
+        if (nextbar < ep) {
+          // reset inline parser state
+          inlineParser = new InlineParser(this.subject, this.warn);
+          this.addMatch(nextbar, nextbar, "+cell");
+          this.skipSpace();
+        }
       }
     }
     if (!completeCell) {
