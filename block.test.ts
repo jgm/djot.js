@@ -95,6 +95,17 @@ describe("Parser", () => {
     ]);
   });
 
+  it("parses thematic breaks", () => {
+    const events = [];
+    for (const event of new Parser(" - - - -\n", ignoreWarnings)) {
+      //                            012345678901 2345678 9 0
+      events.push(event);
+    }
+    expect(events).toStrictEqual([
+      { startpos: 1, endpos: 8, annot: "thematic_break" },
+    ]);
+  });
+
   it("parses footnotes", () => {
     const events = [];
     for (const event of new Parser(

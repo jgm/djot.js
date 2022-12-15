@@ -45,6 +45,7 @@ const pattRowSep = pattern("(%:?)%-%-*(%:?)([ \t]*%|[ \t]*)");
 const pattNextBar = pattern("[^|\\r\\n]*|");
 const pattCaptionStart = pattern("\\^[ \\t]+");
 const pattFootnoteStart = pattern("\\[\\^([^\\]]+)\\]:\\s");
+const pattThematicBreak = pattern("[-*][ \t]*[-*][ \t]*[-*][-* \t]*[\r\n]");
 
 type EventIterator = {
   next : () => { value: Event, done: boolean };
@@ -227,6 +228,7 @@ class Parser {
       }
     },
 
+    // should go before reference definitions
     { name: "footnote",
       isPara: false,
       content: ContentType.Block,
@@ -261,6 +263,28 @@ class Parser {
       }
     },
 
+    // should go before list_item_spec
+    { name: "thematic_break",
+      isPara: false,
+      content: ContentType.None,
+      continue: (container) => {
+        return false;
+      },
+      open: (spec) => {
+        let m = this.find(pattThematicBreak);
+        if (m) {
+          this.addContainer(new Container(spec, {}));
+          this.addMatch(m.startpos, m.endpos, "thematic_break");
+          this.pos = m.endpos;
+          return true;
+        } else {
+          return false;
+        }
+      },
+      close: (container) => {
+        this.containers.pop();
+      }
+    },
 
     { name: "code_block",
       isPara: false,
@@ -680,26 +704,6 @@ class Parser {
 
 function Parser:specs()
   return {
-    // should go before reference definitions
-    // should go before list_item_spec
-    { name: "thematic_break",
-      content: ContentType.None,
-      continue: function()
-        return false
-      },
-      open: (spec) => {
-        let sp, ep = this.find("^[-*][ \t]*[-*][ \t]*[-*][-* \t]*[\r\n]")
-        if ep {
-          this.addContainer(Container:new(spec))
-          this.addMatch(sp, ep, "thematic_break")
-          this.pos = ep
-          return true
-        }
-      },
-      close: function(_container)
-        this.containers.pop();
-      }
-    },
 
     { name: "list_item",
       content: ContentType.Block,
