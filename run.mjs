@@ -17,8 +17,8 @@ for (const event of new Parser(input, warn)) {
   } else {
     pref = ",";
   }
-  process.stdout.write(pref);
-  process.stdout.write(`["${event.annot}",${event.startpos},${event.endpos}]\n`);
+  process.stdout.write(pref + '{"' + event.annot + '",' + event.startpos +
+                         ',' + event.endpos + '}\n');
 }
 console.log("]");
 console.timeEnd("parse events");
