@@ -42,7 +42,8 @@ const pattBlockquotePrefix = pattern("[>]\\s");
 const pattBangs = pattern("#+");
 const pattCodeFence = pattern("(~~~~*|````*)([ \\t]*)(\\S*)[ \\t]*[\\r\\n]");
 const pattRowSep = pattern("(%:?)%-%-*(%:?)([ \t]*%|[ \t]*)");
-const pattNextBar = pattern("[^|\r\n]*|");
+const pattNextBar = pattern("[^|\\r\\n]*|");
+const pattCaptionStart = pattern("\\^[ \\t]+");
 
 type EventIterator = {
   next : () => { value: Event, done: boolean };
@@ -200,6 +201,31 @@ class Parser {
       }
     },
 
+    { name: "caption",
+      isPara: false,
+      content: ContentType.Inline,
+      continue: (container) => {
+        return (find(this.subject, pattWhitespace, this.pos) === null);
+      },
+      open: (spec) => {
+        let m = this.find(pattCaptionStart);
+        if (m) {
+          this.pos = m.endpos + 1;
+          this.addContainer(new Container(spec, {}));
+          this.addMatch(this.pos, this.pos, "+caption");
+          return true;
+        } else {
+          return false;
+        }
+      },
+      close: (container) => {
+        this.getInlineMatches();
+        this.addMatch(this.pos - 1, this.pos - 1, "-caption");
+        this.containers.pop();
+      }
+    },
+
+
     { name: "code_block",
       isPara: false,
       content: ContentType.Text,
@@ -310,7 +336,7 @@ class Parser {
   skipSpace() : void {
     const subject = this.subject;
     let newpos = this.pos;
-    while (newpos) {
+    while (true) {
       const cp = subject.codePointAt(newpos);
       if (cp && isSpaceOrTab(cp)) {
         newpos++;
@@ -618,30 +644,6 @@ class Parser {
 
 function Parser:specs()
   return {
-    { name = "caption",
-      isPara = false,
-      content = "inline",
-      continue = function(container)
-        return this.find("^%S")
-      end,
-      open = function(spec)
-        let _, ep = this.find("^%^[ \t]+")
-        if ep {
-          this.pos = ep + 1
-          this.addContainer(Container:new(spec,
-            { inlineParser =
-                InlineParser:new(this.subject, this.warn) }))
-          this.addMatch(this.pos, this.pos, "+caption")
-          return true
-        }
-      end,
-      close = function()
-        this.getInlineMatches()
-        this.addMatch(this.pos - 1, this.pos - 1, "-caption")
-        this.containers.pop();
-      }
-    },
-
     // should go before reference definitions
     { name = "footnote",
       content = "block",

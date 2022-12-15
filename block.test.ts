@@ -77,5 +77,24 @@ describe("Parser", () => {
     ]);
   });
 
+  it("parses captions", () => {
+    const events = [];
+    for (const event of new Parser(" ^ This is a\n*capt*\n\n", ignoreWarnings)) {
+      //                            012345678901 2345678 9 0
+      events.push(event);
+    }
+    expect(events).toStrictEqual([
+      { startpos: 3, endpos: 3, annot: "+caption" },
+      { startpos: 3, endpos: 11, annot: "str" },
+      { startpos: 12, endpos: 12, annot: "softbreak" },
+      { startpos: 13, endpos: 13, annot: "+strong" },
+      { startpos: 14, endpos: 17, annot: "str" },
+      { startpos: 18, endpos: 18, annot: "-strong" },
+      { startpos: 19, endpos: 19, annot: "-caption" },
+      { startpos: 20, endpos: 20, annot: "blankline" }
+    ]);
+  });
+
+
 });
 
