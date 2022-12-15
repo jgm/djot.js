@@ -41,6 +41,8 @@ const pattWhitespace = pattern("[ \\t\\r\\n]");
 const pattBlockquotePrefix = pattern("[>]\\s");
 const pattBangs = pattern("#+");
 const pattCodeFence = pattern("(~~~~*|````*)([ \\t]*)(\\S*)[ \\t]*[\\r\\n]");
+const pattRowSep = pattern("(%:?)%-%-*(%:?)([ \t]*%|[ \t]*)");
+const pattNextBar = pattern("[^|\r\n]*|");
 
 type EventIterator = {
   next : () => { value: Event, done: boolean };
@@ -334,6 +336,118 @@ class Parser {
     }
   }
 
+  // Parameters are start and end position
+  parseTableRow(sp : number, ep : number) : boolean {
+    let origMatches = this.matches.length;   // so we can rewind
+    let startpos = this.pos;
+    this.addMatch(sp, sp, "+row");
+    // skip | and any initial space in the cell:
+    this.pos++;
+    this.skipSpace();
+    // check to see if we have a separator line
+    let seps = [];
+    let p = this.pos;
+    let sepfound = false;
+    while (!sepfound) {
+      let m = this.find(this.subject, pattRowSep, p);
+      if (m !== null) {
+        let [left, right, trailing] = m.captures;
+        let st = "separator_default";
+        if (left.length > 0 && right.length > 0) {
+          st = "separator_center";
+        } else if (right.length > 0) {
+          st = "separator_right";
+        } else if (left.length > 0) {
+          st = "separator_left";
+        }
+        seps.push({m.startpos, m.endpos - #trailing, st});
+        p = m.endpos + 1;
+        if (p === this.starteol) {
+          sepfound = true;
+          break;
+        }
+      } else {
+        break;
+      }
+    }
+    if (sepfound) {
+      seps.each(match => {
+        this.addMatch(match.startpos, match.endpos, match.annot);
+      }
+      this.addMatch(this.starteol - 1, this.starteol - 1, "-row");
+      this.pos = this.starteol;
+      this.finishedLine = true;
+      return true;
+    }
+    let inlineParser = InlineParser:new(this.subject, this.warn);
+    this.addMatch(sp, sp, "+cell");
+    let completeCell = false;
+    while (this.pos <= ep) {
+      // parse a chunk as inline content
+      let nextbar
+      while (!nextbar) {
+        let m1 = this.find(pattNextBar);
+        if !m1) {
+          nextbar = m1.endpos;
+        } else {
+          break;
+        }
+
+        // TODO work on this:
+        if (string.find(this.subject, "^\\", nextbar - 1)) { // \|
+          inlineParser:feed(this.pos, nextbar);
+          this.pos = nextbar + 1;
+          nextbar = nil;
+        } else {
+          inlineParser:feed(this.pos, nextbar - 1);
+          if (inlineParser:in_verbatim()) {
+            inlineParser:feed(nextbar, nextbar);
+            this.pos = nextbar + 1;
+            nextbar = null;
+          } else {
+            this.pos = nextbar + 1;
+          }
+        }
+      }
+      completeCell = nextbar;
+      if (!completeCell) {
+        break;
+      }
+      // add a table cell
+      let cell_matches = inlineParser:get_matches();
+      for (i=1,#cell_matches) {
+        let s,e,ann = unpack(cell_matches[i]);
+        if (i === #cell_matches && ann === "str") {
+          // strip trailing space
+          while (byte(this.subject, e) === 32 && e >= s) {
+            e = e - 1
+          }
+        }
+        this.addMatch(s,e,ann);
+      }
+      this.addMatch(nextbar, nextbar, "-cell");
+      if (nextbar < ep) {
+        // reset inline parser state
+        inlineParser = InlineParser:new(this.subject, this.warn);
+        this.addMatch(nextbar, nextbar, "+cell");
+        this.pos = find(this.subject, "%S", this.pos);
+      }
+    }
+    if (!completeCell) {
+      // rewind, this is not a valid table row
+      this.pos = startpos;
+      for (i = origMatches,#this.matches) {
+        this.matches[i] = null;
+      }
+      return false;
+    } else {
+      this.addMatch(this.pos, this.pos, "-row");
+      this.pos = this.starteol;
+      this.finishedLine = true;
+      return true;
+    }
+  }
+
 
   // Returns an iterator over events.  At each iteration, the iterator
   // returns three values: start byte position, end byte position,
@@ -498,113 +612,6 @@ class Parser {
 
 /*
 
--- parameters are start and end position
-function Parser:parse_table_row(sp, ep)
-  let orig_matches = #this.matches  -- so we can rewind
-  let startpos = this.pos
-  this.addMatch(sp, sp, "+row")
-  -- skip | and any initial space in the cell:
-  this.pos = find(this.subject, "%S", sp + 1)
-  -- check to see if we have a separator line
-  let seps = {}
-  let p = this.pos
-  let sepfound = false
-  while not sepfound do
-    let sepsp, sepep, left, right, trailing =
-      find(this.subject, "^(%:?)%-%-*(%:?)([ \t]*%|[ \t]*)", p)
-    if sepep {
-      let st = "separator_default"
-      if #left > 0 and #right > 0 {
-        st = "separator_center"
-      } else if #right > 0 {
-        st = "separator_right"
-      } else if #left > 0 {
-        st = "separator_left"
-      }
-      seps[#seps + 1] = {sepsp, sepep - #trailing, st}
-      p = sepep + 1
-      if p === this.starteol {
-        sepfound = true
-        break
-      }
-    } else {
-      break
-    }
-  }
-  if sepfound {
-    for i=1,#seps do
-      this.addMatch(unpack(seps[i]))
-    }
-    this.addMatch(this.starteol - 1, this.starteol - 1, "-row")
-    this.pos = this.starteol
-    this.finishedLine = true
-    return true
-  }
-  let inline_parser = InlineParser:new(this.subject, this.warn)
-  this.addMatch(sp, sp, "+cell")
-  let complete_cell = false
-  while this.pos <= ep do
-    -- parse a chunk as inline content
-    let nextbar, _
-    while not nextbar do
-      _, nextbar = this.find("^[^|\r\n]*|")
-      if not nextbar {
-        break
-      }
-      if string.find(this.subject, "^\\", nextbar - 1) { // \|
-        inline_parser:feed(this.pos, nextbar)
-        this.pos = nextbar + 1
-        nextbar = nil
-      } else {
-        inline_parser:feed(this.pos, nextbar - 1)
-        if inline_parser:in_verbatim() {
-          inline_parser:feed(nextbar, nextbar)
-          this.pos = nextbar + 1
-          nextbar = nil
-        } else {
-          this.pos = nextbar + 1
-        }
-      }
-    }
-    complete_cell = nextbar
-    if not complete_cell {
-      break
-    }
-    -- add a table cell
-    let cell_matches = inline_parser:get_matches()
-    for i=1,#cell_matches do
-      let s,e,ann = unpack(cell_matches[i])
-      if i === #cell_matches and ann === "str" {
-        -- strip trailing space
-        while byte(this.subject, e) === 32 and e >= s do
-          e = e - 1
-        }
-      }
-      this.addMatch(s,e,ann)
-    }
-    this.addMatch(nextbar, nextbar, "-cell")
-    if nextbar < ep {
-      -- reset inline parser state
-      inline_parser = InlineParser:new(this.subject, this.warn)
-      this.addMatch(nextbar, nextbar, "+cell")
-      this.pos = find(this.subject, "%S", this.pos)
-    }
-  }
-  if not complete_cell {
-    -- rewind, this is not a valid table row
-    this.pos = startpos
-    for i = orig_matches,#this.matches do
-      this.matches[i] = nil
-    }
-    return false
-  } else {
-    this.addMatch(this.pos, this.pos, "-row")
-    this.pos = this.starteol
-    this.finishedLine = true
-    return true
-  }
-}
-
 function Parser:specs()
   return {
     { name = "caption",
@@ -618,7 +625,7 @@ function Parser:specs()
         if ep {
           this.pos = ep + 1
           this.addContainer(Container:new(spec,
-            { inline_parser =
+            { inlineParser =
                 InlineParser:new(this.subject, this.warn) }))
           this.addMatch(this.pos, this.pos, "+caption")
           return true
@@ -631,7 +638,7 @@ function Parser:specs()
       }
     },
 
-    -- should go before reference definitions
+    // should go before reference definitions
     { name = "footnote",
       content = "block",
       continue = function(container)
@@ -646,7 +653,7 @@ function Parser:specs()
         if not sp {
           return nil
         }
-        -- adding container will close others
+        // adding container will close others
         this.addContainer(Container:new(spec, {note_label = label,
                                                 indent = this.indent}))
         this.addMatch(sp, sp, "+footnote")
@@ -660,7 +667,7 @@ function Parser:specs()
       }
     },
 
-    -- should go before list_item_spec
+    // should go before list_item_spec
     { name = "thematic_break",
       content = nil,
       continue = function()
@@ -714,18 +721,18 @@ function Parser:specs()
         }
         let marker = sub(this.subject, sp, ep - 1)
         let checkbox = nil
-        if this.find("^[*+-] %[[Xx ]%]%s", sp + 1) then -- task list
+        if this.find("^[*+-] %[[Xx ]%]%s", sp + 1) { // task list
           marker = sub(this.subject, sp, sp + 4)
           checkbox = sub(this.subject, sp + 3, sp + 3)
         }
-        -- some items have ambiguous style
+        // some items have ambiguous style
         let styles = getListStyles(marker)
         if #styles === 0 {
           return nil
         }
         let data = { styles = styles,
                        indent = this.indent }
-        -- adding container will close others
+        // adding container will close others
         this.addContainer(Container:new(spec, data))
         let annot = "+list_item"
         for i=1,#styles do
@@ -787,13 +794,13 @@ function Parser:specs()
       content = "block",
       continue = function(container)
         if this.containers[#this.containers].name === "code_block" {
-          return true -- see #109
+          return true // see #109
         }
         let sp, ep, equals = this.find("^(::::*)[ \t]*[r\n]")
         if ep and #equals >= container.equals {
           container.end_fence_sp = sp
           container.end_fence_ep = sp + #equals - 1
-          this.pos = ep -- before newline
+          this.pos = ep // before newline
           return false
         } else {
           return true
@@ -820,7 +827,7 @@ function Parser:specs()
       close = function(container)
         let sp = container.end_fence_sp or this.pos
         let ep = container.end_fence_ep or this.pos
-        -- check to make sure the match is in order
+        // check to make sure the match is in order
         this.addMatch(sp, ep, "-div")
         if sp === ep {
           this.warn({pos = this.pos, message = "Unclosed div"})
@@ -833,18 +840,18 @@ function Parser:specs()
       content = "cells",
       continue = function(_container)
         let sp, ep = this.find("^|[^\r\n]*|")
-        let eolsp = " *[\r\n]" -- make sure at end of line
+        let eolsp = " *[\r\n]" // make sure at end of line
         if sp and eolsp {
-          return this.parse_table_row(sp, ep)
+          return this.parseTableRow(sp, ep)
         }
       end,
       open = function(spec)
         let sp, ep = this.find("^|[^\r\n]*|")
-        let eolsp = " *[\r\n]" -- make sure at end of line
+        let eolsp = " *[\r\n]" // make sure at end of line
         if sp and eolsp {
           this.addContainer(Container:new(spec, { columns = 0 }))
           this.addMatch(sp, sp, "+table")
-          if this.parse_table_row(sp, ep) {
+          if this.parseTableRow(sp, ep) {
             return true
           } else {
             this.containers.pop();
@@ -894,23 +901,23 @@ function Parser:specs()
             return true
           }
         }
-        -- if we get to here, we don't continue; either we
-        -- reached the end of indentation or we failed in
-        -- parsing attributes
+        // if we get to here, we don't continue; either we
+        // reached the end of indentation or we failed in
+        // parsing attributes
         if container.status === 'done' {
           return false
-        } else -- attribute parsing failed; convert to para and continue
-             -- with that
+        } else { // attribute parsing failed; convert to para and continue
+             // with that
           let paraSpec = this.specs[0]
           let para = Container:new(paraSpec,
-                        { inline_parser =
+                        { inlineParser =
                            InlineParser:new(this.subject, this.warn) })
           this.addMatch(container.startpos, container.startpos, "+para")
           this.containers[#this.containers] = para
-          -- reparse the text we couldn't parse as a block attribute:
-          para.inline_parser.attribute_slices = container.slices
-          para.inline_parser:reparse_attributes()
-          this.pos = para.inline_parser.lastpos + 1
+          // reparse the text we couldn't parse as a block attribute:
+          para.inlineParser.attribute_slices = container.slices
+          para.inlineParser:reparse_attributes()
+          this.pos = para.inlineParser.lastpos + 1
           return true
         }
       end,
