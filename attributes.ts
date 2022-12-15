@@ -34,8 +34,10 @@ enum State {
   START
 }
 
+const reKeyChar = /^[a-zA-Z0-9_:-]/;
+
 const isKeyChar = function(c : string) {
-  return (/^[a-zA-Z0-9_:-]/.exec(c) !== null);
+  return reKeyChar.exec(c) !== null;
 }
 
 const handlers : ((parser : AttributeParser, pos : number) => State)[] = [];
