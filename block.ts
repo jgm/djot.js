@@ -349,7 +349,7 @@ class Parser {
     let p = this.pos;
     let sepfound = false;
     while (!sepfound) {
-      let m = this.find(this.subject, pattRowSep, p);
+      let m = find(this.subject, pattRowSep, p);
       if (m !== null) {
         let [left, right, trailing] = m.captures;
         let st = "separator_default";
@@ -360,7 +360,8 @@ class Parser {
         } else if (left.length > 0) {
           st = "separator_left";
         }
-        seps.push({m.startpos, m.endpos - #trailing, st});
+        seps.push({startpos: m.startpos, endpos: m.endpos - trailing.length,
+                   annot: st});
         p = m.endpos + 1;
         if (p === this.starteol) {
           sepfound = true;
@@ -371,7 +372,8 @@ class Parser {
       }
     }
     if (sepfound) {
-      seps.each(match => {
+      for (const k in seps) {
+        let match = seps[k];
         this.addMatch(match.startpos, match.endpos, match.annot);
       }
       this.addMatch(this.starteol - 1, this.starteol - 1, "-row");
@@ -379,7 +381,7 @@ class Parser {
       this.finishedLine = true;
       return true;
     }
-    let inlineParser = InlineParser:new(this.subject, this.warn);
+    let inlineParser = new InlineParser(this.subject, this.warn);
     this.addMatch(sp, sp, "+cell");
     let completeCell = false;
     while (this.pos <= ep) {
@@ -387,21 +389,20 @@ class Parser {
       let nextbar
       while (!nextbar) {
         let m1 = this.find(pattNextBar);
-        if !m1) {
+        if (m1 !== null) {
           nextbar = m1.endpos;
         } else {
           break;
         }
 
-        // TODO work on this:
-        if (string.find(this.subject, "^\\", nextbar - 1)) { // \|
-          inlineParser:feed(this.pos, nextbar);
+        if (this.subject.charAt(nextbar - 1) === "\\") {  // \|
+          inlineParser.feed(this.pos, nextbar);
           this.pos = nextbar + 1;
-          nextbar = nil;
+          nextbar = null;
         } else {
-          inlineParser:feed(this.pos, nextbar - 1);
-          if (inlineParser:in_verbatim()) {
-            inlineParser:feed(nextbar, nextbar);
+          inlineParser.feed(this.pos, nextbar - 1);
+          if (inlineParser.inVerbatim()) {
+            inlineParser.feed(nextbar, nextbar);
             this.pos = nextbar + 1;
             nextbar = null;
           } else {
@@ -414,10 +415,11 @@ class Parser {
         break;
       }
       // add a table cell
-      let cell_matches = inlineParser:get_matches();
-      for (i=1,#cell_matches) {
-        let s,e,ann = unpack(cell_matches[i]);
-        if (i === #cell_matches && ann === "str") {
+      let cellMatches = inlineParser.getMatches();
+      for (let i=0; i < cellMatches.length; i++) {
+        let match = cellMatches[i];
+        let { startpos: s, endpos: e, annot: ann } = match;
+        if (i === cellMatches.length - 1 && ann === "str") {
           // strip trailing space
           while (byte(this.subject, e) === 32 && e >= s) {
             e = e - 1
@@ -428,7 +430,7 @@ class Parser {
       this.addMatch(nextbar, nextbar, "-cell");
       if (nextbar < ep) {
         // reset inline parser state
-        inlineParser = InlineParser:new(this.subject, this.warn);
+        inlineParser = new InlineParser(this.subject, this.warn);
         this.addMatch(nextbar, nextbar, "+cell");
         this.pos = find(this.subject, "%S", this.pos);
       }
@@ -436,8 +438,8 @@ class Parser {
     if (!completeCell) {
       // rewind, this is not a valid table row
       this.pos = startpos;
-      for (i = origMatches,#this.matches) {
-        this.matches[i] = null;
+      while (this.matches.length - 1 > origMatches) {
+        this.matches.pop();
       }
       return false;
     } else {
@@ -922,7 +924,7 @@ function Parser:specs()
         }
       end,
       close = function(container)
-        let attr_matches = container.attribute_parser:get_matches()
+        let attr_matches = container.attribute_parser:getMatches()
         this.addMatch(container.startpos, container.startpos, "+block_attributes")
         for i=1,#attr_matches do
           this.addMatch(unpack(attr_matches[i]))
