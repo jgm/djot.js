@@ -1,9 +1,11 @@
 import { Parser } from "./block.js";
 
+const ignoreWarnings = () => { /* do nothing */ };
+
 describe("Parser", () => {
   it("parses paragraphs", () => {
-    let events = [];
-    for (const event of new Parser("hello *world*\n\nfoo", () => {})) {
+    const events = [];
+    for (const event of new Parser("hello *world*\n\nfoo", ignoreWarnings)) {
       events.push(event);
     }
     expect(events).toStrictEqual([
@@ -21,8 +23,8 @@ describe("Parser", () => {
   });
 
   it("parses blockquotes", () => {
-    let events = [];
-    for (const event of new Parser("> hello\n> there\nlazy\n>\n> hi\n", () => {})) {
+    const events = [];
+    for (const event of new Parser("> hello\n> there\nlazy\n>\n> hi\n", ignoreWarnings)) {
       //                            01234567 89012345 67890 12 345678
       events.push(event);
     }
@@ -44,8 +46,8 @@ describe("Parser", () => {
   });
 
   it("parses headings", () => {
-    let events = [];
-    for (const event of new Parser("## hello\n## there\nlazy\n", () => {})) {
+    const events = [];
+    for (const event of new Parser("## hello\n## there\nlazy\n", ignoreWarnings)) {
       //                            012345678 901234567 89012
       events.push(event);
     }
@@ -61,8 +63,8 @@ describe("Parser", () => {
   });
 
   it("parses code blocks", () => {
-    let events = [];
-    for (const event of new Parser("```` python\nif x == 3:\n  y = 4\n````\n", () => {})) {
+    const events = [];
+    for (const event of new Parser("```` python\nif x == 3:\n  y = 4\n````\n", ignoreWarnings)) {
       //                            01234567890 12345678901 23456789 01234 5
       events.push(event);
     }

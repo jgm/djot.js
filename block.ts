@@ -168,7 +168,7 @@ class Parser {
       isPara: false,
       content: ContentType.Inline,
       continue: (container) => {
-        let m = this.find(pattBangs);
+        const m = this.find(pattBangs);
         if (m && container.extra.level == (m.endpos - m.startpos + 1) &&
               find(this.subject, pattWhitespace, m.endpos + 1)) {
           this.pos = m.endpos + 1;
@@ -178,9 +178,9 @@ class Parser {
         }
       },
       open: (spec) => {
-        let m = this.find(pattBangs);
+        const m = this.find(pattBangs);
         if (m && find(this.subject, pattWhitespace, m.endpos + 1)) {
-          let level = m.endpos - m.startpos + 1;
+          const level = m.endpos - m.startpos + 1;
           this.addContainer(new Container(spec, {level: level}));
           this.addMatch(m.startpos, m.endpos, "+heading");
           this.pos = m.endpos + 1;
@@ -191,8 +191,8 @@ class Parser {
       },
       close: (container) => {
         this.getInlineMatches()
-        let last = this.matches[this.matches.length - 1]
-        let ep = (last && last.endpos + 1) || this.pos - 1;
+        const last = this.matches[this.matches.length - 1]
+        const ep = (last && last.endpos + 1) || this.pos - 1;
         this.addMatch(ep, ep, "-heading")
         this.containers.pop();
       }
@@ -202,7 +202,7 @@ class Parser {
       isPara: false,
       content: ContentType.Text,
       continue: (container) => {
-        let m = this.find(
+        const m = this.find(
                  pattern("(" + container.extra.border + "*)[ \\t]*[\\r\\n]"));
         if (m) {
           container.extra.end_fence_sp = m.startpos;
@@ -215,16 +215,16 @@ class Parser {
         }
       },
       open: (spec) => {
-        let m = this.find(pattCodeFence);
+        const m = this.find(pattCodeFence);
         if (m) {
-          let [border, ws, lang] = m.captures;
-          let isRaw = lang.charAt(0) === "=" && true || false;
-          let cont = this.addContainer(new Container(spec, {border: border}));
+          const [border, ws, lang] = m.captures;
+          const isRaw = lang.charAt(0) === "=" && true || false;
+          const cont = this.addContainer(new Container(spec, {border: border}));
           cont.indent = this.indent;
           this.addMatch(m.startpos, m.startpos + border.length - 1,
                         "+code_block");
           if (lang.length > 0) {
-            let langstart = m.startpos + border.length + ws.length;
+            const langstart = m.startpos + border.length + ws.length;
             if (isRaw) {
               this.addMatch(langstart, langstart + lang.length - 1,
                             "raw_format");
@@ -241,8 +241,8 @@ class Parser {
         }
       },
       close: (container) => {
-        let sp = container.extra.end_fence_sp || this.pos;
-        let ep = container.extra.end_fence_ep || this.pos;
+        const sp = container.extra.end_fence_sp || this.pos;
+        const ep = container.extra.end_fence_ep || this.pos;
         this.addMatch(sp, ep, "-code_block");
         if (sp === ep) {
           this.warn("Unclosed code block", this.pos);
@@ -274,15 +274,15 @@ class Parser {
   }
 
   getInlineMatches() : void {
-    let tip = this.tip();
-    let ilparser = tip && tip.inlineParser;
+    const tip = this.tip();
+    const ilparser = tip && tip.inlineParser;
     if (ilparser) {
       ilparser.getMatches().forEach(match => this.matches.push(match));
     }
   }
 
   closeUnmatchedContainers() : void {
-    let lastMatched = this.lastMatchedContainer;
+    const lastMatched = this.lastMatchedContainer;
     // close unmatched containers
     let tip = this.tip();
     while (tip &&
@@ -306,10 +306,10 @@ class Parser {
 
   // move parser position to first nonspace, adjusting indent
   skipSpace() : void {
-    let subject = this.subject;
+    const subject = this.subject;
     let newpos = this.pos;
     while (newpos) {
-      let cp = subject.codePointAt(newpos);
+      const cp = subject.codePointAt(newpos);
       if (cp && isSpaceOrTab(cp)) {
         newpos++;
       } else {
@@ -322,7 +322,7 @@ class Parser {
 
   // set this.starteol, this.endeol
   getEol() : void {
-    let m = find(this.subject, pattNonNewlines, this.pos);
+    const m = find(this.subject, pattNonNewlines, this.pos);
     if (m) {
       this.starteol = m.endpos + 1;
       if (this.subject.codePointAt(this.starteol) === 13 &&
@@ -339,11 +339,11 @@ class Parser {
   // returns three values: start byte position, end byte position,
   // and annotation.
   [Symbol.iterator]() : EventIterator {
-    let specs = this.specs;
-    let paraSpec = specs[0];
-    let subjectlen = this.subject.length;
+    const specs = this.specs;
+    const paraSpec = specs[0];
+    const subjectlen = this.subject.length;
     this.returned = 0;
-    let self = this;
+    const self = this;
 
     return { next() {
 
@@ -365,7 +365,7 @@ class Parser {
         self.lastMatchedContainer = -1;
         let idx = 0;
         while (idx < self.containers.length) {
-          let container = self.containers[idx];
+          const container = self.containers[idx];
           // skip any indentation
           self.skipSpace()
           if (container.continue(container)) {
@@ -380,7 +380,7 @@ class Parser {
         if (self.finishedLine) {
           while (self.containers.length > 0 &&
                  self.lastMatchedContainer < self.containers.length - 1) {
-            let tip = self.tip();
+            const tip = self.tip();
             if (tip) {
               tip.close(tip);
             }
@@ -392,7 +392,7 @@ class Parser {
           self.skipSpace();
           let isBlank = (self.pos === self.starteol);
           let newStarts = false;
-          let lastMatch = self.containers[self.lastMatchedContainer];
+          const lastMatch = self.containers[self.lastMatchedContainer];
           let checkStarts = !isBlank &&
                               (!lastMatch ||
                                 lastMatch.content === ContentType.Block) &&
@@ -402,7 +402,7 @@ class Parser {
             for (const spec of specs) {
               if (!spec.isPara) {
                 if (spec.open(spec)) {
-                  let tip = self.tip();
+                  const tip = self.tip();
                   if (tip) {
                     self.lastMatchedContainer = self.containers.length - 1;
                     if (spec.content === ContentType.Inline) {
@@ -431,13 +431,13 @@ class Parser {
 
             isBlank = (self.pos === self.starteol);
             let tip = self.tip();
-            let isLazy = !isBlank &&
+            const isLazy = !isBlank &&
                      !newStarts &&
                      self.lastMatchedContainer < self.containers.length - 1 &&
                      tip &&
                      tip.content === ContentType.Inline;
 
-            let lastMatched = self.lastMatchedContainer;
+            const lastMatched = self.lastMatchedContainer;
             if (!isLazy) {
               self.closeUnmatchedContainers();
             }

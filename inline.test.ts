@@ -1,8 +1,10 @@
 import { InlineParser } from "./inline.js";
 
+const ignoreWarnings = () => { /* do nothing */ };
+
 describe("InlineParser", () => {
   it("does basic parsing", () => {
-    let parser = new InlineParser("hello there", () => {});
+    const parser = new InlineParser("hello there", ignoreWarnings);
     parser.feed(0,6);
     parser.feed(8,10);
     expect(parser.getMatches()).toStrictEqual([
@@ -12,7 +14,7 @@ describe("InlineParser", () => {
   });
 
   it("parses verbatim", () => {
-    let parser = new InlineParser("x ``` hello ``there ``` x", () => {});
+    const parser = new InlineParser("x ``` hello ``there ``` x", ignoreWarnings);
     //                             0123456789012345678901234
     parser.feed(0,24);
     expect(parser.getMatches()).toStrictEqual([
@@ -25,7 +27,7 @@ describe("InlineParser", () => {
   });
 
   it("parses escapes", () => {
-    let parser = new InlineParser('\\"\\*\\ \\a \\\n', () => {});
+    const parser = new InlineParser('\\"\\*\\ \\a \\\n', ignoreWarnings);
     parser.feed(0,10);
     expect(parser.getMatches()).toStrictEqual([
       { annot: "escape", startpos: 0, endpos: 0 },
@@ -41,7 +43,7 @@ describe("InlineParser", () => {
   });
 
   it("parses autolinks", () => {
-    let parser = new InlineParser('<http://example.com?foo=bar&baz=&amp;x2>', () => {});
+    const parser = new InlineParser('<http://example.com?foo=bar&baz=&amp;x2>', ignoreWarnings);
     //                             0123456789012345678901234567890123456789
     parser.feed(0,39);
     expect(parser.getMatches()).toStrictEqual([
@@ -52,7 +54,7 @@ describe("InlineParser", () => {
   });
 
   it("parses email autolinks", () => {
-    let parser = new InlineParser('<me@example.com>', () => {});
+    const parser = new InlineParser('<me@example.com>', ignoreWarnings);
     //                             0123456789012345
     parser.feed(0,15);
     expect(parser.getMatches()).toStrictEqual([
@@ -63,7 +65,7 @@ describe("InlineParser", () => {
   });
 
   it("parses super/subscript", () => {
-    let parser = new InlineParser('H~2~O e=mc^2^ test{^two words^}', () => {});
+    const parser = new InlineParser('H~2~O e=mc^2^ test{^two words^}', ignoreWarnings);
     //                             0123456789012345678901234567890
     parser.feed(0,30);
     expect(parser.getMatches()).toStrictEqual([
@@ -83,7 +85,7 @@ describe("InlineParser", () => {
   });
 
   it("parses emphasis", () => {
-    let parser = new InlineParser('_hello *there*_ world', () => {});
+    const parser = new InlineParser('_hello *there*_ world', ignoreWarnings);
     //                             012345678901234567890
     parser.feed(0,20);
     expect(parser.getMatches()).toStrictEqual([
@@ -98,7 +100,7 @@ describe("InlineParser", () => {
   });
 
   it("parses mark", () => {
-    let parser = new InlineParser('{=hello=}', () => {});
+    const parser = new InlineParser('{=hello=}', ignoreWarnings);
     //                             012345678
     parser.feed(0,8);
     expect(parser.getMatches()).toStrictEqual([
@@ -109,7 +111,7 @@ describe("InlineParser", () => {
   });
 
   it("parses inserted", () => {
-    let parser = new InlineParser('{+hello+}', () => {});
+    const parser = new InlineParser('{+hello+}', ignoreWarnings);
     //                             012345678
     parser.feed(0,8);
     expect(parser.getMatches()).toStrictEqual([
@@ -120,7 +122,7 @@ describe("InlineParser", () => {
   });
 
   it("parses quoted", () => {
-    let parser = new InlineParser('"dog\'s breakfast"', () => {});
+    const parser = new InlineParser('"dog\'s breakfast"', ignoreWarnings);
     //                             0123 4567890123456
     parser.feed(0,16);
     expect(parser.getMatches()).toStrictEqual([
@@ -133,7 +135,7 @@ describe("InlineParser", () => {
   });
 
   it("parses attributes", () => {
-    let parser = new InlineParser('{#foo .bar baz="bim"}', () => {});
+    const parser = new InlineParser('{#foo .bar baz="bim"}', ignoreWarnings);
     //                             012345678901234567890
     parser.feed(0,20);
     expect(parser.getMatches()).toStrictEqual([
@@ -147,7 +149,7 @@ describe("InlineParser", () => {
   });
 
   it("parses inline links", () => {
-    let parser = new InlineParser('[foobar](url)', () => {});
+    const parser = new InlineParser('[foobar](url)', ignoreWarnings);
     //                             0123456789012
     parser.feed(0,12);
     expect(parser.getMatches()).toStrictEqual([
@@ -161,7 +163,7 @@ describe("InlineParser", () => {
   });
 
   it("parses reference links", () => {
-    let parser = new InlineParser('[foobar][1]', () => {});
+    const parser = new InlineParser('[foobar][1]', ignoreWarnings);
     //                             01234567890
     parser.feed(0,10);
     expect(parser.getMatches()).toStrictEqual([
@@ -175,7 +177,7 @@ describe("InlineParser", () => {
   });
 
   it("parses inline images", () => {
-    let parser = new InlineParser('![foobar](url)', () => {});
+    const parser = new InlineParser('![foobar](url)', ignoreWarnings);
     //                             01234567890123
     parser.feed(0,13);
     expect(parser.getMatches()).toStrictEqual([
@@ -190,7 +192,7 @@ describe("InlineParser", () => {
   });
 
   it("parses emojis", () => {
-    let parser = new InlineParser(':+1:', () => {});
+    const parser = new InlineParser(':+1:', ignoreWarnings);
     //                             0123
     parser.feed(0,3);
     expect(parser.getMatches()).toStrictEqual([
@@ -199,7 +201,7 @@ describe("InlineParser", () => {
   });
 
   it("parses ellipses", () => {
-    let parser = new InlineParser('...', () => {});
+    const parser = new InlineParser('...', ignoreWarnings);
     //                             0123
     parser.feed(0,2);
     expect(parser.getMatches()).toStrictEqual([
@@ -208,7 +210,7 @@ describe("InlineParser", () => {
   });
 
   it("parses dashes", () => {
-    let parser = new InlineParser('a---b--c', () => {});
+    const parser = new InlineParser('a---b--c', ignoreWarnings);
     //                             01234567
     parser.feed(0,7);
     expect(parser.getMatches()).toStrictEqual([

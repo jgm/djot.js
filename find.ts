@@ -10,7 +10,7 @@ const find = function(subj : string, patt : RegExp, startpos : number) : null | 
   patt.lastIndex = startpos;
   const result = (patt.exec(subj) as null | RegExpMatchArrayWithIndices);
   if (result !== null) {
-    var idx = 1;
+    let idx = 1;
     const capts = [];
     while (result.indices[idx]) {
       capts.push(subj.substring(result.indices[idx][0], result.indices[idx][1]));

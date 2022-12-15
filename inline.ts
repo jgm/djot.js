@@ -109,7 +109,7 @@ const matchesPattern = function(match : Event, patt : RegExp) : boolean {
 
 const pattNonspace = pattern("[^ \t\r\n]");
 const pattLineEnd = pattern("[ \\t]*\\r?\\n");
-const pattPunctuation = pattern("['!\"#$%&\\\\'()\\*+,\\-\\.\\/:;<=>?@\\[\\]\^_`{|}~']");
+const pattPunctuation = pattern("['!\"#$%&\\\\'()\\*+,\\-\\.\\/:;<=>?@\\[\\]\\^_`{|}~']");
 const pattAutolink = pattern("\\<([^<>\\s]+)\\>");
 const pattDelim = pattern("[_*~^+='\"-]");
 const pattEmoji = pattern(":[\\w_+-]+:");
@@ -135,13 +135,13 @@ const betweenMatched = function(
              defaultmatch : string,
              opentest : ((self : InlineParser, pos : number) => boolean)) {
   return function(self : InlineParser, pos : number, endpos : number) : number {
-    let subject = self.subject;
+    const subject = self.subject;
     let can_open = find(subject, pattNonspace, pos + 1) !== null &&
                    opentest(self, pos);
     let can_close = find(subject, pattNonspace, pos - 1) !== null;
-    let has_open_marker = matchesPattern(self.matches[pos - 1],
+    const has_open_marker = matchesPattern(self.matches[pos - 1],
                                           pattern("open_marker"));
-    let has_close_marker = pos + 1 <= endpos &&
+    const has_close_marker = pos + 1 <= endpos &&
                               subject.codePointAt(pos + 1) === C_RIGHT_BRACE;
     let endcloser = pos;
     let startopener = pos;
@@ -168,11 +168,11 @@ const betweenMatched = function(
     if (has_close_marker) {
       d = "{" + d;
     }
-    let openers = self.openers[d];
+    const openers = self.openers[d];
 
     if (can_close && openers && openers.length > 0) {
       // check openers for a match
-      let opener = openers[openers.length - 1];
+      const opener = openers[openers.length - 1];
       if (opener.endpos !== pos - 1) { // exclude empty emph
         self.clearOpeners(opener.startpos, pos);
         self.addMatch(opener.startpos, opener.endpos, "+" + annotation);
@@ -201,12 +201,12 @@ const betweenMatched = function(
 // handlers for specific code points:
 const matchers = {
   [C_BACKTICK]: function(self : InlineParser, pos : number, endpos : number) : number | null {
-    let subject = self.subject;
-    let m = boundedFind(subject, pattBackticks0, pos, endpos);
+    const subject = self.subject;
+    const m = boundedFind(subject, pattBackticks0, pos, endpos);
     if (m === null) {
       return null;
     }
-    let endchar = m.endpos;
+    const endchar = m.endpos;
     if (find(subject, pattDoubleDollars, pos - 2) &&
         !find(subject, pattBackslash, pos - 3)) {
       delete self.matches[pos - 2];
@@ -226,15 +226,15 @@ const matchers = {
   },
 
     [C_BACKSLASH]: function(self : InlineParser, pos : number, endpos : number) : number | null {
-      let subject = self.subject;
-      let mLineEnd = boundedFind(subject, pattLineEnd, pos + 1, endpos);
+      const subject = self.subject;
+      const mLineEnd = boundedFind(subject, pattLineEnd, pos + 1, endpos);
       if (mLineEnd !== null) {
         // see if there were preceding spaces and remove them
         if (self.matches.length > 0) {
-          let lastmatch = self.matches[self.matches.length - 1];
+          const lastmatch = self.matches[self.matches.length - 1];
           if (lastmatch.annot === "str") {
             let ep = lastmatch.endpos;
-            let sp = lastmatch.startpos;
+            const sp = lastmatch.startpos;
             while (ep >= sp &&
                     (subject.codePointAt(ep) === C_SPACE ||
                      subject.codePointAt(ep) === C_TAB)) {
@@ -251,7 +251,7 @@ const matchers = {
         self.addMatch(pos + 1, mLineEnd.endpos, "hardbreak");
         return mLineEnd.endpos + 1;
       } else {
-        let mPunct = boundedFind(subject, pattPunctuation, pos + 1, endpos);
+        const mPunct = boundedFind(subject, pattPunctuation, pos + 1, endpos);
         if (mPunct !== null) {
           self.addMatch(pos, pos, "escape");
           self.addMatch(mPunct.startpos, mPunct.endpos, "str");
@@ -269,14 +269,14 @@ const matchers = {
     },
 
     [C_LESSTHAN]: function(self : InlineParser, pos : number, endpos : number) : number | null {
-      let subject = self.subject;
-      let m = boundedFind(subject, pattAutolink, pos, endpos);
+      const subject = self.subject;
+      const m = boundedFind(subject, pattAutolink, pos, endpos);
       if (m === null) {
         return null;
       }
-      let endurl = m.endpos;
-      let starturl = m.startpos;
-      let url = m.captures[0];
+      const endurl = m.endpos;
+      const starturl = m.startpos;
+      const url = m.captures[0];
       if (url.match(/[^:]@/)) { // email
         self.addMatch(starturl, starturl, "+email");
         self.addMatch(starturl + 1, endurl - 1, "str");
@@ -308,7 +308,7 @@ const matchers = {
                             if (pos === 0) {
                               return true;
                             } else {
-                              let cp = self.subject.codePointAt(pos - 1);
+                              const cp = self.subject.codePointAt(pos - 1);
                               return (cp === C_SPACE ||
                                       cp === C_TAB ||
                                       cp === C_CR ||
@@ -341,7 +341,7 @@ const matchers = {
     },
 
     [C_COLON]: function(self : InlineParser, pos : number, endpos : number) : number | null {
-      let m = boundedFind(self.subject, pattEmoji, pos, endpos)
+      const m = boundedFind(self.subject, pattEmoji, pos, endpos)
       if (m) {
         self.addMatch(m.startpos, m.endpos, "emoji");
         return m.endpos + 1;
@@ -361,7 +361,7 @@ const matchers = {
     },
 
     [C_LEFT_BRACKET]: function(self : InlineParser, pos : number, endpos : number) : number {
-      let m = boundedFind(self.subject, pattNoteReference, pos + 1, endpos);
+      const m = boundedFind(self.subject, pattNoteReference, pos + 1, endpos);
       if (m) { // footnote ref
         self.addMatch(pos, m.endpos, "footnote_reference");
         return m.endpos + 1;
@@ -374,14 +374,14 @@ const matchers = {
     },
 
     [C_RIGHT_BRACKET]: function(self : InlineParser, pos : number, endpos: number) : number | null {
-      let openers = self.openers["["];
-      let subject = self.subject;
+      const openers = self.openers["["];
+      const subject = self.subject;
       if (openers && openers.length > 0) {
-        let opener = openers[openers.length - 1];
+        const opener = openers[openers.length - 1];
         if (opener.annot === "reference_link") {
           // found a reference link
           // add the matches
-          let isImage =
+          const isImage =
                   subject.codePointAt(opener.startpos - 1) === C_BANG &&
                   subject.codePointAt(opener.startpos - 2) !== C_BACKSLASH;
           if (isImage) {
@@ -450,18 +450,18 @@ const matchers = {
       if (!self.destination) {
         return null;
       }
-      let parens = self.openers["("];
+      const parens = self.openers["("];
       if (parens && parens.length > 0) {
         parens.pop(); // clear opener
         self.addMatch(pos, pos, "str");
         return pos + 1;
       } else {
-        let subject = self.subject;
-        let openers = self.openers["["];
-        let opener = openers[openers.length - 1];
+        const subject = self.subject;
+        const openers = self.openers["["];
+        const opener = openers[openers.length - 1];
         if (openers && openers.length > 0 && opener.annot === "explicit_link") {
           // we have inline link
-          let isImage =
+          const isImage =
                   subject.codePointAt(opener.startpos - 1) === C_BANG &&
                   subject.codePointAt(opener.startpos - 2) !== C_BACKSLASH;
           if (isImage) {
@@ -489,7 +489,7 @@ const matchers = {
     },
 
     [C_HYPHEN]: function(self : InlineParser, pos : number, endpos : number): number | null {
-      let subject = self.subject;
+      const subject = self.subject;
       if (subject.codePointAt(pos - 1) === C_LEFT_BRACE ||
           subject.codePointAt(pos + 1) === C_RIGHT_BRACE) {
         betweenMatched("-", "delete", "str", hasBrace);
@@ -512,8 +512,8 @@ const matchers = {
         return pos + 2;
       }
       // Try to construct a homogeneous sequence of dashes
-      let all_em = hyphens % 3 == 0;
-      let all_en = hyphens % 2 == 0;
+      const all_em = hyphens % 3 == 0;
+      const all_en = hyphens % 2 == 0;
       while (hyphens > 0) {
         if (all_em) {
           self.addMatch(pos, pos + 2, "em_dash");
@@ -589,7 +589,7 @@ class InlineParser {
 
   reparseAttributes() : void {
     // Reparse attributeSlices that we tried to parse as an attribute
-    let slices = this.attributeSlices;
+    const slices = this.attributeSlices;
     if (slices === null) {
       return;
     }
@@ -606,7 +606,7 @@ class InlineParser {
   }
 
   getMatches() : Event[] {
-    let sorted = [];
+    const sorted = [];
     const subject = this.subject;
     let lastsp, lastep, lastannot;
     if (this.attributeParser) {
@@ -615,8 +615,8 @@ class InlineParser {
     }
     for (let i = this.firstpos; i <= this.lastpos; i++) {
       if (i in this.matches) {
-        let {startpos: sp, endpos: ep, annot: annot} = this.matches[i];
-        let lastsorted = sorted[sorted.length - 1];
+        const {startpos: sp, endpos: ep, annot: annot} = this.matches[i];
+        const lastsorted = sorted[sorted.length - 1];
         if (annot == "str" && lastsorted && lastsorted.annot === "str" &&
             lastsorted.endpos === sp - 1) {
           // consolidate adjacent strs
@@ -666,11 +666,11 @@ class InlineParser {
 
   clearOpeners(startpos : number, endpos : number) : void {
     // Remove other openers in between the matches
-    for (let k in this.openers) {
-      let v = this.openers[k];
+    for (const k in this.openers) {
+      const v = this.openers[k];
       let i = v.length - 1
       while (v[i]) {
-        let opener = v[i];
+        const opener = v[i];
         if (opener.startpos >= startpos && opener.endpos <= endpos) {
           v.splice(i, 1);
         } else if ((opener.substartpos && opener.substartpos >= startpos) &&
@@ -689,7 +689,7 @@ class InlineParser {
   strMatches(startpos : number, endpos : number) : void {
     // convert matches between startpos and endpos to str
     for (let i = startpos; i <= endpos; i++) {
-      let m = this.matches[i];
+      const m = this.matches[i];
       if (m) {
         if (m.annot !== "str" && m.annot !== "escape") {
           m.annot = "str";
@@ -702,8 +702,8 @@ class InlineParser {
   feed(startpos : number, endpos : number) : void {
 
     // Feed a slice to the parser, updating state.
-    let subject = this.subject;
-    let matchers = this.matchers;
+    const subject = this.subject;
+    const matchers = this.matchers;
     if (this.firstpos == -1 || startpos < this.firstpos) {
       this.firstpos = startpos;
     }
@@ -713,24 +713,24 @@ class InlineParser {
     let pos = startpos;
     while (pos <= endpos) {
       if (this.attributeParser !== null) {
-        let sp = pos;
-        let nextSpecial = findSpecial(subject, pos, endpos);
+        const sp = pos;
+        const nextSpecial = findSpecial(subject, pos, endpos);
         let ep2;
         if (nextSpecial === null) {
           ep2 = endpos;
         } else {
           ep2 = nextSpecial;
         }
-        let result = this.attributeParser.feed(sp, ep2);
-        let ep = result.position;
+        const result = this.attributeParser.feed(sp, ep2);
+        const ep = result.position;
         if (result.status === "done") {
-          let attributeStart = this.attributeStart;
+          const attributeStart = this.attributeStart;
           // add attribute matches
           if (attributeStart !== null) {
             this.addMatch(attributeStart, attributeStart, "+attributes");
             this.addMatch(ep, ep, "-attributes");
           }
-          let attrMatches = this.attributeParser.matches;
+          const attrMatches = this.attributeParser.matches;
           // add attribute matches
           attrMatches.forEach( (match) => {
             this.addMatch(match.startpos, match.endpos, match.annot);
@@ -755,7 +755,7 @@ class InlineParser {
         }
       } else {
         // find next interesting character:
-        let nextSpecial = findSpecial(subject, pos, endpos);
+        const nextSpecial = findSpecial(subject, pos, endpos);
         let newpos;
         if (nextSpecial === null) {
           newpos = endpos + 1;
@@ -771,7 +771,7 @@ class InlineParser {
         }
         // if we get here, then newpos = pos,
         // i.e. we have something interesting at pos
-        let c = subject.codePointAt(pos);
+        const c = subject.codePointAt(pos);
         if (c === undefined) {
           throw("code point at " + pos + " is undefined.");
         }
@@ -787,12 +787,12 @@ class InlineParser {
           }
         } else if (this.verbatim > 0) {
           if (c === 96) {
-            let m = boundedFind(subject, pattBackticks1, pos, endpos);
+            const m = boundedFind(subject, pattBackticks1, pos, endpos);
             if (m) {
-              let endchar = m.endpos;
+              const endchar = m.endpos;
               if (m.endpos - pos + 1 === this.verbatim) {
                 // check for raw attribute
-                let m2 = boundedFind(subject, pattRawAttribute, endchar + 1, endpos);
+                const m2 = boundedFind(subject, pattRawAttribute, endchar + 1, endpos);
                 if (m2 && this.verbatimType == "verbatim") { // raw
                   this.addMatch(pos, endchar, "-" + this.verbatimType);
                   this.addMatch(m2.startpos, m2.endpos, "raw_format");
@@ -816,9 +816,9 @@ class InlineParser {
             pos = pos + 1;
           }
         } else {
-          let matcher = this.matchers[c];
+          const matcher = this.matchers[c];
           if (matcher) {
-            let res = matcher(this, pos, endpos);
+            const res = matcher(this, pos, endpos);
             if (res === null) {
               pos = this.singleChar(pos);
             } else {
