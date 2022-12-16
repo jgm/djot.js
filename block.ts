@@ -50,6 +50,7 @@ const pattDivFence = pattern("(::::*)[ \\t]*\\r?\\n");
 const pattDivFenceStart = pattern("(::::*)[ \\t]*");
 const pattDivFenceEnd = pattern("([\\w_-]*)[ \\t]*\\r?\\n");
 const pattReferenceDefinition = pattern("\\[([^\\]\\r\\n]*)\\]:[ \\t]*");
+const pattTableRow = pattern("(\\|[^\\r\\n]*\\|)[ \\t]*\\r?\\n");
 
 type EventIterator = {
   next : () => { value: Event, done: boolean };
@@ -332,6 +333,7 @@ class Parser {
       }
     },
 
+    /*
     { name: "list_item",
       isPara: false,
       content: ContentType.Block,
@@ -401,38 +403,44 @@ class Parser {
         this.containers.pop();
       }
     },
+*/
 
-/*
     { name: "table",
+      isPara: false,
       content: ContentType.Cells,
-      continue: function(_container)
-        let sp, ep = this.find("^|[^\r\n]*|")
-        let eolsp = " *[\r\n]" // make sure at end of line
-        if sp and eolsp {
-          return this.parseTableRow(sp, ep)
+      continue: (container) => {
+        let m = this.find(pattTableRow);
+        if (m) {
+          let rawrow = m.captures[0];
+          return this.parseTableRow(m.startpos, m.startpos + rawrow.length);
+        } else {
+          return false;
         }
       },
       open: (spec) => {
-        let sp, ep = this.find("^|[^\r\n]*|")
-        let eolsp = " *[\r\n]" // make sure at end of line
-        if sp and eolsp {
-          this.addContainer(Container:new(spec, { columns = 0 }))
-          this.addMatch(sp, sp, "+table")
-          if this.parseTableRow(sp, ep) {
-            return true
+        let m = this.find(pattTableRow);
+        if (m) {
+          this.addContainer(new Container(spec, { columns: 0 }));
+          if (this.parseTableRow(m.startpos,
+                                 m.startpos + m.captures[0].length)) {
+            this.addMatch(m.startpos, m.startpos, "+table");
+            return true;
           } else {
-            this.containers.pop();
-            return false
+            return false;
           }
+        } else {
+          return false;
         }
      },
-      close: function(_container)
-        this.addMatch(this.pos, this.pos, "-table")
+      close: (container) => {
+        this.addMatch(this.pos, this.pos, "-table");
         this.containers.pop();
       }
     },
 
+/*
     { name: "attributes",
+      isPara: false,
       content: ContentType.Attributes,
       open: (spec) => {
         if this.find("^%{") {
@@ -715,10 +723,9 @@ class Parser {
         p = m.endpos + 1;
         if (p === this.starteol) {
           sepfound = true;
-          break;
         }
       } else {
-        break;
+        sepfound = true;
       }
     }
     if (sepfound) {

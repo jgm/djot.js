@@ -77,6 +77,39 @@ describe("Parser", () => {
     ]);
   });
 
+  it("parses tables", () => {
+    const events = [];
+    for (const event of new Parser("| a | b |\n|--|--:|\n|33|2| ", ignoreWarnings)) {
+      //                            012345678 901234567 8901234
+      events.push(event);
+    }
+    expect(events).toStrictEqual([
+      {startpos: 0, endpos: 0, annot: "+table"},
+      {startpos: 0, endpos: 0, annot: "+row"},
+      {startpos: 0, endpos: 0, annot: "+cell"},
+      {startpos: 2, endpos: 2, annot: "str"},
+      {startpos: 4, endpos: 4, annot: "-cell"},
+      {startpos: 4, endpos: 4, annot: "+cell"},
+      {startpos: 6, endpos: 6, annot: "str"},
+      {startpos: 8, endpos: 8, annot: "-cell"},
+      {startpos: 9, endpos: 9, annot: "-row"},
+      {startpos: 10, endpos: 10, annot: "+row"},
+      {startpos: 11, endpos: 12, annot: "separator_default"},
+      {startpos: 14, endpos: 16, annot: "separator_right"},
+      {startpos: 17, endpos: 17, annot: "-row"},
+      {startpos: 19, endpos: 19, annot: "+row"},
+      {startpos: 19, endpos: 19, annot: "+cell"},
+      {startpos: 20, endpos: 21, annot: "str"},
+      {startpos: 22, endpos: 22, annot: "-cell"},
+      {startpos: 22, endpos: 22, annot: "+cell"},
+      {startpos: 23, endpos: 23, annot: "str"},
+      {startpos: 24, endpos: 24, annot: "-cell"},
+      {startpos: 25, endpos: 25, annot: "-row"},
+      {startpos: 26, endpos: 26, annot: "-table"}
+    ]);
+  });
+
+
   it("parses code blocks", () => {
     const events = [];
     for (const event of new Parser("```` python\nif x == 3:\n  y = 4\n````\n", ignoreWarnings)) {
