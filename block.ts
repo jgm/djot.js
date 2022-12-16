@@ -45,7 +45,10 @@ const pattRowSep = pattern("(%:?)%-%-*(%:?)([ \t]*%|[ \t]*)");
 const pattNextBar = pattern("[^|\\r\\n]*|");
 const pattCaptionStart = pattern("\\^[ \\t]+");
 const pattFootnoteStart = pattern("\\[\\^([^\\]]+)\\]:\\s");
-const pattThematicBreak = pattern("[-*][ \t]*[-*][ \t]*[-*][-* \t]*[\r\n]");
+const pattThematicBreak = pattern("[-*][ \t]*[-*][ \\t]*[-*][-* \\t]*[\\r\\n]");
+const pattDivFence = pattern("(::::*)[ \\t]*[\\r\\n]");
+const pattDivFenceStart = pattern("(::::*)[ \\t]*");
+const pattDivFenceEnd = pattern("([\\w_-]*)[ \\t]*[\\r\\n]");
 
 type EventIterator = {
   next : () => { value: Event, done: boolean };
@@ -286,6 +289,59 @@ class Parser {
       }
     },
 
+    { name: "fenced_div",
+      isPara: false,
+      content: ContentType.Block,
+      continue: (container) => {
+        let tip = this.tip();
+        if (tip && tip.name === "code_block") {
+          return true; // see #109
+        }
+        let m = this.find(pattDivFence);
+        if (m && container.extra.colons) {
+          let colons = m.captures[0];
+          if (colons.length >= container.extra.colons) {
+            container.extra.endFenceStartpos = m.startpos;
+            container.extra.endFenceEndpos = m.startpos + colons.length - 1;
+            this.pos = m.endpos; // before newline
+            return false;
+          }
+        }
+        return true;
+      },
+      open: (spec) => {
+        let m = this.find(pattDivFenceStart);
+        if (!m) {
+          return false;
+        }
+        let colons = m.captures[0];
+        let m2 = this.find(pattDivFenceEnd);
+        if (!m2) {
+          return false;
+        }
+        let clsp = m2.startpos;
+        let lang = m2.captures[0];
+        this.addContainer(new Container(spec, {colons: colons.length}));
+        this.addMatch(m.startpos, m.endpos, "+div");
+        if (lang.length > 0) {
+          this.addMatch(clsp, clsp + lang.length, "class");
+        }
+        this.pos = m2.endpos + 1;
+        this.finishedLine = true;
+        return true;
+      },
+      close: (container) => {
+        let sp = container.extra.endFenceStartpos || this.pos;
+        let ep = container.extra.endFenceEndpos || this.pos;
+        // check to make sure the match is in order
+        this.addMatch(sp, ep, "-div");
+        if (sp === ep) {
+          this.warn("Unclosed div", this.pos);
+        }
+        this.containers.pop();
+      }
+    },
+
     { name: "code_block",
       isPara: false,
       content: ContentType.Text,
@@ -293,8 +349,8 @@ class Parser {
         const m = this.find(
                  pattern("(" + container.extra.border + "*)[ \\t]*[\\r\\n]"));
         if (m) {
-          container.extra.end_fence_sp = m.startpos;
-          container.extra.end_fence_ep = m.startpos + m.captures[0].length - 1;
+          container.extra.endFenceStartpos = m.startpos;
+          container.extra.endFenceEndpos = m.startpos + m.captures[0].length - 1;
           this.pos = m.endpos; // before newline
           this.finishedLine = true;
           return false;
@@ -329,8 +385,8 @@ class Parser {
         }
       },
       close: (container) => {
-        const sp = container.extra.end_fence_sp || this.pos;
-        const ep = container.extra.end_fence_ep || this.pos;
+        const sp = container.extra.endFenceStartpos || this.pos;
+        const ep = container.extra.endFenceEndpos || this.pos;
         this.addMatch(sp, ep, "-code_block");
         if (sp === ep) {
           this.warn("Unclosed code block", this.pos);
@@ -804,52 +860,6 @@ function Parser:specs()
       },
       close: function(_container)
         this.addMatch(this.pos, this.pos, "-reference_definition")
-        this.containers.pop();
-      }
-    },
-
-    { name: "fenced_div",
-      content: ContentType.Block,
-      continue: (container) => {
-        if this.containers[#this.containers].name === "code_block" {
-          return true // see #109
-        }
-        let sp, ep, equals = this.find("^(::::*)[ \t]*[r\n]")
-        if ep and #equals >= container.equals {
-          container.end_fence_sp = sp
-          container.end_fence_ep = sp + #equals - 1
-          this.pos = ep // before newline
-          return false
-        } else {
-          return true
-        }
-      },
-      open: (spec) => {
-        let sp, ep1, equals = this.find("^(::::*)[ \t]*")
-        if not ep1 {
-          return false
-        }
-        let clsp, ep = find(this.subject, "^[%w_-]*", ep1 + 1)
-        let _, eol = find(this.subject, "^[ \t]*[\r\n]", ep + 1)
-        if eol {
-          this.addContainer(Container:new(spec, {equals = #equals}))
-          this.addMatch(sp, ep, "+div")
-          if ep >= clsp {
-            this.addMatch(clsp, ep, "class")
-          }
-          this.pos = eol + 1
-          this.finishedLine = true
-          return true
-        }
-      },
-      close: (container) => {
-        let sp = container.end_fence_sp or this.pos
-        let ep = container.end_fence_ep or this.pos
-        // check to make sure the match is in order
-        this.addMatch(sp, ep, "-div")
-        if sp === ep {
-          this.warn({pos = this.pos, message = "Unclosed div"})
-        }
         this.containers.pop();
       }
     },
