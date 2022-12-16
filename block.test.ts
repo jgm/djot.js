@@ -105,7 +105,7 @@ describe("Parser", () => {
       {startpos: 23, endpos: 23, annot: "str"},
       {startpos: 24, endpos: 24, annot: "-cell"},
       {startpos: 25, endpos: 25, annot: "-row"},
-      {startpos: 26, endpos: 26, annot: "-table"}
+      {startpos: 27, endpos: 27, annot: "-table"}
     ]);
   });
 

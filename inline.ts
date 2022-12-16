@@ -641,7 +641,7 @@ class InlineParser {
         while (endpos > startpos && subject.codePointAt(endpos) === 32) {
           endpos = endpos - 1;
         }
-        sorted.push({startpos: startpos, endpos: endpos, annot: annot});
+        sorted[sorted.length - 1].endpos = endpos;
       }
       if (this.verbatim > 0) { // unclosed verbatim
         this.warn("Unclosed verbatim", endpos);

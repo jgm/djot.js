@@ -422,11 +422,13 @@ class Parser {
         if (m) {
           this.addContainer(new Container(spec, { columns: 0 }));
           let rawrow = m.captures[0];
+          this.addMatch(m.startpos, m.startpos, "+table");
           if (this.parseTableRow(m.startpos,
                                  m.startpos + rawrow.length - 1)) {
-            this.addMatch(m.startpos, m.startpos, "+table");
             return true;
           } else {
+            this.matches.pop(); // remove "+table" match
+            this.containers.pop();
             return false;
           }
         } else {
@@ -695,15 +697,50 @@ class Parser {
     }
   }
 
+  parseTableCell() : null | { startpos : number,
+                              endpos : number,
+                              matches : Event[] } {
+    let inlineParser = new InlineParser(this.subject, this.warn);
+    let cellComplete = false;
+    let sp = this.pos - 1; // we start on char after |
+    let ep = sp; // for now
+    this.skipSpace();
+    while (!cellComplete) {
+      let m = this.find(pattNextBar);
+      if (m === null) {
+        cellComplete = false;
+      } else { // we matched a |
+        let nextbar = m.endpos;
+        if (this.subject.charAt(nextbar - 1) === "\\") {  // \|
+          inlineParser.feed(this.pos, nextbar);
+          this.pos = nextbar + 1;
+        } else if (inlineParser.inVerbatim()) {
+          inlineParser.feed(this.pos, nextbar);
+          this.pos = nextbar + 1;
+        } else {
+          inlineParser.feed(this.pos, nextbar - 1);
+          this.pos = nextbar + 1;
+          cellComplete = true;
+          ep = nextbar;
+        }
+      }
+    }
+    if (cellComplete) {
+      let cellMatches = inlineParser.getMatches();
+      return { startpos: sp, endpos: ep, matches: cellMatches };
+    } else {
+      return null;
+    }
+  }
+
   // Parameters are start and end position
   parseTableRow(sp : number, ep : number) : boolean {
-    console.log(sp,ep);
     let origMatches = this.matches.length;   // so we can rewind
     let startpos = this.pos;
     this.addMatch(sp, sp, "+row");
     // skip | and any initial space in the cell:
     this.pos++;
-    this.skipSpace();
+
     // check to see if we have a separator line
     let seps = [];
     let p = this.pos;
@@ -741,79 +778,42 @@ class Parser {
       this.finishedLine = true;
       return true;
     }
+
     // if we get here, we're parsing a regular row
-    let inlineParser = new InlineParser(this.subject, this.warn);
-    this.addMatch(sp, sp, "+cell");
-    let completeCell = false;
     while (this.pos <= ep) {
-      // parse a chunk as inline content
-      let nextbar = null;
-      while (!nextbar) {
-        let m1 = this.find(pattNextBar);
-        if (m1 !== null) {
-          nextbar = m1.endpos;
-        } else {
-          break;
+      let cell = this.parseTableCell();
+      if (cell !== null) {
+        // add matches for cell
+        this.addMatch(cell.startpos, cell.startpos, "+cell");
+        let cellMatches = cell.matches;
+        cellMatches.forEach((match, i) => {
+          let { startpos: s, endpos: e, annot: ann } = match;
+          if (i === cellMatches.length - 1 && ann === "str") {
+            // strip trailing space
+            while (this.subject.codePointAt(e) === 32 && e >= s) {
+              e = e - 1;
+            }
+          }
+          this.addMatch(s,e,ann);
+        });
+        this.addMatch(cell.endpos, cell.endpos, "-cell");
+      } else {
+        // rewind, this is not a valid table row
+        this.pos = startpos;
+        while (this.matches.length > origMatches) {
+          this.matches.pop();
         }
+        return false;
+      }
+    }
 
-        if (this.subject.charAt(nextbar - 1) === "\\") {  // \|
-          inlineParser.feed(this.pos, nextbar);
-          this.pos = nextbar + 1;
-          nextbar = null;
-        } else {
-          if (inlineParser.inVerbatim()) {
-            inlineParser.feed(nextbar, nextbar);
-          } else {
-            inlineParser.feed(this.pos, nextbar - 1);
-          }
-          this.pos = nextbar + 1;
-          nextbar = null;
-        }
-      }
-      completeCell = (nextbar !== null);
-      console.log("completeCell", completeCell, nextbar);
-      if (!completeCell) {
-        console.log(nextbar, this.pos, ep);
-        break;
-      }
-      // add a table cell
-      let cellMatches = inlineParser.getMatches();
-      for (let i=0; i < cellMatches.length; i++) {
-        let match = cellMatches[i];
-        let { startpos: s, endpos: e, annot: ann } = match;
-        if (i === cellMatches.length - 1 && ann === "str") {
-          // strip trailing space
-          while (this.subject.codePointAt(e) === 32 && e >= s) {
-            e = e - 1
-          }
-        }
-        this.addMatch(s,e,ann);
-      }
-      if (nextbar !== null && nextbar < ep) {
-        this.addMatch(nextbar, nextbar, "-cell");
-        if (nextbar < ep) {
-          // reset inline parser state
-          inlineParser = new InlineParser(this.subject, this.warn);
-          this.addMatch(nextbar, nextbar, "+cell");
-          this.skipSpace();
-        }
-      }
-    }
-    if (!completeCell) {
-      // rewind, this is not a valid table row
-      this.pos = startpos;
-      while (this.matches.length - 1 > origMatches) {
-        this.matches.pop();
-      }
-      return false;
-    } else {
-      this.addMatch(this.pos, this.pos, "-row");
-      this.pos = this.starteol;
-      this.finishedLine = true;
-      return true;
-    }
+    // if we get here, we've parsed a table row
+    this.addMatch(this.pos, this.pos, "-row");
+    this.pos = this.starteol;
+    this.finishedLine = true;
+    return true;
+    return true;
   }
-
 
   // Returns an iterator over events.  At each iteration, the iterator
   // returns three values: start byte position, end byte position,
