@@ -40,15 +40,15 @@ const pattWord = pattern("^\\w+\\s");
 const pattWhitespace = pattern("[ \\t\\r\\n]");
 const pattBlockquotePrefix = pattern("[>]\\s");
 const pattBangs = pattern("#+");
-const pattCodeFence = pattern("(~~~~*|````*)([ \\t]*)(\\S*)[ \\t]*[\\r\\n]");
+const pattCodeFence = pattern("(~~~~*|````*)([ \\t]*)(\\S*)[ \\t]*\\r?\\n");
 const pattRowSep = pattern("(%:?)%-%-*(%:?)([ \t]*%|[ \t]*)");
 const pattNextBar = pattern("[^|\\r\\n]*|");
 const pattCaptionStart = pattern("\\^[ \\t]+");
 const pattFootnoteStart = pattern("\\[\\^([^\\]]+)\\]:\\s");
-const pattThematicBreak = pattern("[-*][ \t]*[-*][ \\t]*[-*][-* \\t]*[\\r\\n]");
-const pattDivFence = pattern("(::::*)[ \\t]*[\\r\\n]");
+const pattThematicBreak = pattern("[-*][ \t]*[-*][ \\t]*[-*][-* \\t]*\\r?\\n");
+const pattDivFence = pattern("(::::*)[ \\t]*\\r?\\n");
 const pattDivFenceStart = pattern("(::::*)[ \\t]*");
-const pattDivFenceEnd = pattern("([\\w_-]*)[ \\t]*[\\r\\n]");
+const pattDivFenceEnd = pattern("([\\w_-]*)[ \\t]*\\r?\\n");
 
 type EventIterator = {
   next : () => { value: Event, done: boolean };
@@ -315,7 +315,7 @@ class Parser {
           return false;
         }
         let colons = m.captures[0];
-        let m2 = this.find(pattDivFenceEnd);
+        let m2 = find(this.subject, pattDivFenceEnd, m.endpos + 1);
         if (!m2) {
           return false;
         }
@@ -324,7 +324,7 @@ class Parser {
         this.addContainer(new Container(spec, {colons: colons.length}));
         this.addMatch(m.startpos, m.endpos, "+div");
         if (lang.length > 0) {
-          this.addMatch(clsp, clsp + lang.length, "class");
+          this.addMatch(clsp, clsp + lang.length - 1, "class");
         }
         this.pos = m2.endpos + 1;
         this.finishedLine = true;

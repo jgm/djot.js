@@ -113,7 +113,7 @@ describe("Parser", () => {
       events.push(event);
     }
     expect(events).toStrictEqual([
-      { startpos: 0, endpos: 7, annot: "+div" },
+      { startpos: 0, endpos: 4, annot: "+div" },
       { startpos: 5, endpos: 7, annot: "class" },
       { startpos: 10, endpos: 10, annot: "+para" },
       { startpos: 10, endpos: 14, annot: "str" },
@@ -122,7 +122,8 @@ describe("Parser", () => {
       { startpos: 17, endpos: 17, annot: "+para" },
       { startpos: 17, endpos: 18, annot: "str" },
       { startpos: 19, endpos: 19, annot: "-para" },
-      { startpos: 20, endpos: 23, annot: "-div" }
+      { startpos: 20, endpos: 23, annot: "-div" },
+      { startpos: 24, endpos: 24, annot: "blankline" }
     ]);
   });
 
