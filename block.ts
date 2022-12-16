@@ -49,6 +49,7 @@ const pattThematicBreak = pattern("[-*][ \t]*[-*][ \\t]*[-*][-* \\t]*\\r?\\n");
 const pattDivFence = pattern("(::::*)[ \\t]*\\r?\\n");
 const pattDivFenceStart = pattern("(::::*)[ \\t]*");
 const pattDivFenceEnd = pattern("([\\w_-]*)[ \\t]*\\r?\\n");
+const pattReferenceDefinition = pattern("\\[([^]\\r\\n]*)\\]:[ \\t]*");
 
 type EventIterator = {
   next : () => { value: Event, done: boolean };
@@ -267,6 +268,46 @@ class Parser {
         this.containers.pop();
       }
     },
+
+    { name: "reference_definition",
+      isPara: false,
+      content: ContentType.None,
+      continue: (container) => {
+        if (container.extra.indent >= this.indent) {
+          return false;
+        }
+        if (this.pos < this.starteol) {
+          this.addMatch(this.pos, this.starteol - 1, "reference_value");
+          this.pos = this.starteol;
+          return true;
+        } else {
+          return false;
+        }
+      },
+      open: (spec) => {
+        let m = this.find(pattReferenceDefinition);
+        if (m) {
+          let label = m.captures[0];
+          this.addContainer(new Container(spec,
+             { key: label, indent: this.indent }));
+          this.addMatch(m.startpos, m.startpos, "+reference_definition");
+          this.addMatch(m.startpos, m.startpos + label.length + 1,
+                          "reference_key");
+          if (m.endpos + 1 < this.starteol) {
+            this.addMatch(m.endpos + 1, this.starteol - 1, "reference_value");
+          }
+          this.pos = this.starteol - 1;
+          return true;
+        } else {
+          return false;
+        }
+      },
+      close: (container) => {
+        this.addMatch(this.pos, this.pos, "-reference_definition");
+        this.containers.pop();
+      }
+    },
+
 
     // should go before list_item_spec
     { name: "thematic_break",
@@ -828,40 +869,6 @@ function Parser:specs()
       },
       close: function(_container)
         this.addMatch(this.pos, this.pos, "-list_item")
-        this.containers.pop();
-      }
-    },
-
-    { name: "reference_definition",
-      content: ContentType.None,
-      continue: (container) => {
-        if container.indent >= this.indent {
-          return false
-        }
-        let _, ep, rest = this.find("^(%S+)")
-        if ep {
-          this.addMatch(ep - #rest + 1, ep, "reference_value")
-          this.pos = ep + 1
-        }
-        return true
-      },
-      open: (spec) => {
-        let sp, ep, label, rest = this.find("^%[([^]\r\n]*)%]:[ \t]*(%S*)")
-        if sp {
-          this.addContainer(Container:new(spec,
-             { key = label,
-               indent = this.indent }))
-          this.addMatch(sp, sp, "+reference_definition")
-          this.addMatch(sp, sp + #label + 1, "reference_key")
-          if #rest > 0 {
-            this.addMatch(ep - #rest + 1, ep, "reference_value")
-          }
-          this.pos = ep + 1
-          return true
-        }
-      },
-      close: function(_container)
-        this.addMatch(this.pos, this.pos, "-reference_definition")
         this.containers.pop();
       }
     },

@@ -62,6 +62,21 @@ describe("Parser", () => {
     ]);
   });
 
+  it("parses reference definitions", () => {
+    const events = [];
+    for (const event of new Parser("[foo]: bar\n baz\n", ignoreWarnings)) {
+      //                            0123456789 01234 5
+      events.push(event);
+    }
+    expect(events).toStrictEqual([
+      { startpos: 0, endpos: 0, annot: "+reference_definition" },
+      { startpos: 0, endpos: 4, annot: "reference_key" },
+      { startpos: 7, endpos: 9, annot: "reference_value" },
+      { startpos: 12, endpos: 14, annot: "reference_value" },
+      { startpos: 15, endpos: 15, annot: "-reference_definition" }
+    ]);
+  });
+
   it("parses code blocks", () => {
     const events = [];
     for (const event of new Parser("```` python\nif x == 3:\n  y = 4\n````\n", ignoreWarnings)) {
