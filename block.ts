@@ -41,8 +41,8 @@ const pattWhitespace = pattern("[ \\t\\r\\n]");
 const pattBlockquotePrefix = pattern("[>]\\s");
 const pattBangs = pattern("#+");
 const pattCodeFence = pattern("(~~~~*|````*)([ \\t]*)(\\S*)[ \\t]*\\r?\\n");
-const pattRowSep = pattern("(%:?)%-%-*(%:?)([ \t]*%|[ \t]*)");
-const pattNextBar = pattern("[^|\\r\\n]*|");
+const pattRowSep = pattern("(:?)--*(:?)([ \\t]*\\|[ \\t]*)");
+const pattNextBar = pattern("[^|\\r\\n]*\\|");
 const pattCaptionStart = pattern("\\^[ \\t]+");
 const pattFootnoteStart = pattern("\\[\\^([^\\]]+)\\]:\\s");
 const pattThematicBreak = pattern("[-*][ \t]*[-*][ \\t]*[-*][-* \\t]*\\r?\\n");
@@ -412,7 +412,7 @@ class Parser {
         let m = this.find(pattTableRow);
         if (m) {
           let rawrow = m.captures[0];
-          return this.parseTableRow(m.startpos, m.startpos + rawrow.length);
+          return this.parseTableRow(m.startpos, m.startpos + rawrow.length - 1);
         } else {
           return false;
         }
@@ -421,8 +421,9 @@ class Parser {
         let m = this.find(pattTableRow);
         if (m) {
           this.addContainer(new Container(spec, { columns: 0 }));
+          let rawrow = m.captures[0];
           if (this.parseTableRow(m.startpos,
-                                 m.startpos + m.captures[0].length)) {
+                                 m.startpos + rawrow.length - 1)) {
             this.addMatch(m.startpos, m.startpos, "+table");
             return true;
           } else {
@@ -696,6 +697,7 @@ class Parser {
 
   // Parameters are start and end position
   parseTableRow(sp : number, ep : number) : boolean {
+    console.log(sp,ep);
     let origMatches = this.matches.length;   // so we can rewind
     let startpos = this.pos;
     this.addMatch(sp, sp, "+row");
@@ -723,9 +725,10 @@ class Parser {
         p = m.endpos + 1;
         if (p === this.starteol) {
           sepfound = true;
+          break;
         }
       } else {
-        sepfound = true;
+        break;
       }
     }
     if (sepfound) {
@@ -738,12 +741,13 @@ class Parser {
       this.finishedLine = true;
       return true;
     }
+    // if we get here, we're parsing a regular row
     let inlineParser = new InlineParser(this.subject, this.warn);
     this.addMatch(sp, sp, "+cell");
     let completeCell = false;
     while (this.pos <= ep) {
       // parse a chunk as inline content
-      let nextbar
+      let nextbar = null;
       while (!nextbar) {
         let m1 = this.find(pattNextBar);
         if (m1 !== null) {
@@ -757,18 +761,19 @@ class Parser {
           this.pos = nextbar + 1;
           nextbar = null;
         } else {
-          inlineParser.feed(this.pos, nextbar - 1);
           if (inlineParser.inVerbatim()) {
             inlineParser.feed(nextbar, nextbar);
-            this.pos = nextbar + 1;
-            nextbar = null;
           } else {
-            this.pos = nextbar + 1;
+            inlineParser.feed(this.pos, nextbar - 1);
           }
+          this.pos = nextbar + 1;
+          nextbar = null;
         }
       }
       completeCell = (nextbar !== null);
+      console.log("completeCell", completeCell, nextbar);
       if (!completeCell) {
+        console.log(nextbar, this.pos, ep);
         break;
       }
       // add a table cell
@@ -784,7 +789,7 @@ class Parser {
         }
         this.addMatch(s,e,ann);
       }
-      if (nextbar) {
+      if (nextbar !== null && nextbar < ep) {
         this.addMatch(nextbar, nextbar, "-cell");
         if (nextbar < ep) {
           // reset inline parser state
