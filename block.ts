@@ -332,6 +332,175 @@ class Parser {
       }
     },
 
+    { name: "list_item",
+      isPara: false,
+      content: ContentType.Block,
+      continue: (container) => {
+        if (this.indent > container.extra.indent || this.find("^[\r\n]")) {
+          return true;
+        } else {
+          return false;
+        }
+      },
+      open: (spec) => {
+        let sp, ep = this.find("^[-*+:]%s");
+        if (!sp) {
+          sp, ep = this.find("^%d+[.)]%s");
+        }
+        if (!sp) {
+          sp, ep = this.find("^%(%d+%)%s");
+        }
+        if (!sp) {
+          sp, ep = this.find("^[ivxlcdmIVXLCDM]+[.)]%s");
+        }
+        if (!sp) {
+          sp, ep = this.find("^%([ivxlcdmIVXLCDM]+%)%s");
+        }
+        if (!sp) {
+          sp, ep = this.find("^%a[.)]%s");
+        }
+        if (!sp) {
+          sp, ep = this.find("^%(%a%)%s");
+        }
+        if (!sp) {
+          return false;
+        }
+        let marker = sub(this.subject, sp, ep - 1);
+        let checkbox = null;
+        if (this.find("^[*+-] %[[Xx ]%]%s", sp + 1)) { // task list
+          marker = sub(this.subject, sp, sp + 4);
+          checkbox = sub(this.subject, sp + 3, sp + 3);
+        }
+        // some items have ambiguous style
+        let styles = getListStyles(marker);
+        if (styles.length === 0) {
+          return false;
+        }
+        let data = { styles = styles,
+                       indent = this.indent };
+        // adding container will close others
+        this.addContainer(new Container(spec, data));
+        let annot = "+list_item";
+        for (let i=1;i < styles.length;i++) do
+          annot = annot .. "[" .. styles[i] .. "]";
+        }
+        this.addMatch(sp, ep - 1, annot);
+        this.pos = ep;
+        if (checkbox) {
+          if (checkbox === " ") {
+            this.addMatch(sp + 2, sp + 4, "checkbox_unchecked");
+          } else {
+            this.addMatch(sp + 2, sp + 4, "checkbox_checked");
+          }
+          this.pos = sp + 5;
+        }
+        return true;
+      },
+      close: function(_container)
+        this.addMatch(this.pos, this.pos, "-list_item");
+        this.containers.pop();
+      }
+    },
+
+/*
+    { name: "table",
+      content: ContentType.Cells,
+      continue: function(_container)
+        let sp, ep = this.find("^|[^\r\n]*|")
+        let eolsp = " *[\r\n]" // make sure at end of line
+        if sp and eolsp {
+          return this.parseTableRow(sp, ep)
+        }
+      },
+      open: (spec) => {
+        let sp, ep = this.find("^|[^\r\n]*|")
+        let eolsp = " *[\r\n]" // make sure at end of line
+        if sp and eolsp {
+          this.addContainer(Container:new(spec, { columns = 0 }))
+          this.addMatch(sp, sp, "+table")
+          if this.parseTableRow(sp, ep) {
+            return true
+          } else {
+            this.containers.pop();
+            return false
+          }
+        }
+     },
+      close: function(_container)
+        this.addMatch(this.pos, this.pos, "-table")
+        this.containers.pop();
+      }
+    },
+
+    { name: "attributes",
+      content: ContentType.Attributes,
+      open: (spec) => {
+        if this.find("^%{") {
+          let attribute_parser =
+                  attributes.AttributeParser:new(this.subject)
+          let status, ep =
+                 attribute_parser:feed(this.pos, this.endeol)
+          if status === 'fail' or ep + 1 < this.endeol {
+            return false
+          } else {
+            this.addContainer(Container:new(spec,
+                               { status = status,
+                                 indent = this.indent,
+                                 startpos = this.pos,
+                                 slices = {},
+                                 attribute_parser = attribute_parser }))
+            let container = this.containers[#this.containers]
+            container.slices = { {this.pos, this.endeol } }
+            this.pos = this.starteol
+            return true
+          }
+
+        }
+      },
+      continue: (container) => {
+        if this.indent > container.indent {
+          table.insert(container.slices, { this.pos, this.endeol })
+          let status, ep =
+            container.attribute_parser:feed(this.pos, this.endeol)
+          container.status = status
+          if status ~= 'fail' or ep + 1 < this.endeol {
+            this.pos = this.starteol
+            return true
+          }
+        }
+        // if we get to here, we don't continue; either we
+        // reached the end of indentation or we failed in
+        // parsing attributes
+        if container.status === 'done' {
+          return false
+        } else { // attribute parsing failed; convert to para and continue
+             // with that
+          let paraSpec = this.specs[0]
+          let para = Container:new(paraSpec,
+                        { inlineParser =
+                           InlineParser:new(this.subject, this.warn) })
+          this.addMatch(container.startpos, container.startpos, "+para")
+          this.containers[#this.containers] = para
+          // reparse the text we couldn't parse as a block attribute:
+          para.inlineParser.attribute_slices = container.slices
+          para.inlineParser:reparse_attributes()
+          this.pos = para.inlineParser.lastpos + 1
+          return true
+        }
+      },
+      close: (container) => {
+        let attr_matches = container.attribute_parser:getMatches()
+        this.addMatch(container.startpos, container.startpos, "+block_attributes")
+        for i=1,#attr_matches {
+          this.addMatch(unpack(attr_matches[i]))
+        }
+        this.addMatch(this.pos, this.pos, "-block_attributes")
+        this.containers.pop();
+      }
+    },
+*/
+
+
     { name: "fenced_div",
       isPara: false,
       content: ContentType.Block,
@@ -437,11 +606,7 @@ class Parser {
         this.containers.pop();
       }
     }
-
-
    ];
-
-
   }
 
   find(patt : RegExp) : null | { startpos : number, endpos : number, captures : string[] } {
@@ -795,182 +960,5 @@ class Parser {
   }
 
 }
-
-
-
-
-/*
-
-function Parser:specs()
-  return {
-
-    { name: "list_item",
-      content: ContentType.Block,
-      continue: (container) => {
-        if this.indent > container.indent or this.find("^[\r\n]") {
-          return true
-        } else {
-          return false
-        }
-      },
-      open: (spec) => {
-        let sp, ep = this.find("^[-*+:]%s")
-        if not sp {
-          sp, ep = this.find("^%d+[.)]%s")
-        }
-        if not sp {
-          sp, ep = this.find("^%(%d+%)%s")
-        }
-        if not sp {
-          sp, ep = this.find("^[ivxlcdmIVXLCDM]+[.)]%s")
-        }
-        if not sp {
-          sp, ep = this.find("^%([ivxlcdmIVXLCDM]+%)%s")
-        }
-        if not sp {
-          sp, ep = this.find("^%a[.)]%s")
-        }
-        if not sp {
-          sp, ep = this.find("^%(%a%)%s")
-        }
-        if not sp {
-          return nil
-        }
-        let marker = sub(this.subject, sp, ep - 1)
-        let checkbox = nil
-        if this.find("^[*+-] %[[Xx ]%]%s", sp + 1) { // task list
-          marker = sub(this.subject, sp, sp + 4)
-          checkbox = sub(this.subject, sp + 3, sp + 3)
-        }
-        // some items have ambiguous style
-        let styles = getListStyles(marker)
-        if #styles === 0 {
-          return nil
-        }
-        let data = { styles = styles,
-                       indent = this.indent }
-        // adding container will close others
-        this.addContainer(Container:new(spec, data))
-        let annot = "+list_item"
-        for i=1,#styles do
-          annot = annot .. "[" .. styles[i] .. "]"
-        }
-        this.addMatch(sp, ep - 1, annot)
-        this.pos = ep
-        if checkbox {
-          if checkbox === " " {
-            this.addMatch(sp + 2, sp + 4, "checkbox_unchecked")
-          } else {
-            this.addMatch(sp + 2, sp + 4, "checkbox_checked")
-          }
-          this.pos = sp + 5
-        }
-        return true
-      },
-      close: function(_container)
-        this.addMatch(this.pos, this.pos, "-list_item")
-        this.containers.pop();
-      }
-    },
-
-    { name: "table",
-      content: ContentType.Cells,
-      continue: function(_container)
-        let sp, ep = this.find("^|[^\r\n]*|")
-        let eolsp = " *[\r\n]" // make sure at end of line
-        if sp and eolsp {
-          return this.parseTableRow(sp, ep)
-        }
-      },
-      open: (spec) => {
-        let sp, ep = this.find("^|[^\r\n]*|")
-        let eolsp = " *[\r\n]" // make sure at end of line
-        if sp and eolsp {
-          this.addContainer(Container:new(spec, { columns = 0 }))
-          this.addMatch(sp, sp, "+table")
-          if this.parseTableRow(sp, ep) {
-            return true
-          } else {
-            this.containers.pop();
-            return false
-          }
-        }
-     },
-      close: function(_container)
-        this.addMatch(this.pos, this.pos, "-table")
-        this.containers.pop();
-      }
-    },
-
-    { name: "attributes",
-      content: ContentType.Attributes,
-      open: (spec) => {
-        if this.find("^%{") {
-          let attribute_parser =
-                  attributes.AttributeParser:new(this.subject)
-          let status, ep =
-                 attribute_parser:feed(this.pos, this.endeol)
-          if status === 'fail' or ep + 1 < this.endeol {
-            return false
-          } else {
-            this.addContainer(Container:new(spec,
-                               { status = status,
-                                 indent = this.indent,
-                                 startpos = this.pos,
-                                 slices = {},
-                                 attribute_parser = attribute_parser }))
-            let container = this.containers[#this.containers]
-            container.slices = { {this.pos, this.endeol } }
-            this.pos = this.starteol
-            return true
-          }
-
-        }
-      },
-      continue: (container) => {
-        if this.indent > container.indent {
-          table.insert(container.slices, { this.pos, this.endeol })
-          let status, ep =
-            container.attribute_parser:feed(this.pos, this.endeol)
-          container.status = status
-          if status ~= 'fail' or ep + 1 < this.endeol {
-            this.pos = this.starteol
-            return true
-          }
-        }
-        // if we get to here, we don't continue; either we
-        // reached the end of indentation or we failed in
-        // parsing attributes
-        if container.status === 'done' {
-          return false
-        } else { // attribute parsing failed; convert to para and continue
-             // with that
-          let paraSpec = this.specs[0]
-          let para = Container:new(paraSpec,
-                        { inlineParser =
-                           InlineParser:new(this.subject, this.warn) })
-          this.addMatch(container.startpos, container.startpos, "+para")
-          this.containers[#this.containers] = para
-          // reparse the text we couldn't parse as a block attribute:
-          para.inlineParser.attribute_slices = container.slices
-          para.inlineParser:reparse_attributes()
-          this.pos = para.inlineParser.lastpos + 1
-          return true
-        }
-      },
-      close: (container) => {
-        let attr_matches = container.attribute_parser:getMatches()
-        this.addMatch(container.startpos, container.startpos, "+block_attributes")
-        for i=1,#attr_matches do
-          this.addMatch(unpack(attr_matches[i]))
-        }
-        this.addMatch(this.pos, this.pos, "-block_attributes")
-        this.containers.pop();
-      }
-    }
-  }
-}
-
-*/
 
 export { Parser }
