@@ -106,6 +106,26 @@ describe("Parser", () => {
     ]);
   });
 
+  it("parses fenced divs", () => {
+    const events = [];
+    for (const event of new Parser(":::: foo \nhello\n\nhi\n::::", ignoreWarnings)) {
+      //                            012345678 901234 5 6789 01234 56789
+      events.push(event);
+    }
+    expect(events).toStrictEqual([
+      { startpos: 0, endpos: 7, annot: "+div" },
+      { startpos: 5, endpos: 7, annot: "class" },
+      { startpos: 10, endpos: 10, annot: "+para" },
+      { startpos: 10, endpos: 14, annot: "str" },
+      { startpos: 15, endpos: 15, annot: "-para" },
+      { startpos: 16, endpos: 16, annot: "blankline" },
+      { startpos: 17, endpos: 17, annot: "+para" },
+      { startpos: 17, endpos: 18, annot: "str" },
+      { startpos: 19, endpos: 19, annot: "-para" },
+      { startpos: 20, endpos: 23, annot: "-div" }
+    ]);
+  });
+
   it("parses footnotes", () => {
     const events = [];
     for (const event of new Parser(
