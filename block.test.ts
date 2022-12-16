@@ -73,7 +73,7 @@ describe("Parser", () => {
       { startpos: 0, endpos: 4, annot: "reference_key" },
       { startpos: 7, endpos: 9, annot: "reference_value" },
       { startpos: 12, endpos: 14, annot: "reference_value" },
-      { startpos: 15, endpos: 15, annot: "-reference_definition" }
+      { startpos: 16, endpos: 16, annot: "-reference_definition" }
     ]);
   });
 

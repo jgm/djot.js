@@ -49,7 +49,7 @@ const pattThematicBreak = pattern("[-*][ \t]*[-*][ \\t]*[-*][-* \\t]*\\r?\\n");
 const pattDivFence = pattern("(::::*)[ \\t]*\\r?\\n");
 const pattDivFenceStart = pattern("(::::*)[ \\t]*");
 const pattDivFenceEnd = pattern("([\\w_-]*)[ \\t]*\\r?\\n");
-const pattReferenceDefinition = pattern("\\[([^]\\r\\n]*)\\]:[ \\t]*");
+const pattReferenceDefinition = pattern("\\[([^\\]\\r\\n]*)\\]:[ \\t]*");
 
 type EventIterator = {
   next : () => { value: Event, done: boolean };
