@@ -141,7 +141,9 @@ class Parser {
        },
        close: (container) => {
          this.getInlineMatches();
-         this.addMatch(this.pos - 1, this.pos - 1, "-para");
+         const last = this.matches[this.matches.length - 1]
+         const ep = (last && last.endpos + 1) || this.pos;
+         this.addMatch(ep, ep, "-para");
          this.containers.pop();
        }
      },
@@ -201,7 +203,7 @@ class Parser {
       close: (container) => {
         this.getInlineMatches()
         const last = this.matches[this.matches.length - 1]
-        const ep = (last && last.endpos + 1) || this.pos - 1;
+        const ep = (last && last.endpos + 1) || this.pos;
         this.addMatch(ep, ep, "-heading")
         this.containers.pop();
       }

@@ -36,7 +36,7 @@ describe("Parser", () => {
       { startpos: 10, endpos: 14, annot: "str" },
       { startpos: 15, endpos: 15, annot: "softbreak" },
       { startpos: 16, endpos: 19, annot: "str" },
-      { startpos: 21, endpos: 21, annot: "-para" },
+      { startpos: 20, endpos: 20, annot: "-para" },
       { startpos: 22, endpos: 22, annot: "blankline" },
       { startpos: 25, endpos: 25, annot: "+para" },
       { startpos: 25, endpos: 26, annot: "str" },
