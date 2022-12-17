@@ -51,6 +51,8 @@ const pattDivFenceStart = pattern("(::::*)[ \\t]*");
 const pattDivFenceEnd = pattern("([\\w_-]*)[ \\t]*\\r?\\n");
 const pattReferenceDefinition = pattern("\\[([^\\]\\r\\n]*)\\]:[ \\t]*");
 const pattTableRow = pattern("(\\|[^\\r\\n]*\\|)[ \\t]*\\r?\\n");
+const pattListMarker = pattern("(:[-*+:]|\\([0-9]+\\)|[0-9]+[.)]|[ivxlcdmIVXLCDM]+[.)]|\\([ivxlcdmIVXLCDM]\\)|[a-zA-Z][.)]|\\([a-zA-Z]\\))\\s");
+const pattTaskListMarker = pattern("[*+-] \\[[Xx ]\\]\\s");
 
 type EventIterator = {
   next : () => { value: Event, done: boolean };
@@ -333,61 +335,44 @@ class Parser {
       }
     },
 
-    /*
     { name: "list_item",
       isPara: false,
       content: ContentType.Block,
       continue: (container) => {
-        if (this.indent > container.extra.indent || this.find("^[\r\n]")) {
-          return true;
-        } else {
-          return false;
-        }
+        return (this.indent > container.extra.indent ||
+                this.pos === this.starteol);
       },
       open: (spec) => {
-        let sp, ep = this.find("^[-*+:]%s");
-        if (!sp) {
-          sp, ep = this.find("^%d+[.)]%s");
-        }
-        if (!sp) {
-          sp, ep = this.find("^%(%d+%)%s");
-        }
-        if (!sp) {
-          sp, ep = this.find("^[ivxlcdmIVXLCDM]+[.)]%s");
-        }
-        if (!sp) {
-          sp, ep = this.find("^%([ivxlcdmIVXLCDM]+%)%s");
-        }
-        if (!sp) {
-          sp, ep = this.find("^%a[.)]%s");
-        }
-        if (!sp) {
-          sp, ep = this.find("^%(%a%)%s");
-        }
-        if (!sp) {
+        let m = this.find(pattListMarker);
+        if (m === null) {
           return false;
         }
-        let marker = sub(this.subject, sp, ep - 1);
+        let sp = m.startpos;
+        let ep = m.endpos;
+        let marker = this.subject.substring(sp, ep);
         let checkbox = null;
-        if (this.find("^[*+-] %[[Xx ]%]%s", sp + 1)) { // task list
-          marker = sub(this.subject, sp, sp + 4);
-          checkbox = sub(this.subject, sp + 3, sp + 3);
+
+        let mtask = this.find(pattTaskListMarker);
+        if (mtask !== null) {
+          marker = this.subject.substr(mtask.startpos, 5);
+          checkbox = this.subject.substr(mtask.startpos + 3, 1);
         }
+
         // some items have ambiguous style
         let styles = getListStyles(marker);
         if (styles.length === 0) {
           return false;
         }
-        let data = { styles = styles,
-                       indent = this.indent };
+        let data = { styles: styles, indent: this.indent };
         // adding container will close others
         this.addContainer(new Container(spec, data));
         let annot = "+list_item";
-        for (let i=1;i < styles.length;i++) do
-          annot = annot .. "[" .. styles[i] .. "]";
-        }
+        styles.forEach(style => {
+          annot = annot + "[" + style + "]";
+        });
         this.addMatch(sp, ep - 1, annot);
         this.pos = ep;
+
         if (checkbox) {
           if (checkbox === " ") {
             this.addMatch(sp + 2, sp + 4, "checkbox_unchecked");
@@ -398,12 +383,11 @@ class Parser {
         }
         return true;
       },
-      close: function(_container)
+      close: (container) => {
         this.addMatch(this.pos, this.pos, "-list_item");
         this.containers.pop();
       }
     },
-*/
 
     { name: "table",
       isPara: false,
