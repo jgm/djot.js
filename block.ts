@@ -98,7 +98,7 @@ class Container {
  }
 }
 
-class Parser {
+class EventParser {
   warn : (message : string, pos : number) => void;
   subject : string;
   indent : number;
@@ -967,4 +967,4 @@ class Parser {
 
 }
 
-export { Parser }
+export { EventParser }

@@ -1,4 +1,4 @@
-import { Parser } from "./block.js";
+import { EventParser } from "./block.js";
 import fs from "fs";
 
 const input = fs.readFileSync("/dev/stdin", "utf8");
@@ -9,7 +9,7 @@ const warn = function(msg, pos) {
 
 let start = true;
 console.time("parse events");
-for (const event of new Parser(input, warn)) {
+for (const event of new EventParser(input, warn)) {
   let pref;
   if (start) {
     pref = "[";
