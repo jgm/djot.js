@@ -12,20 +12,20 @@ const getListStyles = function(marker : string) : string[] {
     return ["X"]; // task list
   } else if (/^\[[Xx ]\]/.exec(marker)) {
     return ["X"];
-  } else if (/^[(]?\d+[).]/.exec(marker)) {
-    return [marker.replace(/\d+/,"1")];
+  } else if (/^[(]?[0-9]+[).]/.exec(marker)) {
+    return [marker.replace(/[0-9]+/,"1")];
   } else if (/^[(]?[ivxlcdm][).]/.exec(marker)) {
     return [marker.replace(/[a-z]+/, "a"), marker.replace(/[a-z]+/, "i")];
   } else if (/^[(]?[IVXLCDM][).]/.exec(marker)) {
     return [marker.replace(/[A-Z]+/, "A"), marker.replace(/[A-Z]+/, "I")];
+  } else if (/^[(]?[ivxlcdm]+[).]/.exec(marker)) {
+    return [marker.replace(/[a-z]+/, "i")];
+  } else if (/^[(]?[IVXLCDM]+[).]/.exec(marker)) {
+    return [marker.replace(/[A-Z]+/, "I")];
   } else if (/^[(]?[a-z][).]/.exec(marker)) {
     return [marker.replace(/[a-z]/, "a")];
   } else if (/^[(]?[A-Z][).]/.exec(marker)) {
     return [marker.replace(/[A-Z]/, "A")];
-  } else if (/^[(]?[ivxlcdm]+[).]/.exec(marker)) {
-    return [marker.replace("[a-z]+", "i")];
-  } else if (/^[(]?[IVXLCDM]+[).]/.exec(marker)) {
-    return [marker.replace("[A-Z]+", "I")];
   } else { // doesn't match any list style
     return []
   }
@@ -51,7 +51,7 @@ const pattDivFenceStart = pattern("(::::*)[ \\t]*");
 const pattDivFenceEnd = pattern("([\\w_-]*)[ \\t]*\\r?\\n");
 const pattReferenceDefinition = pattern("\\[([^\\]\\r\\n]*)\\]:[ \\t]*");
 const pattTableRow = pattern("(\\|[^\\r\\n]*\\|)[ \\t]*\\r?\\n");
-const pattListMarker = pattern("(:[-*+:]|\\([0-9]+\\)|[0-9]+[.)]|[ivxlcdmIVXLCDM]+[.)]|\\([ivxlcdmIVXLCDM]\\)|[a-zA-Z][.)]|\\([a-zA-Z]\\))\\s");
+const pattListMarker = pattern("(:?[-*+:]|\\([0-9]+\\)|[0-9]+[.)]|[ivxlcdmIVXLCDM]+[.)]|\\([ivxlcdmIVXLCDM]+\\)|[a-zA-Z][.)]|\\([a-zA-Z]\\))\\s");
 const pattTaskListMarker = pattern("[*+-] \\[[Xx ]\\]\\s");
 
 type EventIterator = {

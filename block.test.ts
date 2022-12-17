@@ -125,6 +125,41 @@ describe("Parser", () => {
     ]);
   });
 
+  it("parses list items", () => {
+    const events = [];
+    for (const event of new Parser("- one\n1. two\n(iv) three\n\n - sub\n\n   two\n", ignoreWarnings)) {
+      //                            01234 5678901 23456789012 3456789 0 1234567 890
+      events.push(event);
+    }
+    expect(events).toStrictEqual([
+      { startpos: 0, endpos: 0, annot: "+list_item[-]" },
+      { startpos: 2, endpos: 2, annot: "+para" },
+      { startpos: 2, endpos: 4, annot: "str" },
+      { startpos: 5, endpos: 5, annot: "-para" },
+      { startpos: 6, endpos: 6, annot: "-list_item" },
+      { startpos: 6, endpos: 7, annot: "+list_item[1.]" },
+      { startpos: 9, endpos: 9, annot: "+para" },
+      { startpos: 9, endpos: 11, annot: "str" },
+      { startpos: 12, endpos: 12, annot: "-para" },
+      { startpos: 13, endpos: 13, annot: "-list_item" },
+      { startpos: 13, endpos: 16, annot: "+list_item[(i)]" },
+      { startpos: 18, endpos: 18, annot: "+para" },
+      { startpos: 18, endpos: 22, annot: "str" },
+      { startpos: 23, endpos: 23, annot: "-para" },
+      { startpos: 24, endpos: 24, annot: "blankline" },
+      { startpos: 26, endpos: 26, annot: "+list_item[-]" },
+      { startpos: 28, endpos: 28, annot: "+para" },
+      { startpos: 28, endpos: 30, annot: "str" },
+      { startpos: 31, endpos: 31, annot: "-para" },
+      { startpos: 32, endpos: 32, annot: "blankline" },
+      { startpos: 36, endpos: 36, annot: "+para" },
+      { startpos: 36, endpos: 38, annot: "str" },
+      { startpos: 39, endpos: 39, annot: "-para" },
+      { startpos: 40, endpos: 40, annot: "-list_item" },
+      { startpos: 40, endpos: 40, annot: "-list_item" }
+    ]);
+  });
+
   it("parses captions", () => {
     const events = [];
     for (const event of new Parser(" ^ This is a\n*capt*\n\n", ignoreWarnings)) {
