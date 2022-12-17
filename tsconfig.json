@@ -14,6 +14,7 @@
     "find.ts",
     "inline.ts",
     "block.ts",
-    "event.ts"
+    "event.ts",
+    "ast.ts"
   ]
 }
