@@ -92,7 +92,7 @@ handlers[State.SCANNING_COMMENT] = function(parser : AttributeParser, pos : numb
 handlers[State.SCANNING_ID] = function(parser : AttributeParser, pos : number) {
   const c = parser.subject.substr(pos, 1);
 
-  if ((/^[^\s\p]/.exec(c) !== null) || c === '_' || c === '-' || c === ':') {
+  if ((/^\w/.exec(c) !== null) || c === '_' || c === '-' || c === ':') {
     return State.SCANNING_ID;
   } else if (c === '}') {
     if (parser.begin && parser.lastpos && parser.lastpos > parser.begin) {
@@ -113,7 +113,7 @@ handlers[State.SCANNING_ID] = function(parser : AttributeParser, pos : number) {
 
 handlers[State.SCANNING_CLASS] = function(parser : AttributeParser, pos : number) {
   const c = parser.subject.substr(pos, 1);
-  if ((/^[^\s\p]/.exec(c) !== null) || c === '_' || c === '-' || c === ':') {
+  if ((/^\w/.exec(c) !== null) || c === '_' || c === '-' || c === ':') {
     return State.SCANNING_CLASS;
   } else if (c === '}') {
     if (parser.begin && parser.lastpos && parser.lastpos > parser.begin) {

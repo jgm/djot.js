@@ -136,7 +136,7 @@ describe("InlineParser", () => {
 
   it("parses attributes", () => {
     const parser = new InlineParser('{#foo .bar baz="bim"}', ignoreWarnings);
-    //                             012345678901234567890
+    //                               012345678901234567890
     parser.feed(0,20);
     expect(parser.getMatches()).toStrictEqual([
       { annot: "+attributes", startpos: 0, endpos: 0 },
@@ -145,6 +145,23 @@ describe("InlineParser", () => {
       { annot: "key", startpos: 11, endpos: 13 },
       { annot: "value", startpos: 16, endpos: 18 },
       { annot: "-attributes", startpos: 20, endpos: 20 }
+    ]);
+  });
+
+  it("parses spans", () => {
+    const parser = new InlineParser('[hi]{#foo .bar baz="bim"}', ignoreWarnings);
+      //                             0123456789012345678901234
+    parser.feed(0,24);
+    expect(parser.getMatches()).toStrictEqual([
+      { annot: "+span", startpos: 0, endpos: 0 },
+      { annot: "str", startpos: 1, endpos: 2 },
+      { annot: "-span", startpos: 3, endpos: 3 },
+      { annot: "+attributes", startpos: 4, endpos: 4 },
+      { annot: "id", startpos: 6, endpos: 8 },
+      { annot: "class", startpos: 11, endpos: 13 },
+      { annot: "key", startpos: 15, endpos: 17 },
+      { annot: "value", startpos: 20, endpos: 22 },
+      { annot: "-attributes", startpos: 24, endpos: 24 }
     ]);
   });
 

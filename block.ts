@@ -35,6 +35,7 @@ const isSpaceOrTab = function(cp : number) {
   return (cp === 32 || cp === 9);
 }
 
+const pattEndline = pattern("[ \\t]*\\r?\\n");
 const pattNonNewlines = pattern("[^\\n\\r]*");
 const pattWord = pattern("^\\w+\\s");
 const pattWhitespace = pattern("[ \\t\\r\\n]");
@@ -82,6 +83,7 @@ class Container {
   close: (container : Container) => void;
   indent : number | null;
   inlineParser: InlineParser | null;
+  attributeParser: AttributeParser | null;
   extra: {[key : string] : any};
 
   constructor(spec : BlockSpec, extra : {[key : string] : any}) {
@@ -91,6 +93,7 @@ class Container {
     this.close = spec.close;
     this.indent = null;
     this.inlineParser = null;
+    this.attributeParser = null;
     this.extra = extra;
  }
 }
@@ -425,76 +428,83 @@ class Parser {
       }
     },
 
-/*
     { name: "attributes",
       isPara: false,
       content: ContentType.Attributes,
       open: (spec) => {
-        if this.find("^%{") {
-          let attribute_parser =
-                  attributes.AttributeParser:new(this.subject)
-          let status, ep =
-                 attribute_parser:feed(this.pos, this.endeol)
-          if status === 'fail' or ep + 1 < this.endeol {
-            return false
+        if (this.subject.codePointAt(this.pos) === 123) { // {
+          let attributeParser = new AttributeParser(this.subject);
+          let res = attributeParser.feed(this.pos, this.starteol);
+          if (res.status === "fail") {
+            return false;
+          } else if (res.status === "done" &&
+                     find(this.subject, pattEndline, res.position + 1)
+                        === null) {
+            return false;
           } else {
-            this.addContainer(Container:new(spec,
-                               { status = status,
-                                 indent = this.indent,
-                                 startpos = this.pos,
-                                 slices = {},
-                                 attribute_parser = attribute_parser }))
-            let container = this.containers[#this.containers]
-            container.slices = { {this.pos, this.endeol } }
-            this.pos = this.starteol
-            return true
+            let container = this.addContainer(new Container(spec,
+                               { status: res.status,
+                                 indent: this.indent,
+                                 startpos: this.pos,
+                                 slices: [] }));
+            container.attributeParser = attributeParser;
+            container.extra.slices =
+               [ { startpos: this.pos, endpos: this.starteol } ];
+            this.pos = this.starteol;
+            return true;
           }
-
+        } else {
+          return false;
         }
       },
       continue: (container) => {
-        if this.indent > container.indent {
-          table.insert(container.slices, { this.pos, this.endeol })
-          let status, ep =
-            container.attribute_parser:feed(this.pos, this.endeol)
-          container.status = status
-          if status ~= 'fail' or ep + 1 < this.endeol {
-            this.pos = this.starteol
-            return true
+        if (container.extra.status === "done") {
+          return false;
+        }
+        if (container.attributeParser && this.indent > container.extra.indent) {
+          container.extra.slices.push({ startpos: this.pos,
+                                        endpos: this.starteol });
+          let res = container.attributeParser.feed(this.pos, this.endeol);
+          container.extra.status = res.status;
+          if (res.status !== "fail" ||
+              !find(this.subject, pattEndline, res.position + 1)) {
+            this.pos = this.starteol;
+            return true;
           }
         }
         // if we get to here, we don't continue; either we
         // reached the end of indentation or we failed in
         // parsing attributes
-        if container.status === 'done' {
-          return false
-        } else { // attribute parsing failed; convert to para and continue
-             // with that
-          let paraSpec = this.specs[0]
-          let para = Container:new(paraSpec,
-                        { inlineParser =
-                           InlineParser:new(this.subject, this.warn) })
-          this.addMatch(container.startpos, container.startpos, "+para")
-          this.containers[#this.containers] = para
-          // reparse the text we couldn't parse as a block attribute:
-          para.inlineParser.attribute_slices = container.slices
-          para.inlineParser:reparse_attributes()
-          this.pos = para.inlineParser.lastpos + 1
-          return true
+        // attribute parsing failed; convert to para and continue with that
+        this.addMatch(container.extra.startpos,
+                      container.extra.startpos, "+para");
+        let paraSpec = this.specs[0];
+        let attrContainer = this.containers.pop(); // remove attribute contain
+        // add para container
+        let para = this.addContainer(new Container(paraSpec, {}));
+        // reparse the text we couldn't parse as a block attribute:
+        if (!para.inlineParser || !attrContainer) {
+          throw("Missing inlineParser or attrContainer");
+          return false;
         }
+        para.inlineParser.attributeSlices = attrContainer.extra.slices;
+        para.inlineParser.reparseAttributes();
+        this.pos = para.inlineParser.lastpos + 1;
+        return true;
       },
       close: (container) => {
-        let attr_matches = container.attribute_parser:getMatches()
-        this.addMatch(container.startpos, container.startpos, "+block_attributes")
-        for i=1,#attr_matches {
-          this.addMatch(unpack(attr_matches[i]))
+        this.addMatch(container.extra.startpos, container.extra.startpos,
+                      "+block_attributes");
+        if (container.attributeParser) { // should always be true
+          let attrMatches = container.attributeParser.matches;
+          attrMatches.forEach(match => {
+            this.matches.push(match);
+          });
         }
-        this.addMatch(this.pos, this.pos, "-block_attributes")
+        this.addMatch(this.pos, this.pos, "-block_attributes");
         this.containers.pop();
       }
     },
-*/
-
 
     { name: "fenced_div",
       isPara: false,
@@ -646,6 +656,10 @@ class Parser {
     while (tip && tip.content !== ContentType.Block) {
       tip.close(tip);
       tip = this.tip();
+    }
+    if (container.content === ContentType.Inline) {
+      container.inlineParser =
+        new InlineParser(this.subject, this.warn);
     }
     this.containers.push(container);
     return container;
@@ -869,10 +883,6 @@ class Parser {
                   const tip = self.tip();
                   if (tip) {
                     self.lastMatchedContainer = self.containers.length - 1;
-                    if (spec.content === ContentType.Inline) {
-                      tip.inlineParser =
-                        new InlineParser(self.subject, self.warn);
-                    }
                     if (self.finishedLine) {
                       checkStarts = false;
                     } else {

@@ -237,5 +237,46 @@ describe("Parser", () => {
     ]);
   });
 
+  it("parses block attributes", () => {
+    const events = [];
+    for (const event of new Parser(
+          "{.foo}\n{#bar\n .baz}\nHello", ignoreWarnings)) {
+      //   012345 678901 2345678 901234
+      events.push(event);
+    }
+    expect(events).toStrictEqual([
+      { startpos: 0, endpos: 0, annot: "+block_attributes" },
+      { startpos: 2, endpos: 4, annot: "class" },
+      { startpos: 7, endpos: 7, annot: "-block_attributes" },
+      { startpos: 7, endpos: 7, annot: "+block_attributes" },
+      { startpos: 9, endpos: 11, annot: "id" },
+      { startpos: 15, endpos: 17, annot: "class" },
+      { startpos: 20, endpos: 20, annot: "-block_attributes" },
+      { startpos: 20, endpos: 20, annot: "+para" },
+      { startpos: 20, endpos: 24, annot: "str" },
+      { startpos: 25, endpos: 25, annot: "-para" }
+    ]);
+  });
+
+  it("parses failed block attributes as para", () => {
+    const events = [];
+    for (const event of new Parser(
+          "{.foo\nbar *baz*\n\n", ignoreWarnings)) {
+      //   012345 678901234 5 6
+      events.push(event);
+    }
+    expect(events).toStrictEqual([
+      { startpos: 0, endpos: 0, annot: "+para" },
+      { startpos: 0, endpos: 4, annot: "str" },
+      { startpos: 5, endpos: 5, annot: "softbreak" },
+      { startpos: 6, endpos: 9, annot: "str" },
+      { startpos: 10, endpos: 10, annot: "+strong" },
+      { startpos: 11, endpos: 13, annot: "str" },
+      { startpos: 14, endpos: 14, annot: "-strong" },
+      { startpos: 15, endpos: 15, annot: "-para" },
+      { startpos: 16, endpos: 16, annot: "blankline" }
+    ]);
+  });
+
 });
 
