@@ -82,21 +82,21 @@ type Inline = Str
             | SingleQuoted
             ;
 
-interface Str {
+interface Str extends HasAttributes {
   tag: "str";
   text: string;
 }
 
-interface RightSingleQuote {
+interface RightSingleQuote extends HasAttributes {
   tag: "right_single_quote";
   text: string;
 }
 
-interface SoftBreak {
+interface SoftBreak extends HasAttributes {
   tag: "softbreak";
 }
 
-interface HardBreak {
+interface HardBreak extends HasAttributes {
   tag: "hardbreak";
 }
 
@@ -157,13 +157,13 @@ interface ListItem extends HasAttributes, HasBlockChildren {
   // TODO
 }
 
-interface TableRow {
+interface TableRow extends HasAttributes {
   tag: "table_row";
   children: TableCell[];
   // TODO
 }
 
-interface TableCell extends HasBlockChildren {
+interface TableCell extends HasAttributes, HasBlockChildren {
   tag: "table_cell";
   // TODO
 }
@@ -186,6 +186,7 @@ interface Doc extends HasBlockChildren, HasAttributes {
 
 interface Container {
   children: any[];
+  attributes?: Attributes;
   data?: any;
 }
 
@@ -317,6 +318,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
   }
   const warn = options.warn || defaultWarnings;
   const parser = new EventParser(input, warn);
+
   const pushContainer = function(data ?: any) {
       let container = {children: [], data: data};
       containers.push(container);
@@ -328,6 +330,23 @@ const parse = function(input : string, options : ParseOptions) : Doc {
       }
       return node;
   };
+  const topContainer = function() {
+    if (containers.length > 0) {
+      return containers[containers.length - 1];
+    } else {
+      throw("Container stack is empty");
+    }
+  }
+  // points to last child of top container, or top container if
+  // it doesn't have children
+  const getTip = function() : Container {
+    let top = topContainer();
+    if (top.children.length > 0) {
+      return top.children[top.children.length - 1];
+    } else {
+      return top;
+    }
+  }
 
   const handleEvent = function(containers : Container[], event : Event) : void {
     let node;
@@ -424,6 +443,43 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         node = popContainer();
         addChildToTip(containers, {tag: "single_quoted", children: node.children});
         break;
+      case "+attributes":
+        pushContainer();
+        break;
+      case "-attributes":
+        node = popContainer();
+          console.log(node);
+        if (node.attributes && containers.length > 0) {
+          let tip = getTip();
+          if (!tip.attributes) {
+            tip.attributes = {};
+          }
+          for (const k in node.attributes) {
+            if (k === "class") {
+              if (tip.attributes[k]) {
+                tip.attributes[k] = tip.attributes[k] +
+                                      " " + node.attributes[k];
+              } else {
+                tip.attributes[k] = node.attributes[k];
+              }
+            } else {
+              tip.attributes[k] = node.attributes[k];
+            }
+          }
+        }
+        break;
+      case "class":
+        let top = topContainer();
+        let cl = input.substring(event.startpos, event.endpos + 1);
+        if (!top.attributes) {
+          top.attributes = {};
+        }
+        if (top.attributes.class) {
+          top.attributes.class = top.attributes.class + " " + cl;
+        } else {
+          top.attributes.class = cl;
+        }
+        break;
       case "+linktext":
         pushContainer();
         break;
@@ -495,6 +551,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
               { tag: "doc",
                 references: references,
                 footnotes: footnotes,
+                attributes: {},
                 children: []
               };
 
