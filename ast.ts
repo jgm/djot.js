@@ -9,6 +9,10 @@ interface HasAttributes {
   attributes?: Attributes;
 }
 
+interface HasChildren {
+  children: any[];
+}
+
 interface HasInlineChildren {
   children: Inline[];
 }
@@ -20,6 +24,7 @@ interface HasBlockChildren {
 type Block = Para
            | Heading
            | ThematicBreak
+           | Div
            | BlockQuote
            | List
            | Table ;
@@ -37,8 +42,13 @@ interface ThematicBreak extends HasAttributes {
   tag: "thematic_break";
 }
 
+interface Div extends HasAttributes, HasBlockChildren {
+  tag: "div";
+  children: Block[];
+}
+
 interface BlockQuote extends HasAttributes, HasBlockChildren {
-  tag: "block_quote";
+  tag: "blockquote";
   children: Block[];
 }
 
@@ -58,6 +68,8 @@ type Inline = Str
             | SoftBreak
             | HardBreak
             | Emoji
+            | Verbatim
+            | RightSingleQuote
             | Emph
             | Strong
             | Link
@@ -73,6 +85,11 @@ interface Str {
   text: string;
 }
 
+interface RightSingleQuote {
+  tag: "right_single_quote";
+  text: string;
+}
+
 interface SoftBreak {
   tag: "softbreak";
 }
@@ -84,6 +101,11 @@ interface HardBreak {
 interface Emoji extends HasAttributes {
   tag: "emoji";
   alias: string;
+}
+
+interface Verbatim extends HasAttributes {
+  tag: "verbatim";
+  text: string;
 }
 
 interface Link extends HasAttributes, HasInlineChildren {
@@ -136,7 +158,7 @@ interface TableCell extends HasBlockChildren {
   // TODO
 }
 
-type Node = Doc | Block | Inline | ListItem | TableRow | TableCell;
+type Node = Doc | Block | Inline | ListItem | TableRow | TableCell ;
 
 interface Reference {
 
@@ -150,6 +172,11 @@ interface Doc extends HasBlockChildren, HasAttributes {
   tag: "doc";
   references: Record<string, Reference>;
   footnotes: Record<string, Footnote>;
+}
+
+interface Container {
+  children: any[];
+  data?: any;
 }
 
 const addStringContent = function(node : Inline, buffer : string[]) : void {
@@ -223,7 +250,7 @@ const getListStart = function(marker : string, style : string) : number | null {
   return null;
 }
 
-const addChildToTip = function(containers : any[], child : any) : void {
+const addChildToTip = function(containers : Container[], child : Node) : void {
   /*
   if containers[#containers].t == "list" and
       not (child.t == "list_item" or child.t == "definition_list_item") then
@@ -261,7 +288,15 @@ interface ParseOptions {
   warn?: (message : string, pos : number) => void;
 }
 
+enum Context {
+  Normal = 0,
+  Verbatim = 1,
+  Literal = 2
+}
+
 const parse = function(input : string, options : ParseOptions) : Doc {
+  let context = Context.Normal;
+  let accumulatedText : string[] = [];
   const references : Record<string, Reference> = {};
   const footnotes : Record<string, Footnote> = {};
   const identifiers : Record<string, boolean> = {}; // identifiers used
@@ -271,26 +306,40 @@ const parse = function(input : string, options : ParseOptions) : Doc {
   }
   const warn = options.warn || defaultWarnings;
   const parser = new EventParser(input, warn);
-  const pushContainer = function(container : any) {
+  const pushContainer = function(data ?: any) {
+      let container = {children: [], data: data};
       containers.push(container);
   };
   const popContainer = function() {
       let node = containers.pop();
-      if (node) {
-        addChildToTip(containers, node);
+      if (!node) {
+        throw("Container stack is empty");
       }
-    };
+      return node;
+  };
 
-  const handleEvent = function(containers : any[], event : Event) : void {
+  const handleEvent = function(containers : Container[], event : Event) : void {
+    let node;
     switch (event.annot) {
       case "str":
         let txt = input.substring(event.startpos, event.endpos + 1);
-        addChildToTip(containers, {tag: "str", text: txt});
+        if (context === Context.Normal) {
+          addChildToTip(containers, {tag: "str", text: txt});
+        } else {
+          accumulatedText.push(txt);
+        }
         break;
       case "softbreak":
-        addChildToTip(containers, {tag: "softbreak"});
+        if (context === Context.Normal) {
+          addChildToTip(containers, {tag: "softbreak"});
+        } else {
+          accumulatedText.push("\n");
+        }
         break;
       case "escape":
+        if (context === Context.Verbatim) {
+          accumulatedText.push("\\");
+        }
         break;
       case "hardbreak":
         addChildToTip(containers, {tag: "hardbreak"});
@@ -300,92 +349,108 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         addChildToTip(containers, {tag: "emoji", alias: alias});
         break;
       case "+emph":
-        pushContainer({tag: "emph", children: []});
+        pushContainer();
         break;
       case "-emph":
-        popContainer();
+        node = popContainer();
+        addChildToTip(containers, {tag: "emph", children: node.children});
         break;
       case "+strong":
-        pushContainer({tag: "strong", children: []});
+        pushContainer();
         break;
       case "-strong":
-        popContainer();
+        node = popContainer();
+        addChildToTip(containers, {tag: "strong", children: node.children});
         break;
       case "+span":
-        pushContainer({tag: "span", children: []});
+        pushContainer();
         break;
       case "-span":
-        popContainer();
+        node = popContainer();
+        addChildToTip(containers, {tag: "span", children: node.children});
         break;
       case "+mark":
-        pushContainer({tag: "mark", children: []});
+        pushContainer();
         break;
       case "-mark":
-        popContainer();
+        node = popContainer();
+        addChildToTip(containers, {tag: "mark", children: node.children});
         break;
       case "+delete":
-        pushContainer({tag: "delete", children: []});
+        pushContainer();
         break;
       case "-delete":
-        popContainer();
+        node = popContainer();
+        addChildToTip(containers, {tag: "delete", children: node.children});
         break;
       case "+insert":
-        pushContainer({tag: "insert", children: []});
+        pushContainer();
         break;
       case "-insert":
-        popContainer();
+        node = popContainer();
+        addChildToTip(containers, {tag: "insert", children: node.children});
         break;
       case "+linktext":
-        pushContainer({tag: "link", destination: "", children: []});
+        pushContainer();
         break;
       case "-linktext":
-        // leave on container stack and await destination
+        // we don't pop yet, but wait for -destination
         break;
       case "+destination":
-        pushContainer({tag: "destination", destination: "", children: []});
+        context = Context.Literal;
         break;
       case "-destination":
-        let dest = containers.pop();
-        if (dest) {
-          containers[containers.length - 1].destination = getStringContent(dest);
-          popContainer();
-        }
+        node = popContainer();
+        addChildToTip(containers, {tag: "link", destination: accumulatedText.join(""), children: node.children});
+        context = Context.Normal;
+        accumulatedText = [];
         break;
-      case "+linktext": // can just ignore this, children go to link container
+      case "+verbatim":
+        pushContainer();
+        context = Context.Verbatim;
         break;
-      case "-linktext":
+      case "-verbatim":
+        node = popContainer();
+        addChildToTip(containers, {tag: "verbatim",
+                                   text: accumulatedText.join("")});
+        context = Context.Normal;
+        accumulatedText = [];
         break;
       case "+para":
-        pushContainer({tag: "para", children: []});
+        pushContainer();
         break;
       case "-para":
-        popContainer();
+        node = popContainer();
+        addChildToTip(containers, {tag: "para", children: node.children});
         break;
       case "+heading":
-        pushContainer({tag: "heading",
-                       level: 1 + event.endpos - event.startpos,
-                       children: []});
+        pushContainer({ level: 1 + event.endpos - event.startpos });
         break;
       case "-heading":
-        popContainer();
+        node = popContainer();
+        addChildToTip(containers, {tag: "heading",
+                                   level: node.data.level,
+                                   children: node.children });
         break;
       case "+blockquote":
-        pushContainer({tag: "blockquote", children: []});
+        pushContainer();
         break;
       case "-blockquote":
-        popContainer();
+        node = popContainer();
+        addChildToTip(containers, {tag: "blockquote", children: node.children});
         break;
       case "+div":
-        pushContainer({tag: "div", children: []});
+        pushContainer();
         break;
       case "-div":
-        popContainer();
+        node = popContainer();
+        addChildToTip(containers, {tag: "div", children: node.children});
         break;
       case "thematic_break":
         addChildToTip(containers, {tag: "thematic_break"});
         break;
       case "right_single_quote":
-        addChildToTip(containers, {tag: "right_single_quote", str: "'"});
+        addChildToTip(containers, {tag: "right_single_quote", text: "'"});
         break;
       case "blankline":
         break;
@@ -401,7 +466,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
                 children: []
               };
 
-  let containers : any[] = [doc];
+  let containers : Container[] = [doc];
 
   for (const event of parser) {
     handleEvent(containers, event);
