@@ -78,6 +78,8 @@ type Inline = Str
             | Mark
             | Insert
             | Delete
+            | DoubleQuoted
+            | SingleQuoted
             ;
 
 interface Str {
@@ -140,6 +142,14 @@ interface Delete extends HasAttributes, HasInlineChildren {
 
 interface Insert extends HasAttributes, HasInlineChildren {
   tag: "insert";
+}
+
+interface DoubleQuoted extends HasAttributes, HasInlineChildren {
+  tag: "double_quoted";
+}
+
+interface SingleQuoted extends HasAttributes, HasInlineChildren {
+  tag: "single_quoted";
 }
 
 interface ListItem extends HasAttributes, HasBlockChildren {
@@ -399,6 +409,20 @@ const parse = function(input : string, options : ParseOptions) : Doc {
       case "-insert":
         node = popContainer();
         addChildToTip(containers, {tag: "insert", children: node.children});
+        break;
+      case "+double_quoted":
+        pushContainer();
+        break;
+      case "-double_quoted":
+        node = popContainer();
+        addChildToTip(containers, {tag: "double_quoted", children: node.children});
+        break;
+      case "+single_quoted":
+        pushContainer();
+        break;
+      case "-single_quoted":
+        node = popContainer();
+        addChildToTip(containers, {tag: "single_quoted", children: node.children});
         break;
       case "+linktext":
         pushContainer();
