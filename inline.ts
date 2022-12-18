@@ -560,7 +560,9 @@ class InlineParser {
   constructor(subject : string, warn : (message : string, pos : number) => void) {
     this.warn = warn;
     this.subject = subject;
-    this.matches = [];
+    this.matches = [];  // sparse array of matches indexed by startpos
+    // We use a sparse array because we sometimes want to replace early,
+    // provisional matches with new ones.
     this.openers = {};
     this.verbatim = 0;
     this.verbatimType = "";
