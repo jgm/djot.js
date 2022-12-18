@@ -350,6 +350,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
   const handleEvent = function(containers : Container[], event : Event) : void {
     let node;
+    let top;
     switch (event.annot) {
       case "str":
         let txt = input.substring(event.startpos, event.endpos + 1);
@@ -469,7 +470,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         }
         break;
       case "class":
-        let top = topContainer();
+        top = topContainer();
         let cl = input.substring(event.startpos, event.endpos + 1);
         if (!top.attributes) {
           top.attributes = {};
@@ -478,6 +479,15 @@ const parse = function(input : string, options : ParseOptions) : Doc {
           top.attributes.class = top.attributes.class + " " + cl;
         } else {
           top.attributes.class = cl;
+        }
+        break;
+      case "id":
+        top = topContainer();
+        let id = input.substring(event.startpos, event.endpos + 1);
+        if (!top.attributes) {
+          top.attributes = { id: id };
+        } else {
+          top.attributes.id = id;
         }
         break;
       case "+linktext":
