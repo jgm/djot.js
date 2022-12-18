@@ -449,7 +449,6 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         break;
       case "-attributes":
         node = popContainer();
-          console.log(node);
         if (node.attributes && containers.length > 0) {
           let tip = getTip();
           if (!tip.attributes) {
