@@ -288,10 +288,11 @@ interface ParseOptions {
   warn?: (message : string, pos : number) => void;
 }
 
+// Parsing ocntext:
 enum Context {
-  Normal = 0,
-  Verbatim = 1,
-  Literal = 2
+  Normal = 0,    // add str nodes as children of tip
+  Verbatim = 1,  // gather str, escape, softbreak, hardbreak in accumulatedText
+  Literal = 2    // gather str, softbreak, hardbreak in accumulatedText
 }
 
 const parse = function(input : string, options : ParseOptions) : Doc {
@@ -342,11 +343,20 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         }
         break;
       case "hardbreak":
-        addChildToTip(containers, {tag: "hardbreak"});
+        if (context === Context.Normal) {
+          addChildToTip(containers, {tag: "hardbreak"});
+        } else {
+          accumulatedText.push("\n");
+        }
         break;
       case "emoji":
-        let alias = input.substring(event.startpos + 1, event.endpos);
-        addChildToTip(containers, {tag: "emoji", alias: alias});
+        if (context === Context.Normal) {
+          let alias = input.substring(event.startpos + 1, event.endpos);
+          addChildToTip(containers, {tag: "emoji", alias: alias});
+        } else {
+          let txt = input.substring(event.startpos, event.endpos + 1);
+          accumulatedText.push(txt);
+        }
         break;
       case "+emph":
         pushContainer();
@@ -400,17 +410,15 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         context = Context.Literal;
         break;
       case "-destination":
-        node = popContainer();
+        node = popContainer();  // the container added by +linktext
         addChildToTip(containers, {tag: "link", destination: accumulatedText.join(""), children: node.children});
         context = Context.Normal;
         accumulatedText = [];
         break;
       case "+verbatim":
-        pushContainer();
         context = Context.Verbatim;
         break;
       case "-verbatim":
-        node = popContainer();
         addChildToTip(containers, {tag: "verbatim",
                                    text: accumulatedText.join("")});
         context = Context.Normal;
