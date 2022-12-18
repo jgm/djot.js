@@ -1,7 +1,8 @@
-type Event = {
-  startpos : number,
-  endpos : number,
-  annot : string
+interface Event {
+  startpos : number;
+  endpos : number;
+  annot : string;
+
 }
 
 export { Event }

@@ -3,29 +3,11 @@ import { EventParser } from "./block.js";
 
 // Types for the AST
 
-interface HasAttributes {
-  attributes?: Record<string, string>;
-}
+type Attributes = Record<string, string>;
 
-type Container =
-      Doc
-    | Para
-    | Heading
-    | BlockQuote
-    | List
-    | Table
-    | ListItem
-    | TableRow
-    | TableCell
-    | Emph
-    | Strong
-    | Link
-    | Image
-    | Span
-    | Mark
-    | Insert
-    | Delete
-    | Strikeout ;
+interface HasAttributes {
+  attributes?: Attributes;
+}
 
 interface HasInlineChildren {
   children: Inline[];
@@ -84,7 +66,7 @@ type Inline = Str
             | Mark
             | Insert
             | Delete
-            | Strikeout ;
+            ;
 
 interface Str {
   tag: "str";
@@ -136,10 +118,6 @@ interface Delete extends HasAttributes, HasInlineChildren {
 
 interface Insert extends HasAttributes, HasInlineChildren {
   tag: "insert";
-}
-
-interface Strikeout extends HasAttributes, HasInlineChildren {
-  tag: "strikeout";
 }
 
 interface ListItem extends HasAttributes, HasBlockChildren {
@@ -245,7 +223,7 @@ const getListStart = function(marker : string, style : string) : number | null {
   return null;
 }
 
-const addChildToTip = function(containers : Container[], child : any) : void {
+const addChildToTip = function(containers : any[], child : any) : void {
   /*
   if containers[#containers].t == "list" and
       not (child.t == "list_item" or child.t == "definition_list_item") then
@@ -278,8 +256,6 @@ const addChildToTip = function(containers : Container[], child : any) : void {
   tip.children.push(child);
 }
 
-
-
 interface ParseOptions {
   sourcePositions?: boolean;
   warn?: (message : string, pos : number) => void;
@@ -289,26 +265,123 @@ const parse = function(input : string, options : ParseOptions) : Doc {
   const references : Record<string, Reference> = {};
   const footnotes : Record<string, Footnote> = {};
   const identifiers : Record<string, boolean> = {}; // identifiers used
+  const attributes : Attributes = {}; // accumulated block attributes
   const defaultWarnings = function(message : string, pos : number) {
     process.stderr.write(message + (pos ? " at " + pos : "") + "\n");
   }
   const warn = options.warn || defaultWarnings;
   const parser = new EventParser(input, warn);
+  const pushContainer = function(container : any) {
+      containers.push(container);
+  };
+  const popContainer = function() {
+      let node = containers.pop();
+      if (node) {
+        addChildToTip(containers, node);
+      }
+    };
 
-  const handleEvent = function(containers : Container[], event : Event) : void {
+  const handleEvent = function(containers : any[], event : Event) : void {
     switch (event.annot) {
       case "str":
         let txt = input.substring(event.startpos, event.endpos + 1);
         addChildToTip(containers, {tag: "str", text: txt});
         break;
+      case "softbreak":
+        addChildToTip(containers, {tag: "softbreak"});
+        break;
+      case "escape":
+        break;
+      case "hardbreak":
+        addChildToTip(containers, {tag: "hardbreak"});
+        break;
+      case "emoji":
+        let alias = input.substring(event.startpos + 1, event.endpos);
+        addChildToTip(containers, {tag: "emoji", alias: alias});
+        break;
+      case "+emph":
+        pushContainer({tag: "emph", children: []});
+        break;
+      case "-emph":
+        popContainer();
+        break;
+      case "+strong":
+        pushContainer({tag: "strong", children: []});
+        break;
+      case "-strong":
+        popContainer();
+        break;
+      case "+span":
+        pushContainer({tag: "span", children: []});
+        break;
+      case "-span":
+        popContainer();
+        break;
+      case "+mark":
+        pushContainer({tag: "mark", children: []});
+        break;
+      case "-mark":
+        popContainer();
+        break;
+      case "+delete":
+        pushContainer({tag: "delete", children: []});
+        break;
+      case "-delete":
+        popContainer();
+        break;
+      case "+insert":
+        pushContainer({tag: "insert", children: []});
+        break;
+      case "-insert":
+        popContainer();
+        break;
+      case "+linktext":
+        pushContainer({tag: "link", destination: "", children: []});
+        break;
+      case "-linktext":
+        // leave on container stack and await destination
+        break;
+      case "+destination":
+        pushContainer({tag: "destination", destination: "", children: []});
+        break;
+      case "-destination":
+        let dest = containers.pop();
+        if (dest) {
+          containers[containers.length - 1].destination = getStringContent(dest);
+          popContainer();
+        }
+        break;
+      case "+linktext": // can just ignore this, children go to link container
+        break;
+      case "-linktext":
+        break;
       case "+para":
-        containers.push({tag: "para", children: []});
+        pushContainer({tag: "para", children: []});
         break;
       case "-para":
-        let node = containers.pop();
-        if (node) {
-          addChildToTip(containers, node);
-        }
+        popContainer();
+        break;
+      case "+heading":
+        pushContainer({tag: "heading",
+                       level: 1 + event.endpos - event.startpos,
+                       children: []});
+        break;
+      case "-heading":
+        popContainer();
+        break;
+      case "+blockquote":
+        pushContainer({tag: "blockquote", children: []});
+        break;
+      case "-blockquote":
+        popContainer();
+        break;
+      case "thematic_break":
+        addChildToTip(containers, {tag: "thematic_break"});
+        break;
+      case "right_single_quote":
+        addChildToTip(containers, {tag: "right_single_quote", str: "'"});
+        break;
+      case "blankline":
         break;
       default:
         throw("Unknown event " + event.annot);
@@ -322,7 +395,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
                 children: []
               };
 
-  let containers : Container[] = [doc];
+  let containers : any[] = [doc];
 
   for (const event of parser) {
     handleEvent(containers, event);
