@@ -7,6 +7,26 @@ interface HasAttributes {
   attributes?: Record<string, string>;
 }
 
+type Container =
+      Doc
+    | Para
+    | Heading
+    | BlockQuote
+    | List
+    | Table
+    | ListItem
+    | TableRow
+    | TableCell
+    | Emph
+    | Strong
+    | Link
+    | Image
+    | Span
+    | Mark
+    | Insert
+    | Delete
+    | Strikeout ;
+
 interface HasInlineChildren {
   children: Inline[];
 }
@@ -225,6 +245,41 @@ const getListStart = function(marker : string, style : string) : number | null {
   return null;
 }
 
+const addChildToTip = function(containers : Container[], child : any) : void {
+  /*
+  if containers[#containers].t == "list" and
+      not (child.t == "list_item" or child.t == "definition_list_item") then
+    -- close list
+    local oldlist = table.remove(containers)
+    add_child_to_tip(containers, oldlist)
+  end
+  if child.t == "list" then
+    if child.pos then
+      child.pos[2] = child.c[#child.c].pos[2]
+    end
+    -- calculate tightness (TODO not quite right)
+    local tight = true
+    for i=1,#child.c do
+      tight = tight and is_tight(child.c[i].startidx,
+                                   child.c[i].endidx, i == #child.c)
+      child.c[i].startidx = nil
+      child.c[i].endidx = nil
+    end
+    child.tight = tight
+
+    -- resolve style if still ambiguous
+    resolve_style(child)
+  end
+  */
+  let tip = containers[containers.length - 1];
+  if (!tip) {
+    throw("Container stack is empty!");
+  }
+  tip.children.push(child);
+}
+
+
+
 interface ParseOptions {
   sourcePositions?: boolean;
   warn?: (message : string, pos : number) => void;
@@ -240,8 +295,24 @@ const parse = function(input : string, options : ParseOptions) : Doc {
   const warn = options.warn || defaultWarnings;
   const parser = new EventParser(input, warn);
 
-  const handleEvent = function(containers : Node[], event : Event) : void {
-    console.log(event); // TODO
+  const handleEvent = function(containers : Container[], event : Event) : void {
+    switch (event.annot) {
+      case "str":
+        let txt = input.substring(event.startpos, event.endpos + 1);
+        addChildToTip(containers, {tag: "str", text: txt});
+        break;
+      case "+para":
+        containers.push({tag: "para", children: []});
+        break;
+      case "-para":
+        let node = containers.pop();
+        if (node) {
+          addChildToTip(containers, node);
+        }
+        break;
+      default:
+        throw("Unknown event " + event.annot);
+    }
   }
 
   const doc : Doc =
@@ -251,7 +322,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
                 children: []
               };
 
-  let containers : Node[] = [doc];
+  let containers : Container[] = [doc];
 
   for (const event of parser) {
     handleEvent(containers, event);
@@ -259,8 +330,8 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
   // close any open containers
   while (containers.length > 1) {
-    let node = containers.pop()
-    // addChildToTip(containers, node) // TODO
+    let node = containers.pop();
+    // addChildToTip(containers, node);
     // note: doc container doesn't have pos, so we check: // TODO
     // if (sourceposmap && containers[containers.length - 1].pos) {
     //   containers[#containers].pos[2] = node.pos[2]
