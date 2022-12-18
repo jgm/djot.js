@@ -375,6 +375,12 @@ const parse = function(input : string, options : ParseOptions) : Doc {
       case "-blockquote":
         popContainer();
         break;
+      case "+div":
+        pushContainer({tag: "div", children: []});
+        break;
+      case "-div":
+        popContainer();
+        break;
       case "thematic_break":
         addChildToTip(containers, {tag: "thematic_break"});
         break;
