@@ -312,15 +312,24 @@ const parse = function(input : string, options : ParseOptions) : Doc {
   const references : Record<string, Reference> = {};
   const footnotes : Record<string, Footnote> = {};
   const identifiers : Record<string, boolean> = {}; // identifiers used
-  const attributes : Attributes = {}; // accumulated block attributes
+  const blockAttributes : Attributes = {}; // accumulated block attributes
   const defaultWarnings = function(message : string, pos : number) {
     process.stderr.write(message + (pos ? " at " + pos : "") + "\n");
   }
   const warn = options.warn || defaultWarnings;
   const parser = new EventParser(input, warn);
-
+  const addBlockAttributes = function(container : HasAttributes) {
+      if (Object.keys(blockAttributes).length > 0) {
+        container.attributes = container.attributes || {};
+        for (const k in blockAttributes) {
+          container.attributes[k] = blockAttributes[k];
+          delete blockAttributes[k];
+        }
+      }
+  };
   const pushContainer = function(data ?: any) {
-      let container = {children: [], data: data};
+      let container : Container = {children: [], data: data};
+      addBlockAttributes(container);
       containers.push(container);
   };
   const popContainer = function() {
@@ -331,21 +340,21 @@ const parse = function(input : string, options : ParseOptions) : Doc {
       return node;
   };
   const topContainer = function() {
-    if (containers.length > 0) {
-      return containers[containers.length - 1];
-    } else {
-      throw("Container stack is empty");
-    }
+      if (containers.length > 0) {
+        return containers[containers.length - 1];
+      } else {
+        throw("Container stack is empty");
+      }
   }
   // points to last child of top container, or top container if
   // it doesn't have children
   const getTip = function() : Container {
-    let top = topContainer();
-    if (top.children.length > 0) {
-      return top.children[top.children.length - 1];
-    } else {
-      return top;
-    }
+      let top = topContainer();
+      if (top.children.length > 0) {
+        return top.children[top.children.length - 1];
+      } else {
+        return top;
+      }
   }
 
   const handleEvent = function(containers : Container[], event : Event) : void {
@@ -468,6 +477,26 @@ const parse = function(input : string, options : ParseOptions) : Doc {
           }
         }
         break;
+      case "+block_attributes":
+        pushContainer({});
+        break;
+      case "-block_attributes":
+        node = popContainer();
+        if (node.attributes && containers.length > 0) {
+          for (const k in node.attributes) {
+            if (k === "class") {
+              if (blockAttributes[k]) {
+                blockAttributes[k] = blockAttributes[k] +
+                                      " " + node.attributes[k];
+              } else {
+                blockAttributes[k] = node.attributes[k];
+              }
+            } else {
+              blockAttributes[k] = node.attributes[k];
+            }
+          }
+        }
+        break;
       case "class":
         top = topContainer();
         let cl = input.substring(event.startpos, event.endpos + 1);
@@ -536,7 +565,9 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         break;
       case "-para":
         node = popContainer();
-        addChildToTip(containers, {tag: "para", children: node.children});
+        addChildToTip(containers, {tag: "para",
+                                   children: node.children,
+                                   attributes: node.attributes });
         break;
       case "+heading":
         pushContainer({ level: 1 + event.endpos - event.startpos });
@@ -545,24 +576,31 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         node = popContainer();
         addChildToTip(containers, {tag: "heading",
                                    level: node.data.level,
-                                   children: node.children });
+                                   children: node.children,
+                                   attributes: node.attributes });
         break;
       case "+blockquote":
         pushContainer();
         break;
       case "-blockquote":
         node = popContainer();
-        addChildToTip(containers, {tag: "blockquote", children: node.children});
+        addChildToTip(containers, {tag: "blockquote",
+                                   children: node.children,
+                                   attributes: node.attributes });
         break;
       case "+div":
         pushContainer();
         break;
       case "-div":
         node = popContainer();
-        addChildToTip(containers, {tag: "div", children: node.children});
+        addChildToTip(containers, {tag: "div",
+                                   children: node.children,
+                                   attributes: node.attributes });
         break;
       case "thematic_break":
-        addChildToTip(containers, {tag: "thematic_break"});
+        let tb : Node = { tag: "thematic_break" };
+        addBlockAttributes(tb);
+        addChildToTip(containers, tb);
         break;
       case "right_single_quote":
         addChildToTip(containers, {tag: "right_single_quote", text: "'"});
