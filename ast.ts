@@ -445,7 +445,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         addChildToTip(containers, {tag: "single_quoted", children: node.children});
         break;
       case "+attributes":
-        pushContainer();
+        pushContainer({});
         break;
       case "-attributes":
         node = popContainer();
@@ -489,6 +489,24 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         } else {
           top.attributes.id = id;
         }
+        break;
+      case "key":
+        top = topContainer();
+        let key = input.substring(event.startpos, event.endpos + 1);
+        top.data.key = key;
+        break;
+      case "value":
+        top = topContainer();
+        let val = input.substring(event.startpos, event.endpos + 1);
+        if (!top.attributes) {
+          top.attributes = {};
+        }
+        if (top.data.key) {
+          top.attributes[top.data.key] = val;
+        } else {
+          throw("Encountered value without key");
+        }
+        top.data.key = null;
         break;
       case "+linktext":
         pushContainer();
