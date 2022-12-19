@@ -352,11 +352,10 @@ const addChildToTip = function(containers : Container[], child : Node) : void {
     resolve_style(child)
   end
   */
-  let tip = containers[containers.length - 1];
-  if (!tip) {
-    throw("Container stack is empty!");
+  if (containers.length > 0) {
+    let tip = containers[containers.length - 1];
+    tip.children.push(child);
   }
-  tip.children.push(child);
 }
 
 interface ParseOptions {
@@ -400,7 +399,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
   const popContainer = function() {
       let node = containers.pop();
       if (!node) {
-        throw("Container stack is empty");
+        throw("Container stack is empty (popContainer)");
       }
       return node;
   };
@@ -408,7 +407,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
       if (containers.length > 0) {
         return containers[containers.length - 1];
       } else {
-        throw("Container stack is empty");
+        throw("Container stack is empty (topContainer)");
       }
   }
   // points to last child of top container, or top container if
@@ -663,29 +662,23 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         // we don't pop yet, but wait for -destination
         break;
 
+      case "+imagetext":
+        pushContainer();
+        break;
+
+      case "-imagetext":
+        // we don't pop yet, but wait for -destination
+        break;
+
       case "+destination":
         context = Context.Literal;
         break;
 
       case "-destination":
-        node = popContainer();  // the container added by +linktext
+        node = popContainer();  // the container added by +linktext/+imagetext
         addChildToTip(containers,
                       {tag: "link",
                        destination: accumulatedText.join(""),
-                       children: node.children});
-        context = Context.Normal;
-        accumulatedText = [];
-        break;
-
-      case "+reference":
-        context = Context.Literal;
-        break;
-
-      case "-reference":
-        node = popContainer();  // the container added by +linktext
-        addChildToTip(containers,
-                      {tag: "link",
-                       reference: accumulatedText.join(""),
                        children: node.children});
         context = Context.Normal;
         accumulatedText = [];
@@ -870,15 +863,6 @@ const parse = function(input : string, options : ParseOptions) : Doc {
     handleEvent(containers, event);
   }
 
-  // close any open containers
-  while (containers.length > 1) {
-    let node = containers.pop();
-    // addChildToTip(containers, node);
-    // note: doc container doesn't have pos, so we check: // TODO
-    // if (sourceposmap && containers[containers.length - 1].pos) {
-    //   containers[#containers].pos[2] = node.pos[2]
-    // }
-  }
   // doc = addSections(doc); // TODO
 
   return doc;
