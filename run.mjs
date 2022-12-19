@@ -60,7 +60,12 @@ if (files.length === 0) {
   files = ["/dev/stdin"];
 }
 files.forEach(file => {
-  input = input + fs.readFileSync(file, "utf8");
+  try {
+    input = input + fs.readFileSync(file, "utf8");
+  } catch(err) {
+    console.error(err);
+    process.exit(1);
+  }
 });
 
 try {
