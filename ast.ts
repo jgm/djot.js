@@ -260,7 +260,7 @@ interface Container {
   children: any[];
   attributes?: Attributes;
   data?: any;
-  pos?: Pos;
+  pos: Pos;
 }
 
 const addStringContent = function(node : Inline, buffer : string[]) : void {
@@ -430,10 +430,10 @@ const parse = function(input : string, options : ParseOptions) : Doc {
       }
   }
 
-  const addChildToTip = function(child : Node, pos ?: Pos) : void {
+  const addChildToTip = function(child : Node, pos : Pos) : void {
     if (containers.length > 0) {
       let tip = containers[containers.length - 1];
-      if (options.sourcePositions && pos) {
+      if (options.sourcePositions) {
         child.pos = pos;
       }
       tip.children.push(child);
@@ -445,12 +445,13 @@ const parse = function(input : string, options : ParseOptions) : Doc {
     let top;
     let sp = event.startpos;
     let ep = event.endpos;
+    let pos = {start: sp, end: ep};
     switch (event.annot) {
 
       case "str":
         let txt = input.substring(event.startpos, event.endpos + 1);
         if (context === Context.Normal) {
-          addChildToTip({tag: "str", text: txt}, {start: sp, end: ep});
+          addChildToTip({tag: "str", text: txt}, pos);
         } else {
           accumulatedText.push(txt);
         }
@@ -458,7 +459,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "softbreak":
         if (context === Context.Normal) {
-          addChildToTip({tag: "softbreak"});
+          addChildToTip({tag: "softbreak"}, pos);
         } else {
           accumulatedText.push("\n");
         }
@@ -472,7 +473,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "hardbreak":
         if (context === Context.Normal) {
-          addChildToTip({tag: "hardbreak"});
+          addChildToTip({tag: "hardbreak"}, pos);
         } else {
           accumulatedText.push("\n");
         }
@@ -481,7 +482,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
       case "emoji":
         if (context === Context.Normal) {
           let alias = input.substring(event.startpos + 1, event.endpos);
-          addChildToTip({tag: "emoji", alias: alias});
+          addChildToTip({tag: "emoji", alias: alias}, pos);
         } else {
           let txt = input.substring(event.startpos, event.endpos + 1);
           accumulatedText.push(txt);
@@ -490,7 +491,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "footnote_reference":
         let fnref = input.substring(event.startpos + 2, event.endpos);
-        addChildToTip({tag: "footnote_reference", text: fnref});
+        addChildToTip({tag: "footnote_reference", text: fnref}, pos);
         break;
 
       case "+emph":
@@ -499,7 +500,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-emph":
         node = popContainer(ep);
-        addChildToTip({tag: "emph", children: node.children});
+        addChildToTip({tag: "emph", children: node.children}, node.pos);
         break;
 
       case "+strong":
@@ -508,7 +509,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-strong":
         node = popContainer(ep);
-        addChildToTip({tag: "strong", children: node.children});
+        addChildToTip({tag: "strong", children: node.children}, node.pos);
         break;
 
       case "+span":
@@ -517,7 +518,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-span":
         node = popContainer(ep);
-        addChildToTip({tag: "span", children: node.children});
+        addChildToTip({tag: "span", children: node.children}, node.pos);
         break;
 
       case "+mark":
@@ -526,7 +527,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-mark":
         node = popContainer(ep);
-        addChildToTip({tag: "mark", children: node.children});
+        addChildToTip({tag: "mark", children: node.children}, node.pos);
         break;
 
       case "+superscript":
@@ -535,7 +536,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-superscript":
         node = popContainer(ep);
-        addChildToTip({tag: "superscript", children: node.children});
+        addChildToTip({tag: "superscript", children: node.children}, node.pos);
         break;
 
       case "+subscript":
@@ -544,7 +545,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-subscript":
         node = popContainer(ep);
-        addChildToTip({tag: "subscript", children: node.children});
+        addChildToTip({tag: "subscript", children: node.children}, node.pos);
         break;
 
       case "+delete":
@@ -553,7 +554,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-delete":
         node = popContainer(ep);
-        addChildToTip({tag: "delete", children: node.children});
+        addChildToTip({tag: "delete", children: node.children}, node.pos);
         break;
 
       case "+insert":
@@ -562,7 +563,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-insert":
         node = popContainer(ep);
-        addChildToTip({tag: "insert", children: node.children});
+        addChildToTip({tag: "insert", children: node.children}, node.pos);
         break;
 
       case "+double_quoted":
@@ -571,7 +572,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-double_quoted":
         node = popContainer(ep);
-        addChildToTip({tag: "double_quoted", children: node.children});
+        addChildToTip({tag: "double_quoted", children: node.children}, node.pos);
         break;
 
       case "+single_quoted":
@@ -580,7 +581,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-single_quoted":
         node = popContainer(ep);
-        addChildToTip({tag: "single_quoted", children: node.children});
+        addChildToTip({tag: "single_quoted", children: node.children}, node.pos);
         break;
 
       case "+attributes":
@@ -698,7 +699,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         node = popContainer(ep);  // the container added by +linktext/+imagetext
         addChildToTip({tag: "link",
                        destination: accumulatedText.join(""),
-                       children: node.children});
+                       children: node.children}, node.pos);
         context = Context.Normal;
         accumulatedText = [];
         break;
@@ -711,57 +712,67 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         node = popContainer(ep);  // the container added by +linktext
         addChildToTip({tag: "link",
                        reference: accumulatedText.join(""),
-                       children: node.children});
+                       children: node.children}, node.pos);
         context = Context.Normal;
         accumulatedText = [];
         break;
 
       case "+verbatim":
         context = Context.Verbatim;
+        pushContainer(sp);
         break;
 
       case "-verbatim":
-        addChildToTip({tag: "verbatim", text: accumulatedText.join("")});
+        node = popContainer(ep);
+        addChildToTip({tag: "verbatim", text: accumulatedText.join("")}, node.pos);
         context = Context.Normal;
         accumulatedText = [];
         break;
 
       case "+inline_math":
         context = Context.Verbatim;
+        pushContainer(sp);
         break;
 
       case "-inline_math":
-        addChildToTip({tag: "inline_math", text: accumulatedText.join("")});
+        node = popContainer(ep);
+        addChildToTip({tag: "inline_math", text: accumulatedText.join("")}, node.pos);
         context = Context.Normal;
         accumulatedText = [];
         break;
 
       case "+display_math":
         context = Context.Verbatim;
+        pushContainer(sp);
         break;
 
       case "-display_math":
-        addChildToTip({tag: "display_math", text: accumulatedText.join("")});
+        node = popContainer(ep);
+        addChildToTip({tag: "display_math", text: accumulatedText.join("")}, node.pos);
         context = Context.Normal;
         accumulatedText = [];
         break;
 
       case "+url":
         context = Context.Literal;
+        pushContainer(sp);
         break;
 
       case "-url":
-        addChildToTip({tag: "url", text: accumulatedText.join("")});
+        node = popContainer(ep);
+        addChildToTip({tag: "url", text: accumulatedText.join("")}, node.pos);
         context = Context.Normal;
         accumulatedText = [];
         break;
 
       case "+email":
         context = Context.Literal;
+        pushContainer(sp);
         break;
 
       case "-email":
-        addChildToTip({tag: "email", text: accumulatedText.join("")});
+        node = popContainer(ep);
+        addChildToTip({tag: "email", text: accumulatedText.join("")}, node.pos);
         context = Context.Normal;
         accumulatedText = [];
         break;
@@ -774,7 +785,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         node = popContainer(ep);
         addChildToTip({tag: "para",
                        children: node.children,
-                       attributes: node.attributes });
+                       attributes: node.attributes }, node.pos);
         break;
 
       case "+heading":
@@ -787,7 +798,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         addChildToTip({tag: "heading",
                        level: node.data.level,
                        children: node.children,
-                       attributes: node.attributes });
+                       attributes: node.attributes }, node.pos);
         break;
 
       case "+blockquote":
@@ -798,7 +809,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         node = popContainer(ep);
         addChildToTip({tag: "blockquote",
                        children: node.children,
-                       attributes: node.attributes });
+                       attributes: node.attributes }, node.pos);
         break;
 
       case "+code_block":
@@ -811,7 +822,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         addChildToTip({tag: "code_block",
                        text: accumulatedText.join(""),
                        lang:  node.data.lang,
-                       attributes: node.attributes });
+                       attributes: node.attributes }, node.pos);
 
         context = Context.Normal;
         accumulatedText = [];
@@ -830,29 +841,29 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         node = popContainer(ep);
         addChildToTip({tag: "div",
                        children: node.children,
-                       attributes: node.attributes });
+                       attributes: node.attributes }, node.pos);
         break;
 
       case "thematic_break":
         let tb : Node = { tag: "thematic_break" };
         addBlockAttributes(tb);
-        addChildToTip(tb);
+        addChildToTip(tb, pos);
         break;
 
       case "right_single_quote":
-        addChildToTip({tag: "right_single_quote", text: "'"});
+        addChildToTip({tag: "right_single_quote", text: "'"}, pos);
         break;
 
       case "ellipses":
-        addChildToTip({tag: "ellipses", text: "..."});
+        addChildToTip({tag: "ellipses", text: "..."}, pos);
         break;
 
       case "en_dash":
-        addChildToTip({tag: "en_dash", text: "--"});
+        addChildToTip({tag: "en_dash", text: "--"}, pos);
         break;
 
       case "em_dash":
-        addChildToTip({tag: "em_dash", text: "---"});
+        addChildToTip({tag: "em_dash", text: "---"}, pos);
         break;
 
       case "blankline":
@@ -863,24 +874,21 @@ const parse = function(input : string, options : ParseOptions) : Doc {
     }
   }
 
-  const doc : Doc =
-              { tag: "doc",
-                references: references,
-                footnotes: footnotes,
-                attributes: {},
-                children: [],
-                pos: {start: 0, end: input.length - 1}
-              };
-
-  let containers : Container[] = [doc];
+  let containers : Container[] = [{children: [],
+                                   data: {},
+                                   pos: {start: 0, end: 0}} ];
 
   for (const event of parser) {
     handleEvent(containers, event);
   }
 
-  // doc = addSections(doc); // TODO
-
-  return doc;
+  return { tag: "doc",
+           references: references,
+           footnotes: footnotes,
+           attributes: containers[0].attributes,
+           children: containers[0].children,
+           pos: {start: 0, end: input.length - 1}
+          };
 }
 
 export {
