@@ -39,7 +39,12 @@ for (let i=2; i < process.argv.length; i++) {
       process.exit(0);
       break;
     default:
-      files.push(arg);
+      if (arg.charAt(0) === "-") {
+        process.stderr.write("Unknown option " + arg + "\n");
+        process.exit(1);
+      } else {
+        files.push(arg);
+      }
   }
 }
 
