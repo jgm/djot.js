@@ -374,6 +374,44 @@ enum Context {
 }
 
 const parse = function(input : string, options : ParseOptions) : Doc {
+
+  let linestarts : number[] = [0];
+
+  if (options.sourcePositions) { // construct map of newline positions
+    for(var i=0; i < input.length; i++) {
+      if (input[i] === "\n") {
+        linestarts.push(i);
+      }
+    }
+  }
+
+  // use binary search on linestarts to find line number and offset
+  const getLineAndCol = function(pos : number) :  { line: number,
+                                                    offset: number } {
+    let numlines = linestarts.length;
+    let bottom = 0;
+    let top = numlines - 1;
+    let line = 0;
+    let offset = 0;
+    while (!line) {
+      let mid = ~~((top - bottom) / 2);
+      console.log(mid, bottom, top);
+      let nlpos = linestarts[mid];
+      if (nlpos > pos) {
+        bottom = mid;
+      } else { // nlpos <= pos
+        if (linestarts[mid + 1] && linestarts[mid + 1] > pos) {
+          line = mid + 1;
+          offset = pos - linestarts[mid];
+        } else {
+          top = mid;
+        }
+      }
+    }
+    return { line: line, offset: offset };
+  }
+
+
   let context = Context.Normal;
   let accumulatedText : string[] = [];
   const references : Record<string, Reference> = {};
