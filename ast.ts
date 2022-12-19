@@ -878,8 +878,10 @@ const parse = function(input : string, options : ParseOptions) : Doc {
                                    data: {},
                                    pos: {start: 0, end: 0}} ];
 
+  let lastpos = 0;
   for (const event of parser) {
     handleEvent(containers, event);
+    lastpos = event.endpos;
   }
 
   let doc : Doc =
@@ -890,7 +892,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
            attributes: containers[0].attributes
           };
   if (options.sourcePositions) {
-    doc.pos = {start: 0, end: input.length - 1};
+    doc.pos = {start: 0, end: lastpos};
   }
   return doc;
 }
