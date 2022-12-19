@@ -5,12 +5,55 @@ lua implementation](https://github.com/jgm/djot).
 
 Use `tsc` to compile the ts files to js.
 
-Status:
+`yarn test` runs some tests.
 
-- [X] attributes
-- [X] inline
-- [X] block
-- [ ] ast <--- in progress
-- [ ] html
-- [ ] filter
+Road map:
+
+- [X] attribute parsing (attribute.ts)
+- [X] inline parsing (inline.ts)
+- [X] block parsing (block.ts)
+- [ ] parsing to an ast (ast.ts)
+  - [X] para
+  - [X] block quote
+  - [X] heading
+  - [X] thematic break
+  - [X] div
+  - [X] code block
+  - [X] str
+  - [X] smart quotes, ellipses, dashes
+  - [X] softbreak
+  - [X] hardbreak
+  - [X] emoji
+  - [X] verbatim
+  - [X] link
+  - [X] image
+  - [X] emph
+  - [X] strong
+  - [X] span
+  - [X] mark
+  - [X] delete
+  - [X] insert
+  - [X] attributes (block and inline)
+  - [ ] pretty renderer
+  - [ ] auto identifiers on headings
+  - [ ] superscript, subscript
+  - [ ] autolink
+  - [ ] math
+  - [ ] footnote reference
+  - [ ] raw inline
+  - [ ] sections
+  - [ ] raw block
+  - [ ] footnote
+  - [ ] reference definitions
+  - [ ] list items/lists, inc. def lists and task lists
+  - [ ] tables, captions
+  - [ ] source positions
+- [ ] html renderer (consume ast, produce DOM?)
+- [ ] filter API
+- [ ] full-featured cli
+- [ ] functional tests (from lua implementation)
+- [ ] pathological tests
+- [ ] benchmarks
+- [ ] node module
+- [ ] replace current wasm in djot sandbox
 
