@@ -34,19 +34,22 @@ Road map:
   - [X] delete
   - [X] insert
   - [X] attributes (block and inline)
-  - [ ] pretty renderer
-  - [ ] auto identifiers on headings
   - [X] superscript, subscript
   - [X] autolink
   - [X] math
-  - [ ] footnote reference
+  - [X] footnote reference
   - [ ] raw inline
-  - [ ] sections
   - [ ] raw block
-  - [ ] footnote
+  - [ ] sections
   - [ ] reference definitions
-  - [ ] list items/lists, inc. def lists and task lists
-  - [ ] tables, captions
+  - [ ] footnote
+  - [ ] pretty renderer
+  - [ ] auto identifiers on headings
+  - [ ] list items/lists
+  - [ ] definition lists
+  - [ ] task lists
+  - [ ] tables
+  - [ ] captions
   - [ ] source positions
   - [ ] unit tests
 - [ ] html renderer (consume ast, produce DOM?)

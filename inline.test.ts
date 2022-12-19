@@ -239,7 +239,13 @@ describe("InlineParser", () => {
     ]);
   });
 
-
-
+  it("parses note references", () => {
+    const parser = new InlineParser('[^ref]', ignoreWarnings);
+    //                               012345
+    parser.feed(0,5);
+    expect(parser.getMatches()).toStrictEqual([
+      { annot: "footnote_reference", startpos: 0, endpos: 5 }
+    ]);
+  });
 
 })

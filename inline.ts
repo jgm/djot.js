@@ -120,7 +120,7 @@ const pattDoubleDollars = pattern("\\$\\$");
 const pattSingleDollar = pattern("\\$");
 const pattBackslash = pattern("\\\\");
 const pattRawAttribute = pattern("\\{=[^\\s{}`]+\\}");
-const pattNoteReference = pattern("%^([^]]+)%]");
+const pattNoteReference = pattern("\\^([^\\]]+)\\]");
 
 const hasBrace = function(self : InlineParser, pos : number) : boolean {
   return ((pos > 0 && self.subject.codePointAt(pos - 1) === C_LEFT_BRACE) ||

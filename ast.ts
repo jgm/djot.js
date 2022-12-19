@@ -78,6 +78,7 @@ type Inline = Str
             | DisplayMath
             | Url
             | Email
+            | FootnoteReference
             | RightSingleQuote
             | Ellipses
             | EmDash
@@ -98,6 +99,11 @@ type Inline = Str
 
 interface Str extends HasAttributes {
   tag: "str";
+  text: string;
+}
+
+interface FootnoteReference extends HasAttributes {
+  tag: "footnote_reference";
   text: string;
 }
 
@@ -460,6 +466,12 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         }
         break;
 
+      case "footnote_reference":
+        let fnref = input.substring(event.startpos + 2, event.endpos);
+        addChildToTip(containers, {tag: "footnote_reference",
+                                   text: fnref});
+        break;
+
       case "+emph":
         pushContainer();
         break;
@@ -810,7 +822,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         break;
 
       default:
-        throw("Unknown event " + event.annot);
+        // throw("Unknown event " + event.annot);
     }
   }
 
