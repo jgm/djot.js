@@ -1,17 +1,20 @@
 import { EventParser } from "./block.js";
 import { parse } from "./ast.js";
 import fs from "fs";
+import { performance } from "perf_hooks";
 
 const warn = function(msg, pos) {
   process.stderr.write(msg + (pos ? " at " + pos : "") + "\n");
 }
 
+let timing = false;
 let options = {sourcePositions: false, warn: warn};
 let usage = `node ./run.mjs [OPTIONS] FILE*
 Options:
---sourcepos,-p       Include source positions
---quiet,-q           Suppress warnings
---help,-h            This usage message
+  --sourcepos,-p       Include source positions
+  --quiet,-q           Suppress warnings
+  --time,-t            Print parse time to stderr
+  --help,-h            This usage message
 `;
 let files = [];
 
@@ -25,6 +28,10 @@ for (let i=2; i < process.argv.length; i++) {
     case "--quiet":
     case "-q":
       options.warn = (msg, pos) => {};
+      break;
+    case "--time":
+    case "-t":
+      timing = true;
       break;
     case "--help":
     case "-h":
@@ -60,12 +67,16 @@ try {
   }
   console.log("]");
 
-  console.time("parse AST");
+  let startTime = performance.now();
   let ast = parse(input, {sourcePositions: true});
-  console.timeEnd("parse AST");
+  let endTime = performance.now();
+  let parseTime = (endTime - startTime).toFixed(2);
 
   process.stdout.write(JSON.stringify(ast, null, 2));
   process.stdout.write("\n");
+  if (timing) {
+    process.stderr.write(`Parse time = ${parseTime} ms\n`);
+  }
 } catch(err) {
     console.log(err + "\n");
     if (err.stack) {
@@ -73,5 +84,6 @@ try {
     }
     process.exit(1);
 }
+
 
 process.exit(0);
