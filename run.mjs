@@ -24,8 +24,8 @@ console.log("]");
 
 console.time("parse AST");
 let ast = parse(input, {});
+console.timeEnd("parse AST");
 
 process.stdout.write(JSON.stringify(ast, null, 2));
 process.stdout.write("\n");
-console.timeEnd("parse AST");
 

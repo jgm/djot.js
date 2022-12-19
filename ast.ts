@@ -167,12 +167,14 @@ interface Email extends HasAttributes {
 
 interface Link extends HasAttributes, HasInlineChildren {
   tag: "link";
-  destination: string;
+  destination?: string;
+  reference?: string;
 }
 
 interface Image extends HasAttributes, HasInlineChildren {
   tag: "image";
-  destination: string;
+  destination?: string;
+  reference?: string;
 }
 
 interface Emph extends HasAttributes, HasInlineChildren {
@@ -670,6 +672,34 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         addChildToTip(containers,
                       {tag: "link",
                        destination: accumulatedText.join(""),
+                       children: node.children});
+        context = Context.Normal;
+        accumulatedText = [];
+        break;
+
+      case "+reference":
+        context = Context.Literal;
+        break;
+
+      case "-reference":
+        node = popContainer();  // the container added by +linktext
+        addChildToTip(containers,
+                      {tag: "link",
+                       reference: accumulatedText.join(""),
+                       children: node.children});
+        context = Context.Normal;
+        accumulatedText = [];
+        break;
+
+      case "+reference":
+        context = Context.Literal;
+        break;
+
+      case "-reference":
+        node = popContainer();  // the container added by +linktext
+        addChildToTip(containers,
+                      {tag: "link",
+                       reference: accumulatedText.join(""),
                        children: node.children});
         context = Context.Normal;
         accumulatedText = [];
