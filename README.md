@@ -38,6 +38,7 @@ Road map:
   - [X] autolink
   - [X] math
   - [X] footnote reference
+  - [X] source positions
   - [ ] raw inline
   - [ ] raw block
   - [ ] sections
@@ -50,7 +51,6 @@ Road map:
   - [ ] task lists
   - [ ] tables
   - [ ] captions
-  - [ ] source positions
   - [ ] unit tests
 - [ ] html renderer (consume ast, produce DOM?)
 - [ ] filter API
