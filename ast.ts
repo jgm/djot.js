@@ -60,7 +60,7 @@ interface List extends HasAttributes {
 
 interface Table extends HasAttributes {
   tag: "table";
-  children: TableRow[];
+  children: Row[];
   // TODO
 }
 
@@ -175,18 +175,18 @@ interface ListItem extends HasAttributes, HasBlockChildren {
   // TODO
 }
 
-interface TableRow extends HasAttributes {
+interface Row extends HasAttributes {
   tag: "table_row";
-  children: TableCell[];
+  children: Cell[];
   // TODO
 }
 
-interface TableCell extends HasAttributes, HasBlockChildren {
+interface Cell extends HasAttributes, HasBlockChildren {
   tag: "table_cell";
   // TODO
 }
 
-type Node = Doc | Block | Inline | ListItem | TableRow | TableCell ;
+type Node = Doc | Block | Inline | ListItem | Row | Cell ;
 
 interface Reference {
 
