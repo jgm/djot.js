@@ -10,7 +10,7 @@ const warn = function(msg, pos) {
 let timing = false;
 let events = false;
 let options = {sourcePositions: false, warn: warn};
-let usage = `node ./run.mjs [OPTIONS] FILE*
+let usage = `djot [OPTIONS] FILE*
 
 Options:
   --sourcepos,-p       Include source positions
