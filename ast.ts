@@ -70,6 +70,9 @@ type Inline = Str
             | Emoji
             | Verbatim
             | RightSingleQuote
+            | Ellipses
+            | EmDash
+            | EnDash
             | Emph
             | Strong
             | Link
@@ -89,6 +92,21 @@ interface Str extends HasAttributes {
 
 interface RightSingleQuote extends HasAttributes {
   tag: "right_single_quote";
+  text: string;
+}
+
+interface Ellipses extends HasAttributes {
+  tag: "ellipses";
+  text: string;
+}
+
+interface EmDash extends HasAttributes {
+  tag: "em_dash";
+  text: string;
+}
+
+interface EnDash extends HasAttributes {
+  tag: "en_dash";
   text: string;
 }
 
@@ -547,7 +565,10 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         break;
       case "-destination":
         node = popContainer();  // the container added by +linktext
-        addChildToTip(containers, {tag: "link", destination: accumulatedText.join(""), children: node.children});
+        addChildToTip(containers,
+                      {tag: "link",
+                       destination: accumulatedText.join(""),
+                       children: node.children});
         context = Context.Normal;
         accumulatedText = [];
         break;
@@ -604,6 +625,15 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         break;
       case "right_single_quote":
         addChildToTip(containers, {tag: "right_single_quote", text: "'"});
+        break;
+      case "ellipses":
+        addChildToTip(containers, {tag: "ellipses", text: "..."});
+        break;
+      case "en_dash":
+        addChildToTip(containers, {tag: "en_dash", text: "--"});
+        break;
+      case "em_dash":
+        addChildToTip(containers, {tag: "em_dash", text: "---"});
         break;
       case "blankline":
         break;
