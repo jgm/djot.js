@@ -25,6 +25,7 @@ type Block = Para
            | Heading
            | ThematicBreak
            | Div
+           | CodeBlock
            | BlockQuote
            | List
            | Table ;
@@ -44,12 +45,16 @@ interface ThematicBreak extends HasAttributes {
 
 interface Div extends HasAttributes, HasBlockChildren {
   tag: "div";
-  children: Block[];
 }
 
 interface BlockQuote extends HasAttributes, HasBlockChildren {
   tag: "blockquote";
-  children: Block[];
+}
+
+interface CodeBlock extends HasAttributes {
+  tag: "code_block";
+  lang?: string;
+  text: string;
 }
 
 interface List extends HasAttributes {
@@ -649,6 +654,27 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         addChildToTip(containers, {tag: "blockquote",
                                    children: node.children,
                                    attributes: node.attributes });
+        break;
+
+      case "+code_block":
+        pushContainer({});
+        context = Context.Verbatim;
+        break;
+
+      case "-code_block":
+        node = popContainer();
+        addChildToTip(containers, {tag: "code_block",
+                                   text: accumulatedText.join(""),
+                                   lang:  node.data.lang,
+                                   attributes: node.attributes });
+
+        context = Context.Normal;
+        accumulatedText = [];
+        break;
+
+      case "code_language":
+        top = topContainer();
+        top.data.lang = input.substring(event.startpos, event.endpos + 1);
         break;
 
       case "+div":
