@@ -74,6 +74,8 @@ type Inline = Str
             | HardBreak
             | Emoji
             | Verbatim
+            | InlineMath
+            | DisplayMath
             | RightSingleQuote
             | Ellipses
             | EmDash
@@ -132,6 +134,16 @@ interface Emoji extends HasAttributes {
 
 interface Verbatim extends HasAttributes {
   tag: "verbatim";
+  text: string;
+}
+
+interface InlineMath extends HasAttributes {
+  tag: "inline_math";
+  text: string;
+}
+
+interface DisplayMath extends HasAttributes {
+  tag: "display_math";
   text: string;
 }
 
@@ -645,6 +657,28 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-verbatim":
         addChildToTip(containers, {tag: "verbatim",
+                                   text: accumulatedText.join("")});
+        context = Context.Normal;
+        accumulatedText = [];
+        break;
+
+      case "+inline_math":
+        context = Context.Verbatim;
+        break;
+
+      case "-inline_math":
+        addChildToTip(containers, {tag: "inline_math",
+                                   text: accumulatedText.join("")});
+        context = Context.Normal;
+        accumulatedText = [];
+        break;
+
+      case "+display_math":
+        context = Context.Verbatim;
+        break;
+
+      case "-display_math":
+        addChildToTip(containers, {tag: "display_math",
                                    text: accumulatedText.join("")});
         context = Context.Normal;
         accumulatedText = [];

@@ -38,7 +38,7 @@ Road map:
   - [ ] auto identifiers on headings
   - [X] superscript, subscript
   - [ ] autolink
-  - [ ] math
+  - [X] math
   - [ ] footnote reference
   - [ ] raw inline
   - [ ] sections
