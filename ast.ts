@@ -84,6 +84,8 @@ type Inline = Str
             | Image
             | Span
             | Mark
+            | Superscript
+            | Subscript
             | Insert
             | Delete
             | DoubleQuoted
@@ -157,6 +159,14 @@ interface Span extends HasAttributes, HasInlineChildren {
 
 interface Mark extends HasAttributes, HasInlineChildren {
   tag: "mark";
+}
+
+interface Superscript extends HasAttributes, HasInlineChildren {
+  tag: "superscript";
+}
+
+interface Subscript extends HasAttributes, HasInlineChildren {
+  tag: "subscript";
 }
 
 interface Delete extends HasAttributes, HasInlineChildren {
@@ -460,6 +470,24 @@ const parse = function(input : string, options : ParseOptions) : Doc {
       case "-mark":
         node = popContainer();
         addChildToTip(containers, {tag: "mark", children: node.children});
+        break;
+
+      case "+superscript":
+        pushContainer();
+        break;
+
+      case "-superscript":
+        node = popContainer();
+        addChildToTip(containers, {tag: "superscript", children: node.children});
+        break;
+
+      case "+subscript":
+        pushContainer();
+        break;
+
+      case "-subscript":
+        node = popContainer();
+        addChildToTip(containers, {tag: "subscript", children: node.children});
         break;
 
       case "+delete":

@@ -12,7 +12,7 @@ Road map:
 - [X] attribute parsing (attribute.ts)
 - [X] inline parsing (inline.ts)
 - [X] block parsing (block.ts)
-- [ ] parsing to an ast (ast.ts)
+- [o] parsing to an ast (ast.ts)
   - [X] para
   - [X] block quote
   - [X] heading
@@ -36,7 +36,7 @@ Road map:
   - [X] attributes (block and inline)
   - [ ] pretty renderer
   - [ ] auto identifiers on headings
-  - [ ] superscript, subscript
+  - [X] superscript, subscript
   - [ ] autolink
   - [ ] math
   - [ ] footnote reference
@@ -48,6 +48,7 @@ Road map:
   - [ ] list items/lists, inc. def lists and task lists
   - [ ] tables, captions
   - [ ] source positions
+  - [ ] unit tests
 - [ ] html renderer (consume ast, produce DOM?)
 - [ ] filter API
 - [ ] full-featured cli
