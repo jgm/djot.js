@@ -25,7 +25,7 @@ try {
   console.log("]");
 
   console.time("parse AST");
-  let ast = parse(input, {});
+  let ast = parse(input, {sourcePositions: true});
   console.timeEnd("parse AST");
 
   process.stdout.write(JSON.stringify(ast, null, 2));

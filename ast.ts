@@ -430,9 +430,12 @@ const parse = function(input : string, options : ParseOptions) : Doc {
       }
   }
 
-  const addChildToTip = function(child : Node) : void {
+  const addChildToTip = function(child : Node, pos ?: Pos) : void {
     if (containers.length > 0) {
       let tip = containers[containers.length - 1];
+      if (options.sourcePositions && pos) {
+        child.pos = pos;
+      }
       tip.children.push(child);
     }
   }
@@ -447,7 +450,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
       case "str":
         let txt = input.substring(event.startpos, event.endpos + 1);
         if (context === Context.Normal) {
-          addChildToTip({tag: "str", text: txt, pos: {start: sp, end: ep}});
+          addChildToTip({tag: "str", text: txt}, {start: sp, end: ep});
         } else {
           accumulatedText.push(txt);
         }
