@@ -12,7 +12,7 @@ Road map:
 - [X] attribute parsing (attribute.ts)
 - [X] inline parsing (inline.ts)
 - [X] block parsing (block.ts)
-- [o] parsing to an ast (ast.ts)
+- [ ] parsing to an ast (ast.ts)
   - [X] para
   - [X] block quote
   - [X] heading
