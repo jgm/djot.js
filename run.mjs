@@ -85,7 +85,7 @@ try {
     console.log("]");
   } else {
     let startTime = performance.now();
-    let ast = parse(input, {sourcePositions: true});
+    let ast = parse(input, options);
     let endTime = performance.now();
     let parseTime = (endTime - startTime).toFixed(2);
 
