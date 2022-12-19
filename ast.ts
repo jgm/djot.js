@@ -882,13 +882,17 @@ const parse = function(input : string, options : ParseOptions) : Doc {
     handleEvent(containers, event);
   }
 
-  return { tag: "doc",
+  let doc : Doc =
+         { tag: "doc",
            references: references,
            footnotes: footnotes,
-           attributes: containers[0].attributes,
            children: containers[0].children,
-           pos: {start: 0, end: input.length - 1}
+           attributes: containers[0].attributes
           };
+  if (options.sourcePositions) {
+    doc.pos = {start: 0, end: input.length - 1};
+  }
+  return doc;
 }
 
 export {
