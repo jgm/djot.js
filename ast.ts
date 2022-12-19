@@ -262,7 +262,7 @@ interface Container {
   children: any[];
   attributes?: Attributes;
   data?: any;
-  pos: Pos;
+  pos?: Pos;
 }
 
 const addStringContent = function(node : Inline, buffer : string[]) : void {
@@ -435,20 +435,21 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         }
       }
   };
-  const pushContainer = function(startpos : SourceLoc) {
+  const pushContainer = function(startpos ?: SourceLoc) {
       let container : Container = {children: [],
-                                   data: {},
-                                   pos: {start: startpos, end: startpos}
-                                  };
+                                   data: {}};
+      if (startpos) {
+        container.pos = {start: startpos, end: startpos};
+      }
       addBlockAttributes(container);
       containers.push(container);
   };
-  const popContainer = function(endpos : SourceLoc) {
+  const popContainer = function(endpos ?: SourceLoc) {
       let node = containers.pop();
       if (!node) {
         throw("Container stack is empty (popContainer)");
       }
-      if (node.pos) {
+      if (endpos && node.pos) {
         node.pos.end = endpos;
       }
       return node;
@@ -471,10 +472,10 @@ const parse = function(input : string, options : ParseOptions) : Doc {
       }
   }
 
-  const addChildToTip = function(child : Node, pos : Pos) : void {
+  const addChildToTip = function(child : Node, pos ?: Pos) : void {
     if (containers.length > 0) {
       let tip = containers[containers.length - 1];
-      if (options.sourcePositions) {
+      if (pos) {
         child.pos = pos;
       }
       tip.children.push(child);
@@ -484,9 +485,14 @@ const parse = function(input : string, options : ParseOptions) : Doc {
   const handleEvent = function(containers : Container[], event : Event) : void {
     let node;
     let top;
-    let sp = getSourceLoc(event.startpos);
-    let ep = getSourceLoc(event.endpos);
-    let pos = {start: sp, end: ep};
+    let sp;
+    let ep;
+    let pos;
+    if (options.sourcePositions) {
+      sp = getSourceLoc(event.startpos);
+      ep = getSourceLoc(event.endpos);
+      pos = {start: sp, end: ep};
+    }
     switch (event.annot) {
 
       case "str":
