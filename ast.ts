@@ -5,7 +5,9 @@ import { EventParser } from "./block.js";
 
 type Attributes = Record<string, string>;
 
-type Pos = { start: number, end: number }
+type SourceLoc = { line: number, offset: number, char: number }
+
+type Pos = { start: SourceLoc, end: SourceLoc }
 
 interface HasAttributes {
   attributes?: Attributes;
@@ -386,29 +388,30 @@ const parse = function(input : string, options : ParseOptions) : Doc {
   }
 
   // use binary search on linestarts to find line number and offset
-  const getLineAndCol = function(pos : number) :  { line: number,
-                                                    offset: number } {
+  const getSourceLoc = function(pos : number) :  SourceLoc {
     let numlines = linestarts.length;
     let bottom = 0;
     let top = numlines - 1;
     let line = 0;
     let offset = 0;
     while (!line) {
-      let mid = ~~((top - bottom) / 2);
-      console.log(mid, bottom, top);
-      let nlpos = linestarts[mid];
-      if (nlpos > pos) {
-        bottom = mid;
-      } else { // nlpos <= pos
-        if (linestarts[mid + 1] && linestarts[mid + 1] > pos) {
+      let mid = bottom + ~~((top - bottom) / 2);
+      if (linestarts[mid] > pos) {
+        top = mid;
+      } else { // linestarts[mid] <= pos
+        if (mid === top || linestarts[mid + 1] > pos) {
           line = mid + 1;
           offset = pos - linestarts[mid];
         } else {
-          top = mid;
+          if (bottom === mid) {
+            bottom = mid + 1;
+          } else {
+            bottom = mid;
+          }
         }
       }
     }
-    return { line: line, offset: offset };
+    return { line: line, offset: offset, char: pos };
   }
 
 
@@ -432,7 +435,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         }
       }
   };
-  const pushContainer = function(startpos : number) {
+  const pushContainer = function(startpos : SourceLoc) {
       let container : Container = {children: [],
                                    data: {},
                                    pos: {start: startpos, end: startpos}
@@ -440,7 +443,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
       addBlockAttributes(container);
       containers.push(container);
   };
-  const popContainer = function(endpos : number) {
+  const popContainer = function(endpos : SourceLoc) {
       let node = containers.pop();
       if (!node) {
         throw("Container stack is empty (popContainer)");
@@ -481,8 +484,8 @@ const parse = function(input : string, options : ParseOptions) : Doc {
   const handleEvent = function(containers : Container[], event : Event) : void {
     let node;
     let top;
-    let sp = event.startpos;
-    let ep = event.endpos;
+    let sp = getSourceLoc(event.startpos);
+    let ep = getSourceLoc(event.endpos);
     let pos = {start: sp, end: ep};
     switch (event.annot) {
 
@@ -912,9 +915,12 @@ const parse = function(input : string, options : ParseOptions) : Doc {
     }
   }
 
-  let containers : Container[] = [{children: [],
-                                   data: {},
-                                   pos: {start: 0, end: 0}} ];
+  let containers : Container[] =
+         [{ children: [],
+            data: {},
+            pos: { start: {line: 0, offset: 0, char: 0},
+                   end:   {line: 0, offset: 0, char: 0}
+                 }}];
 
   let lastpos = 0;
   for (const event of parser) {
@@ -930,7 +936,8 @@ const parse = function(input : string, options : ParseOptions) : Doc {
            attributes: containers[0].attributes
           };
   if (options.sourcePositions) {
-    doc.pos = {start: 0, end: lastpos};
+    doc.pos = {start: {line: 0, offset: 0, char: 0},
+               end: getSourceLoc(lastpos) };
   }
   return doc;
 }
