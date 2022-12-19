@@ -59,8 +59,16 @@ describe("Parser", () => {
               "tag": "str",
               "text": "testing ",
               "pos": {
-                "start": 2,
-                "end": 9
+                "start": {
+                  "line": 1,
+                  "col": 3,
+                  "offset": 2
+                },
+                "end": {
+                  "line": 1,
+                  "col": 10,
+                  "offset": 9
+                }
               }
             },
             {
@@ -70,34 +78,75 @@ describe("Parser", () => {
                   "tag": "str",
                   "text": "testing",
                   "pos": {
-                    "start": 11,
-                    "end": 17
+                    "start": {
+                      "line": 1,
+                      "col": 12,
+                      "offset": 11
+                    },
+                    "end": {
+                      "line": 1,
+                      "col": 18,
+                      "offset": 17
+                    }
                   }
                 }
               ],
               "pos": {
-                "start": 10,
-                "end": 18
+                "start": {
+                  "line": 1,
+                  "col": 11,
+                  "offset": 10
+                },
+                "end": {
+                  "line": 1,
+                  "col": 19,
+                  "offset": 18
+                }
               }
             }
           ],
           "pos": {
-            "start": 2,
-            "end": 19
+            "start": {
+              "line": 1,
+              "col": 3,
+              "offset": 2
+            },
+            "end": {
+              "line": 2,
+              "col": 20,
+              "offset": 19
+            }
           }
         }
       ],
       "pos": {
-        "start": 0,
-        "end": 20
+        "start": {
+          "line": 1,
+          "col": 1,
+          "offset": 0
+        },
+        "end": {
+          "line": 2,
+          "col": 1,
+          "offset": 20
+        }
       }
     }
   ],
   "pos": {
-    "start": 0,
-    "end": 20
+    "start": {
+      "line": 0,
+      "col": 0,
+      "offset": 0
+    },
+    "end": {
+      "line": 2,
+      "col": 1,
+      "offset": 20
+    }
   }
 }
+
     );
   });
 

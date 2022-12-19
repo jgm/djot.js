@@ -5,7 +5,7 @@ import { EventParser } from "./block.js";
 
 type Attributes = Record<string, string>;
 
-type SourceLoc = { line: number, offset: number, char: number }
+type SourceLoc = { line: number, col: number, offset: number }
 
 type Pos = { start: SourceLoc, end: SourceLoc }
 
@@ -387,21 +387,21 @@ const parse = function(input : string, options : ParseOptions) : Doc {
     }
   }
 
-  // use binary search on linestarts to find line number and offset
+  // use binary search on linestarts to find line number and col
   const getSourceLoc = function(pos : number) :  SourceLoc {
     let numlines = linestarts.length;
     let bottom = 0;
     let top = numlines - 1;
     let line = 0;
-    let offset = 0;
+    let col = 0;
     while (!line) {
       let mid = bottom + ~~((top - bottom) / 2);
       if (linestarts[mid] > pos) {
         top = mid;
-      } else { // linestarts[mid] <= pos
+      } else if (linestarts[mid] <= pos) {
         if (mid === top || linestarts[mid + 1] > pos) {
           line = mid + 1;
-          offset = pos - linestarts[mid];
+          col = pos - linestarts[mid] + 1;
         } else {
           if (bottom === mid) {
             bottom = mid + 1;
@@ -411,7 +411,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         }
       }
     }
-    return { line: line, offset: offset, char: pos };
+    return { line: line, col: col, offset: pos };
   }
 
 
@@ -918,8 +918,8 @@ const parse = function(input : string, options : ParseOptions) : Doc {
   let containers : Container[] =
          [{ children: [],
             data: {},
-            pos: { start: {line: 0, offset: 0, char: 0},
-                   end:   {line: 0, offset: 0, char: 0}
+            pos: { start: {line: 0, col: 0, offset: 0},
+                   end:   {line: 0, col: 0, offset: 0}
                  }}];
 
   let lastpos = 0;
@@ -936,7 +936,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
            attributes: containers[0].attributes
           };
   if (options.sourcePositions) {
-    doc.pos = {start: {line: 0, offset: 0, char: 0},
+    doc.pos = {start: {line: 0, col: 0, offset: 0},
                end: getSourceLoc(lastpos) };
   }
   return doc;
