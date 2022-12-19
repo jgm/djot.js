@@ -101,6 +101,7 @@ class Container {
 class EventParser {
   warn : (message : string, pos : number) => void;
   subject : string;
+  maxoffset : number;
   indent : number;
   startline : number;
   starteol : number;
@@ -119,6 +120,7 @@ class EventParser {
      subject = subject + "\n";
    }
    this.subject = subject;
+   this.maxoffset = subject.length - 1;
    this.warn = warn;
    this.indent = 0;
    this.startline = 0;
@@ -627,7 +629,9 @@ class EventParser {
   }
 
   addMatch(startpos : number, endpos : number, annot : string) : void {
-    this.matches.push({startpos, endpos, annot});
+    this.matches.push({startpos: Math.min(startpos, this.maxoffset),
+                       endpos: Math.min(endpos, this.maxoffset),
+                       annot: annot});
   }
 
   getInlineMatches() : void {

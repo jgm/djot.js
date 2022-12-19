@@ -112,7 +112,7 @@ describe("Parser", () => {
               "offset": 2
             },
             "end": {
-              "line": 2,
+              "line": 1,
               "col": 20,
               "offset": 19
             }
@@ -126,9 +126,9 @@ describe("Parser", () => {
           "offset": 0
         },
         "end": {
-          "line": 2,
-          "col": 1,
-          "offset": 20
+          "line": 1,
+          "col": 20,
+          "offset": 19
         }
       }
     }
@@ -140,9 +140,9 @@ describe("Parser", () => {
       "offset": 0
     },
     "end": {
-      "line": 2,
-      "col": 1,
-      "offset": 20
+      "line": 1,
+      "col": 20,
+      "offset": 19
     }
   }
 }

@@ -41,7 +41,7 @@ describe("EventParser", () => {
       { startpos: 25, endpos: 25, annot: "+para" },
       { startpos: 25, endpos: 26, annot: "str" },
       { startpos: 27, endpos: 27, annot: "-para" },
-      { startpos: 28, endpos: 28, annot: "-blockquote" }
+      { startpos: 27, endpos: 27, annot: "-blockquote" }
     ]);
   });
 
@@ -73,7 +73,7 @@ describe("EventParser", () => {
       { startpos: 0, endpos: 4, annot: "reference_key" },
       { startpos: 7, endpos: 9, annot: "reference_value" },
       { startpos: 12, endpos: 14, annot: "reference_value" },
-      { startpos: 16, endpos: 16, annot: "-reference_definition" }
+      { startpos: 15, endpos: 15, annot: "-reference_definition" }
     ]);
   });
 
@@ -105,7 +105,7 @@ describe("EventParser", () => {
       {startpos: 23, endpos: 23, annot: "str"},
       {startpos: 24, endpos: 24, annot: "-cell"},
       {startpos: 25, endpos: 25, annot: "-row"},
-      {startpos: 27, endpos: 27, annot: "-table"}
+      {startpos: 26, endpos: 26, annot: "-table"}
     ]);
   });
 
@@ -155,8 +155,8 @@ describe("EventParser", () => {
       { startpos: 36, endpos: 36, annot: "+para" },
       { startpos: 36, endpos: 38, annot: "str" },
       { startpos: 39, endpos: 39, annot: "-para" },
-      { startpos: 40, endpos: 40, annot: "-list_item" },
-      { startpos: 40, endpos: 40, annot: "-list_item" }
+      { startpos: 39, endpos: 39, annot: "-list_item" },
+      { startpos: 39, endpos: 39, annot: "-list_item" }
     ]);
   });
 

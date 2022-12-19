@@ -403,7 +403,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
           line = mid + 1;
           col = pos - linestarts[mid] + 1;
         } else {
-          if (bottom === mid) {
+          if (bottom === mid && bottom < top) {
             bottom = mid + 1;
           } else {
             bottom = mid;
