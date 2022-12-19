@@ -37,7 +37,7 @@ Road map:
   - [ ] pretty renderer
   - [ ] auto identifiers on headings
   - [X] superscript, subscript
-  - [ ] autolink
+  - [X] autolink
   - [X] math
   - [ ] footnote reference
   - [ ] raw inline

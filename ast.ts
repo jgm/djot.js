@@ -76,6 +76,8 @@ type Inline = Str
             | Verbatim
             | InlineMath
             | DisplayMath
+            | Url
+            | Email
             | RightSingleQuote
             | Ellipses
             | EmDash
@@ -144,6 +146,16 @@ interface InlineMath extends HasAttributes {
 
 interface DisplayMath extends HasAttributes {
   tag: "display_math";
+  text: string;
+}
+
+interface Url extends HasAttributes {
+  tag: "url";
+  text: string;
+}
+
+interface Email extends HasAttributes {
+  tag: "email";
   text: string;
 }
 
@@ -679,6 +691,28 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-display_math":
         addChildToTip(containers, {tag: "display_math",
+                                   text: accumulatedText.join("")});
+        context = Context.Normal;
+        accumulatedText = [];
+        break;
+
+      case "+url":
+        context = Context.Literal;
+        break;
+
+      case "-url":
+        addChildToTip(containers, {tag: "url",
+                                   text: accumulatedText.join("")});
+        context = Context.Normal;
+        accumulatedText = [];
+        break;
+
+      case "+email":
+        context = Context.Literal;
+        break;
+
+      case "-email":
+        addChildToTip(containers, {tag: "email",
                                    text: accumulatedText.join("")});
         context = Context.Normal;
         accumulatedText = [];
