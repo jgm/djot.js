@@ -40,8 +40,8 @@ Road map:
   - [X] footnote reference
   - [X] source positions
   - [X] pretty renderer
-  - [ ] raw inline
-  - [ ] raw block
+  - [X] raw inline
+  - [X] raw block
   - [ ] sections
   - [ ] reference definitions
   - [ ] footnote

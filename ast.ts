@@ -35,6 +35,7 @@ type Block = Para
            | ThematicBreak
            | Div
            | CodeBlock
+           | RawBlock
            | BlockQuote
            | List
            | Table ;
@@ -66,6 +67,12 @@ interface CodeBlock extends HasAttributes {
   text: string;
 }
 
+interface RawBlock extends HasAttributes {
+  tag: "raw_block";
+  format: string;
+  text: string;
+}
+
 interface List extends HasAttributes {
   tag: "list";
   children: ListItem[];
@@ -83,6 +90,7 @@ type Inline = Str
             | HardBreak
             | Emoji
             | Verbatim
+            | RawInline
             | InlineMath
             | DisplayMath
             | Url
@@ -151,6 +159,12 @@ interface Emoji extends HasAttributes {
 
 interface Verbatim extends HasAttributes {
   tag: "verbatim";
+  text: string;
+}
+
+interface RawInline extends HasAttributes {
+  tag: "raw_inline";
+  format: string;
   text: string;
 }
 
@@ -780,15 +794,16 @@ const parse = function(input : string, options : ParseOptions) : Doc {
       case "raw_format":
         let format = input.substring(event.startpos + 2, event.endpos);
         top = topContainer();
-        tip = top.children[top.children.length - 1];
-        if (tip && tip.tag === "verbatim") {
-          tip.tag = "raw_inline";
-          tip.format = format;
-        } else if (tip && tip.tag === "code_block") {
-          tip.tag = "raw_block";
-          tip.format = format;
+        if (context === Context.Verbatim) { // in a code block
+          top.data.format = format;
         } else {
-          throw("raw_format is not after verbatim or code_block");
+          tip = top.children[top.children.length - 1];
+          if (tip && tip.tag === "verbatim") {
+            tip.tag = "raw_inline";
+            tip.format = format;
+          } else {
+            throw("raw_format is not after verbatim or code_block");
+          }
         }
         break;
 
@@ -882,11 +897,17 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-code_block":
         node = popContainer(ep);
-        addChildToTip({tag: "code_block",
-                       text: accumulatedText.join(""),
-                       lang:  node.data.lang,
-                       attributes: node.attributes }, node.pos);
-
+        if (node.data.format) {
+          addChildToTip({tag: "raw_block",
+                         format: node.data.format,
+                         text: accumulatedText.join(""),
+                         attributes: node.attributes }, node.pos);
+        } else {
+          addChildToTip({tag: "code_block",
+                         text: accumulatedText.join(""),
+                         lang:  node.data.lang,
+                         attributes: node.attributes }, node.pos);
+        }
         context = Context.Normal;
         accumulatedText = [];
         break;
