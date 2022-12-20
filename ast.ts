@@ -485,6 +485,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
   const handleEvent = function(containers : Container[], event : Event) : void {
     let node;
     let top;
+    let tip;
     let sp;
     let ep;
     let pos;
@@ -638,7 +639,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
       case "-attributes":
         node = popContainer(ep);
         if (node.attributes && containers.length > 0) {
-          let tip = getTip();
+          tip = getTip();
           if (!tip.attributes) {
             tip.attributes = {};
           }
@@ -774,6 +775,21 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         addChildToTip({tag: "verbatim", text: accumulatedText.join("")}, node.pos);
         context = Context.Normal;
         accumulatedText = [];
+        break;
+
+      case "raw_format":
+        let format = input.substring(event.startpos + 2, event.endpos);
+        top = topContainer();
+        tip = top.children[top.children.length - 1];
+        if (tip && tip.tag === "verbatim") {
+          tip.tag = "raw_inline";
+          tip.format = format;
+        } else if (tip && tip.tag === "code_block") {
+          tip.tag = "raw_block";
+          tip.format = format;
+        } else {
+          throw("raw_format is not after verbatim or code_block");
+        }
         break;
 
       case "+inline_math":

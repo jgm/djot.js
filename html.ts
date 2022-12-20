@@ -68,6 +68,10 @@ class HTMLRenderer {
   }
 }
 
+const renderHTML = function(ast : Doc) : string {
+  let renderer = new HTMLRenderer();
+  return renderer.render(ast);
+}
 
-export { HTMLRenderer }
+export { renderHTML }
 

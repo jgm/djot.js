@@ -1,10 +1,8 @@
 import { EventParser } from "./block.js";
 import { parse, renderAST } from "./ast.js";
-import { renderDOM } from "./html.js";
+import { renderHTML } from "./html.js";
 import fs from "fs";
 import { performance } from "perf_hooks";
-
-const { document } = (new JSDOM(`<!DOCTYPE html><p>hello</p>`)).window;
 
 const warn = function(msg, pos) {
   process.stderr.write(msg + (pos ? " at " + pos : "") + "\n");
