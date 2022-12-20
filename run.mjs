@@ -1,5 +1,5 @@
 import { EventParser } from "./block.js";
-import { parse } from "./ast.js";
+import { parse, renderAST } from "./ast.js";
 import fs from "fs";
 import { performance } from "perf_hooks";
 
@@ -10,13 +10,14 @@ const warn = function(msg, pos) {
 let timing = false;
 let events = false;
 let options = {sourcePositions: false, warn: warn};
+let json = false;
 let usage = `djot [OPTIONS] FILE*
-
 Options:
   --sourcepos,-p       Include source positions
   --quiet,-q           Suppress warnings
   --time,-t            Print parse time to stderr
   --events,-e          Print events instead of AST
+  --json,-j            Print AST in JSON format
   --help,-h            This usage message
 `;
 let files = [];
@@ -39,6 +40,10 @@ for (let i=2; i < process.argv.length; i++) {
     case "--events":
     case "-e":
       events = true;
+      break;
+    case "--json":
+    case "-j":
+      json = true;
       break;
     case "--help":
     case "-h":
@@ -89,8 +94,13 @@ try {
     let endTime = performance.now();
     let parseTime = (endTime - startTime).toFixed(2);
 
-    process.stdout.write(JSON.stringify(ast, null, 2));
-    process.stdout.write("\n");
+    if (json) {
+      process.stdout.write(JSON.stringify(ast, null, 2));
+      process.stdout.write("\n");
+    } else {
+      process.stdout.write(renderAST(ast));
+    }
+
     if (timing) {
       process.stderr.write(`Parse time = ${parseTime} ms\n`);
     }

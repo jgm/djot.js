@@ -39,12 +39,12 @@ Road map:
   - [X] math
   - [X] footnote reference
   - [X] source positions
+  - [X] pretty renderer
   - [ ] raw inline
   - [ ] raw block
   - [ ] sections
   - [ ] reference definitions
   - [ ] footnote
-  - [ ] pretty renderer
   - [ ] auto identifiers on headings
   - [ ] list items/lists
   - [ ] definition lists

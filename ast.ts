@@ -948,8 +948,71 @@ const parse = function(input : string, options : ParseOptions) : Doc {
   return doc;
 }
 
+const omitFields : Record<string, boolean> =
+  { children: true,
+    tag: true,
+    pos: true,
+    attributes: true,
+    references: true,
+    footnotes: true };
+
+const renderNode = function(node : Record<string, any>, buff : string[], indent : number) : void {
+  buff.push(" ".repeat(indent));
+  if (indent > 128) {
+    buff.push("(((DEEPLY NESTED CONTENT OMITTED)))\n");
+    return;
+  }
+
+  buff.push(node.tag);
+  if (node.pos) {
+    buff.push(` (${node.pos.start.line}:${node.pos.start.col}:${node.pos.start.offset}-${node.pos.end.line}:${node.pos.end.col}:${node.pos.end.offset})`);
+  }
+  for (let k in node) {
+    if (!omitFields[k]) {
+      let v : any = node[k];
+      buff.push(` ${k}=${JSON.stringify(v)}`);
+    }
+  }
+  if (node.attributes) {
+    for (let k in node.attributes) {
+      buff.push(` ${k}=${JSON.stringify(node[k])}`);
+    }
+  }
+  buff.push("\n");
+  if (node.children) {
+    node.children.forEach((child : any) => {
+      renderNode(child, buff, indent + 2);
+    });
+  }
+}
+
+// Render an AST in human-readable form, with indentation
+// showing the hierarchy.
+const renderAST = function(doc : Doc) : string {
+  let buff : string[] = [];
+  renderNode(doc, buff, 0)
+  if (Object.keys(doc.references).length > 0) {
+    buff.push("references\n");
+    for (let k in doc.references) {
+      buff.push(`  [${JSON.stringify(k)}] =\n`);
+      renderNode(doc.references[k], buff, 4);
+    }
+  }
+  if (Object.keys(doc.footnotes).length > 0) {
+    buff.push("footnotes\n")
+    for (let k in doc.footnotes) {
+      buff.push(`  [${JSON.stringify(k)}] =\n`);
+      renderNode(doc.footnotes[k], buff, 4)
+    }
+  }
+  return buff.join("");
+}
+
+
+
 export {
   parse,
   ParseOptions,
-  Doc
+  Doc,
+  renderAST
 }
