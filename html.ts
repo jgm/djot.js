@@ -130,6 +130,38 @@ class HTMLRenderer {
         this.out(node.text);
         break;
 
+      case "left_double_quote":
+        this.literal("&ldquo;");
+        break;
+
+      case "right_single_quote":
+        this.literal("&rsquo;");
+        break;
+
+      case "double_quoted":
+        this.literal("&ldquo;");
+        this.renderChildren(node);
+        this.literal("rldquo;");
+        break;
+
+      case "single_quoted":
+        this.literal("&lsquo;");
+        this.renderChildren(node);
+        this.literal("rsquo;");
+        break;
+
+      case "ellipses":
+        this.literal("&hellip;");
+        break;
+
+      case "em_dash":
+        this.literal("&mdash;");
+        break;
+
+      case "en_dash":
+        this.literal("&ndash;");
+        break;
+
       case "verbatim":
         this.renderTag("code", node);
         this.out(node.text);
