@@ -297,12 +297,6 @@ const addStringContent = function(node : Inline, buffer : string[]) : void {
   }
 }
 
-const getStringContent = function(node : Inline) : string {
-  let buffer : string[] = [];
-  addStringContent(node, buffer);
-  return buffer.join('');
-}
-
 const romanDigits : Record<string, number> = {
   i: 1,
   v: 5,
@@ -342,6 +336,10 @@ const romanToNumber = function(s : string) : number {
   return total;
 }
 
+// in verbatim text, trim one space next to ` at beginning or end:
+const trimVerbatim = function(s : string) : string {
+  return s.replace(/^ ( *)`/, "$1`").replace(/( *) (`+)$/, "$1$2");
+}
 
 const getListStart = function(marker : string, style : string) : number | null {
   let numtype = style.replace(/[().]/g, "");
@@ -800,7 +798,9 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-verbatim":
         node = popContainer(ep);
-        addChildToTip({tag: "verbatim", text: accumulatedText.join("")}, node.pos);
+        addChildToTip({tag: "verbatim",
+                       text: trimVerbatim(accumulatedText.join(""))},
+                      node.pos);
         context = Context.Normal;
         accumulatedText = [];
         break;
@@ -821,28 +821,18 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         }
         break;
 
+      case "+display_math":
       case "+inline_math":
         context = Context.Verbatim;
         pushContainer(sp);
         break;
 
+      case "-display_math":
       case "-inline_math":
         node = popContainer(ep);
-        addChildToTip({tag: "math", display: false,
-                       text: accumulatedText.join("")}, node.pos);
-        context = Context.Normal;
-        accumulatedText = [];
-        break;
-
-      case "+display_math":
-        context = Context.Verbatim;
-        pushContainer(sp);
-        break;
-
-      case "-display_math":
-        node = popContainer(ep);
-        addChildToTip({tag: "math", display: true,
-                       text: accumulatedText.join("")}, node.pos);
+        addChildToTip({tag: "math", display: event.annot === "-display_math",
+                       text: trimVerbatim(accumulatedText.join(""))},
+                      node.pos);
         context = Context.Normal;
         accumulatedText = [];
         break;
