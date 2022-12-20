@@ -1013,6 +1013,11 @@ const renderAST = function(doc : Doc) : string {
 export {
   parse,
   ParseOptions,
+  Node,
+  HasChildren,
+  HasAttributes,
   Doc,
+  Reference,
+  Footnote,
   renderAST
 }
