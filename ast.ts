@@ -92,8 +92,7 @@ type Inline = Str
             | Emoji
             | Verbatim
             | RawInline
-            | InlineMath
-            | DisplayMath
+            | Math
             | Url
             | Email
             | FootnoteReference
@@ -179,13 +178,9 @@ interface RawInline extends HasAttributes {
   text: string;
 }
 
-interface InlineMath extends HasAttributes {
-  tag: "inline_math";
-  text: string;
-}
-
-interface DisplayMath extends HasAttributes {
-  tag: "display_math";
+interface Math extends HasAttributes {
+  tag: "math";
+  display: boolean;
   text: string;
 }
 
@@ -833,7 +828,8 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-inline_math":
         node = popContainer(ep);
-        addChildToTip({tag: "inline_math", text: accumulatedText.join("")}, node.pos);
+        addChildToTip({tag: "math", display: false,
+                       text: accumulatedText.join("")}, node.pos);
         context = Context.Normal;
         accumulatedText = [];
         break;
@@ -845,7 +841,8 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-display_math":
         node = popContainer(ep);
-        addChildToTip({tag: "display_math", text: accumulatedText.join("")}, node.pos);
+        addChildToTip({tag: "math", display: true,
+                       text: accumulatedText.join("")}, node.pos);
         context = Context.Normal;
         accumulatedText = [];
         break;

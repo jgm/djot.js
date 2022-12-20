@@ -45,11 +45,19 @@ class HTMLRenderer {
     this.buffer.push(s);
   }
 
-  renderAttributes (node : any) : void {
+  renderAttributes (node : any, extraClasses ?: string[]) : void {
     if (node.attributes) {
       for (let k in node.attributes) {
-        this.literal(` ${k}="${this.escape(node.attributes[k])}"`);
+        let v = node.attributes[k];
+        if (k === "class" && extraClasses) {
+          v = extraClasses.join(" ") + " " + v;
+          extraClasses = undefined;
+        }
+        this.literal(` ${k}="${this.escape(v)}"`);
       }
+    }
+    if (extraClasses) {
+      this.literal(` class="${extraClasses.join(' ')}"`);
     }
     if (node.pos) {
       let sp = node.pos.start;
@@ -58,10 +66,11 @@ class HTMLRenderer {
     }
   }
 
-  renderTag (tag : string, node : any) : void {
+  renderTag (tag : string, node : any, extraClasses ?: string[] )
+      : void {
     this.literal("<");
     this.literal(tag);
-    this.renderAttributes(node);
+    this.renderAttributes(node, extraClasses);
     this.literal(">");
   }
 
@@ -85,7 +94,7 @@ class HTMLRenderer {
     });
   }
 
-  renderNode (node : Node) : void {
+  renderNode (node : any) : void {
     switch(node.tag) {
       case "para":
         this.inTags("p", node, 1);
@@ -170,6 +179,23 @@ class HTMLRenderer {
         } else {
           this.out(`:${node.alias}:`);
         }
+        break;
+
+      case "math":
+        this.renderTag("span", node,
+                       ["math", node.display ? "display" : "inline"]);
+        if (node.display) {
+          this.out("\\[");
+        } else {
+          this.out("\\(");
+        }
+        this.out(node.text);
+        if (node.display) {
+          this.out("\\]");
+        } else {
+          this.out("\\)");
+        }
+        this.renderCloseTag("span");
         break;
 
       case "verbatim":
