@@ -751,6 +751,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "+linktext":
         pushContainer(sp);
+        topContainer().data.isimage = false;
         break;
 
       case "-linktext":
@@ -759,6 +760,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "+imagetext":
         pushContainer(sp);
+        topContainer().data.isimage = true;
         break;
 
       case "-imagetext":
@@ -771,7 +773,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-destination":
         node = popContainer(ep);  // the container added by +linktext/+imagetext
-        addChildToTip({tag: "link",
+        addChildToTip({tag: node.data.isimage ? "image" : "link",
                        destination: accumulatedText.join(""),
                        children: node.children}, node.pos);
         context = Context.Normal;

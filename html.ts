@@ -12,6 +12,20 @@ const blockTag : Record<string, boolean> = {
   table: true
 }
 
+const toText = function(node : any) : string {
+  let buffer : string[] = [];
+  if (node.text) {
+    buffer.push(node.text);
+  } else if (node.children) {
+    node.children.forEach((child : any) => {
+      buffer.push(toText(child));
+    });
+  } else if (node.tag === "softbreak" || node.tag === "hardbreak") {
+    node.push(" ");
+  }
+  return buffer.join("");
+}
+
 class HTMLRenderer {
   buffer : string[];
   tight : boolean;
@@ -223,19 +237,31 @@ class HTMLRenderer {
         break;
 
       case "link":
-        // TODO
-        break;
-
-      case "email":
-        // TODO
-        break;
-
-      case "email":
-        // TODO
-        break;
-
+      case "url":
       case "image":
+      case "email":
         // TODO
+        let newnode : any = {};  // new node for combined attributes
+        newnode.pos = node.pos;
+        newnode.children = node.children;
+        newnode.attributes = {};
+        if (node.tag === "image") {
+          newnode.attributes.alt = toText(node);
+          newnode.attributes.src = node.destination;
+        } else {
+          newnode.attributes.href = node.destination;
+        }
+        if (node.attributes) {
+          for (let k in node.attributes) {
+            newnode.attributes[k] = node.attributes[k];
+          }
+        }
+        // TODO resolve references and override attributes
+        if (node.tag === "image") {
+          this.renderTag("img", newnode);
+        } else {
+          this.inTags("a", newnode, 0);
+        }
         break;
 
       case "strong":
