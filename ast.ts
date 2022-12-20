@@ -98,6 +98,7 @@ type Inline = Str
             | Email
             | FootnoteReference
             | RightSingleQuote
+            | LeftDoubleQuote
             | Ellipses
             | EmDash
             | EnDash
@@ -127,6 +128,11 @@ interface FootnoteReference extends HasAttributes {
 
 interface RightSingleQuote extends HasAttributes {
   tag: "right_single_quote";
+  text: string;
+}
+
+interface LeftDoubleQuote extends HasAttributes {
+  tag: "left_double_quote";
   text: string;
 }
 
@@ -949,6 +955,10 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "right_single_quote":
         addChildToTip({tag: "right_single_quote", text: "'"}, pos);
+        break;
+
+      case "left_double_quote":
+        addChildToTip({tag: "left_double_quote", text: "'"}, pos);
         break;
 
       case "ellipses":
