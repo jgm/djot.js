@@ -29,11 +29,49 @@ class HTMLRenderer {
   }
 
   escape (s : string) : string {
-    return s; // TODO
+    return s
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;");
   }
 
   out (s : string) : void {
     this.buffer.push(s);
+  }
+
+  renderAttributes (node : any) : void {
+    if (node.attributes) {
+      for (let k in node.attributes) {
+        this.out(` ${k}="${escape(node.attributes[k])}"`);
+      }
+    }
+    if (node.pos) {
+      let sp = node.pos.start;
+      let ep = node.pos.end;
+      this.out(` data-startpos="${sp.line}:${sp.col}:${sp.offset}" data-endpos="${ep.line}:${ep.col}:${ep.offset}"`);
+    }
+  }
+
+  renderTag (tag : string, node : any) : void {
+    this.out("<");
+    this.out(tag);
+    this.renderAttributes(node);
+    this.out(">");
+  }
+
+  renderCloseTag (tag : string) : void {
+    this.out("</");
+    this.out(tag);
+    this.out(">");
+  }
+
+  inTags (tag : string, node : any, newlines : number) : void {
+    this.renderTag(tag, node);
+    if (newlines > 1) { this.out("\n"); }
+    this.renderChildren(node);
+    this.renderCloseTag(tag);
+    if (newlines === 1) { this.out("\n"); }
   }
 
   renderChildren (node : HasChildren) : void {
@@ -45,9 +83,20 @@ class HTMLRenderer {
   renderNode (node : Node) : void {
     switch(node.tag) {
       case "para":
-        this.out("<p>");
-        this.renderChildren(node);
-        this.out("</p>\n");
+        this.inTags("p", node, 1);
+        break;
+
+      case "blockquote":
+        this.inTags("blockquote", node, 2);
+        break;
+
+      case "heading":
+        this.inTags(`h${node.level}`, node, 1);
+        break;
+
+      case "thematic_break":
+        this.renderTag("hr", node);
+        this.out("\n");
         break;
 
       case "str":
@@ -56,6 +105,22 @@ class HTMLRenderer {
 
       case "softbreak":
         this.out("\n");
+        break;
+
+      case "strong":
+        this.inTags("strong", node, 0);
+        break;
+
+      case "emph":
+        this.inTags("em", node, 0);
+        break;
+
+      case "superscript":
+        this.inTags("sup", node, 0);
+        break;
+
+      case "subscript":
+        this.inTags("sub", node, 0);
         break;
 
       default:
