@@ -120,8 +120,26 @@ class HTMLRenderer {
         this.literal("\n");
         break;
 
+      case "raw_block":
+        if (node.format === "html") {
+          this.literal(node.text);
+        }
+        break;
+
       case "str":
         this.out(node.text);
+        break;
+
+      case "verbatim":
+        this.renderTag("code", node);
+        this.out(node.text);
+        this.renderCloseTag("code");
+        break;
+
+      case "raw_inline":
+        if (node.format === "html") {
+          this.literal(node.text);
+        }
         break;
 
       case "softbreak":
@@ -142,6 +160,10 @@ class HTMLRenderer {
 
       case "emph":
         this.inTags("em", node, 0);
+        break;
+
+      case "span":
+        this.inTags("span", node, 0);
         break;
 
       case "mark":
