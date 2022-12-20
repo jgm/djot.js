@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "es2016",
-    "lib": [],
+    "lib": ["dom"],
     "jsx": "preserve",
     "module": "commonjs",
     "esModuleInterop": true,
@@ -15,6 +15,7 @@
     "inline.ts",
     "block.ts",
     "event.ts",
-    "ast.ts"
+    "ast.ts",
+    "html.ts"
   ]
 }
