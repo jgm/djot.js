@@ -102,8 +102,9 @@ try {
     let startTime = performance.now();
     let ast = parse(input, options);
     let endTime = performance.now();
-    let parseTime = (endTime - startTime).toFixed(2);
+    let parseTime = (endTime - startTime).toFixed(1);
 
+    startTime = performance.now();
     switch (output) {
       case "html":
         process.stdout.write(renderHTML(ast));
@@ -117,9 +118,11 @@ try {
         break;
       default:
     }
+    endTime = performance.now();
+    let renderTime = (endTime - startTime).toFixed(1);
 
     if (timing) {
-      process.stderr.write(`Parse time = ${parseTime} ms\n`);
+      process.stderr.write(`Timings: parse ${parseTime} ms, render ${renderTime} ms\n`);
     }
   }
 } catch(err) {
