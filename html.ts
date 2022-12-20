@@ -11,9 +11,13 @@ const blockTag : Record<string, boolean> = {
   table: true
 }
 
-const renderHTML = function(doc : Doc) : string {
-  return "";
+class HTMLRenderer {
+
+  render (doc : Doc) : string {
+    return "";
+  }
 }
 
-export { renderHTML }
+
+export { HTMLRenderer }
 
