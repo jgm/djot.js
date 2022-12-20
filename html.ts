@@ -1,4 +1,4 @@
-import { Doc, Reference, Footnote, HasChildren, Node } from "./ast.js";
+import { Doc, Reference, Footnote, HasChildren, Node } from "./ast";
 
 const blockTag : Record<string, boolean> = {
   para: true,

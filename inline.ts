@@ -1,6 +1,6 @@
-import { Event } from "./event.js";
-import { AttributeParser } from "./attributes.js";
-import { pattern, find, boundedFind } from "./find.js";
+import { Event } from "./event";
+import { AttributeParser } from "./attributes";
+import { pattern, find, boundedFind } from "./find";
 
 // General note on the parsing strategy:  our objective is to
 // parse without backtracking. To that end, we keep a stack of

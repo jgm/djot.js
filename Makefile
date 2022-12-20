@@ -1,9 +1,10 @@
-MODULES=attributes.js event.js inline.js block.js find.js ast.js html.js
-
 test:
-	tsc && yarn test
+	yarn test
 .PHONY: test
 
+build:
+	tsc
+
 clean:
-	-rm $(MODULES)
+	rm -rf dist
 .PHONY: clean

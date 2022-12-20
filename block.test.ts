@@ -1,4 +1,4 @@
-import { EventParser } from "./block.js";
+import { EventParser } from "./block";
 
 const ignoreWarnings = () => { /* do nothing */ };
 

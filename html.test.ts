@@ -1,5 +1,5 @@
-import { parse, ParseOptions, Doc } from "./ast.js";
-import { renderHTML } from "./html.js";
+import { parse, ParseOptions, Doc } from "./ast";
+import { renderHTML } from "./html";
 
 const ignoreWarnings = () => { /* do nothing */ };
 

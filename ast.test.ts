@@ -1,4 +1,4 @@
-import { parse, renderAST, ParseOptions, Doc } from "./ast.js";
+import { parse, renderAST, ParseOptions, Doc } from "./ast";
 
 const ignoreWarnings = () => { /* do nothing */ };
 

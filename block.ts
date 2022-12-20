@@ -1,7 +1,7 @@
-import { Event } from "./event.js";
-import { AttributeParser } from "./attributes.js";
-import { pattern, find, boundedFind } from "./find.js";
-import { InlineParser } from "./inline.js";
+import { Event } from "./event";
+import { AttributeParser } from "./attributes";
+import { pattern, find, boundedFind } from "./find";
+import { InlineParser } from "./inline";
 
 // Return array of list styles that match a marker.
 // In ambiguous cases we return multiple values.

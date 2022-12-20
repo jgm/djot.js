@@ -1,4 +1,4 @@
-import { InlineParser } from "./inline.js";
+import { InlineParser } from "./inline";
 
 const ignoreWarnings = () => { /* do nothing */ };
 

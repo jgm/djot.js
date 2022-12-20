@@ -1,5 +1,5 @@
-import { Event } from "./event.js";
-import { EventParser } from "./block.js";
+import { Event } from "./event";
+import { EventParser } from "./block";
 
 // Types for the AST
 

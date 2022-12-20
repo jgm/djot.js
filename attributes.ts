@@ -16,7 +16,7 @@
  * quotedval <- '"' ([^"] | '\"') '"'
  */
 
-import { Event } from "./event.js";
+import { Event } from "./event";
 
 // states
 enum State {

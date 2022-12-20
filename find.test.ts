@@ -1,4 +1,4 @@
-import { pattern, find, boundedFind } from "./find.js";
+import { pattern, find, boundedFind } from "./find";
 
 describe("find", () => {
   it("finds a pattern at 0", () => {
