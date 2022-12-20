@@ -1,7 +1,11 @@
 import { EventParser } from "./block.js";
 import { parse, renderAST } from "./ast.js";
+import { renderDOM } from "./html.js";
 import fs from "fs";
 import { performance } from "perf_hooks";
+import { JSDOM } from "jsdom";
+
+const { document } = (new JSDOM(`<!DOCTYPE html><p>hello</p>`)).window;
 
 const warn = function(msg, pos) {
   process.stderr.write(msg + (pos ? " at " + pos : "") + "\n");
@@ -10,14 +14,16 @@ const warn = function(msg, pos) {
 let timing = false;
 let events = false;
 let options = {sourcePositions: false, warn: warn};
-let json = false;
+let output = 'html';
 let usage = `djot [OPTIONS] FILE*
 Options:
   --sourcepos,-p       Include source positions
   --quiet,-q           Suppress warnings
   --time,-t            Print parse time to stderr
-  --events,-e          Print events instead of AST
+  --events,-e          Print events in JSON format
   --json,-j            Print AST in JSON format
+  --ast,-a             Print AST in human-readable format
+  --html               Print HTML (default)
   --help,-h            This usage message
 `;
 let files = [];
@@ -43,7 +49,14 @@ for (let i=2; i < process.argv.length; i++) {
       break;
     case "--json":
     case "-j":
-      json = true;
+      output = 'json';
+      break;
+    case "--ast":
+    case "-a":
+      output = 'ast';
+      break;
+    case "--html":
+      output = 'html';
       break;
     case "--help":
     case "-h":
@@ -94,11 +107,18 @@ try {
     let endTime = performance.now();
     let parseTime = (endTime - startTime).toFixed(2);
 
-    if (json) {
-      process.stdout.write(JSON.stringify(ast, null, 2));
-      process.stdout.write("\n");
-    } else {
-      process.stdout.write(renderAST(ast));
+    switch (output) {
+      case "html":
+        process.stdout.write(renderHTML(ast));
+        break;
+      case "json":
+        process.stdout.write(JSON.stringify(ast, null, 2));
+        process.stdout.write("\n");
+        break;
+      case "ast":
+        process.stdout.write(renderAST(ast));
+        break;
+      default:
     }
 
     if (timing) {

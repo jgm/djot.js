@@ -52,7 +52,7 @@ Road map:
   - [ ] tables
   - [ ] captions
   - [ ] unit tests
-- [ ] html renderer (consume ast, produce DOM?)
+- [ ] html renderer
 - [ ] filter API
 - [ ] full-featured cli
 - [ ] functional tests (from lua implementation)
