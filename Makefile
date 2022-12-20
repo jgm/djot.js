@@ -1,4 +1,4 @@
-test:
+test: build
 	yarn test
 .PHONY: test
 

@@ -8,6 +8,9 @@
   "scripts": {
     "test": "jest"
   },
+  "dependencies": {
+    "node-emoji": "^1.11.0"
+  },
   "devDependencies": {
     "@types/jest": "^29.2.4",
     "@typescript-eslint/eslint-plugin": "^5.46.1",

@@ -1,4 +1,5 @@
 import { Doc, Reference, Footnote, HasChildren, Node } from "./ast";
+const emoji = require("node-emoji");
 
 const blockTag : Record<string, boolean> = {
   para: true,
@@ -160,6 +161,15 @@ class HTMLRenderer {
 
       case "en_dash":
         this.literal("&ndash;");
+        break;
+
+      case "emoji":
+        let ch = emoji.get(node.alias);
+        if (ch) {
+          this.out(ch);
+        } else {
+          this.out(`:${node.alias}:`);
+        }
         break;
 
       case "verbatim":
