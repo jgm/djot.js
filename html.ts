@@ -72,10 +72,10 @@ class HTMLRenderer {
 
   inTags (tag : string, node : any, newlines : number) : void {
     this.renderTag(tag, node);
-    if (newlines > 1) { this.literal("\n"); }
+    if (newlines >= 2) { this.literal("\n"); }
     this.renderChildren(node);
     this.renderCloseTag(tag);
-    if (newlines === 1) { this.literal("\n"); }
+    if (newlines >= 1) { this.literal("\n"); }
   }
 
   renderChildren (node : HasChildren) : void {
