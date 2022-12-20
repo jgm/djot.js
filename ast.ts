@@ -88,6 +88,7 @@ interface Table extends HasAttributes {
 type Inline = Str
             | SoftBreak
             | HardBreak
+            | Nbsp
             | Emoji
             | Verbatim
             | RawInline
@@ -150,6 +151,10 @@ interface SoftBreak extends HasAttributes {
 
 interface HardBreak extends HasAttributes {
   tag: "hardbreak";
+}
+
+interface Nbsp extends HasAttributes {
+  tag: "nbsp";
 }
 
 interface Emoji extends HasAttributes {
@@ -538,6 +543,14 @@ const parse = function(input : string, options : ParseOptions) : Doc {
           addChildToTip({tag: "hardbreak"}, pos);
         } else {
           accumulatedText.push("\n");
+        }
+        break;
+
+      case "nbsp":
+        if (context === Context.Verbatim) {
+          accumulatedText.push("\\ ");
+        } else {
+          addChildToTip({tag: "nbsp"}, pos);
         }
         break;
 

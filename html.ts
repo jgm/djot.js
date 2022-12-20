@@ -37,41 +37,45 @@ class HTMLRenderer {
   }
 
   out (s : string) : void {
+    this.buffer.push(this.escape(s));
+  }
+
+  literal (s : string) : void {
     this.buffer.push(s);
   }
 
   renderAttributes (node : any) : void {
     if (node.attributes) {
       for (let k in node.attributes) {
-        this.out(` ${k}="${escape(node.attributes[k])}"`);
+        this.literal(` ${k}="${this.escape(node.attributes[k])}"`);
       }
     }
     if (node.pos) {
       let sp = node.pos.start;
       let ep = node.pos.end;
-      this.out(` data-startpos="${sp.line}:${sp.col}:${sp.offset}" data-endpos="${ep.line}:${ep.col}:${ep.offset}"`);
+      this.literal(` data-startpos="${sp.line}:${sp.col}:${sp.offset}" data-endpos="${ep.line}:${ep.col}:${ep.offset}"`);
     }
   }
 
   renderTag (tag : string, node : any) : void {
-    this.out("<");
-    this.out(tag);
+    this.literal("<");
+    this.literal(tag);
     this.renderAttributes(node);
-    this.out(">");
+    this.literal(">");
   }
 
   renderCloseTag (tag : string) : void {
-    this.out("</");
-    this.out(tag);
-    this.out(">");
+    this.literal("</");
+    this.literal(tag);
+    this.literal(">");
   }
 
   inTags (tag : string, node : any, newlines : number) : void {
     this.renderTag(tag, node);
-    if (newlines > 1) { this.out("\n"); }
+    if (newlines > 1) { this.literal("\n"); }
     this.renderChildren(node);
     this.renderCloseTag(tag);
-    if (newlines === 1) { this.out("\n"); }
+    if (newlines === 1) { this.literal("\n"); }
   }
 
   renderChildren (node : HasChildren) : void {
@@ -90,21 +94,46 @@ class HTMLRenderer {
         this.inTags("blockquote", node, 2);
         break;
 
+      case "div":
+        this.inTags("div", node, 2);
+        break;
+
       case "heading":
         this.inTags(`h${node.level}`, node, 1);
         break;
 
       case "thematic_break":
         this.renderTag("hr", node);
-        this.out("\n");
+        this.literal("\n");
+        break;
+
+      case "code_block":
+        this.renderTag("pre", node);
+        this.literal("<code");
+        if (node.lang) {
+          this.literal(` class="language-${this.escape(node.lang)}"`);
+        }
+        this.literal(">");
+        this.out(node.text);
+        this.renderCloseTag("code");
+        this.renderCloseTag("pre");
+        this.literal("\n");
         break;
 
       case "str":
-        this.out(this.escape(node.text));
+        this.out(node.text);
         break;
 
       case "softbreak":
-        this.out("\n");
+        this.literal("\n");
+        break;
+
+      case "hardbreak":
+        this.literal("<br>\n");
+        break;
+
+      case "nbsp":
+        this.literal("&nbsp;");
         break;
 
       case "strong":
@@ -113,6 +142,18 @@ class HTMLRenderer {
 
       case "emph":
         this.inTags("em", node, 0);
+        break;
+
+      case "mark":
+        this.inTags("mark", node, 0);
+        break;
+
+      case "insert":
+        this.inTags("ins", node, 0);
+        break;
+
+      case "delete":
+        this.inTags("del", node, 0);
         break;
 
       case "superscript":
