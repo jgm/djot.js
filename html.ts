@@ -222,6 +222,22 @@ class HTMLRenderer {
         this.literal("&nbsp;");
         break;
 
+      case "link":
+        // TODO
+        break;
+
+      case "email":
+        // TODO
+        break;
+
+      case "email":
+        // TODO
+        break;
+
+      case "image":
+        // TODO
+        break;
+
       case "strong":
         this.inTags("strong", node, 0);
         break;
