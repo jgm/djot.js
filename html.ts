@@ -26,7 +26,12 @@ const toText = function(node : any) : string {
   return buffer.join("");
 }
 
+const defaultWarnings = function(message : string, pos : number) {
+  process.stderr.write(message + (pos ? " at " + pos : "") + "\n");
+}
+
 class HTMLRenderer {
+  warn : (message : string, pos : number) => void;
   buffer : string[];
   tight : boolean;
   footnoteIndex : Record<string, any>; // TODO
@@ -34,7 +39,8 @@ class HTMLRenderer {
   references: Record<string, Reference>;
   footnotes: Record<string, Footnote>;
 
-  constructor() {
+  constructor(warn ?: (message : string, pos : number) => void) {
+    this.warn = warn || defaultWarnings;
     this.buffer = [];
     this.tight = false;
     this.footnoteIndex = {};
@@ -237,19 +243,33 @@ class HTMLRenderer {
         break;
 
       case "link":
-      case "url":
       case "image":
-      case "email":
         // TODO
         let newnode : any = {};  // new node for combined attributes
         newnode.pos = node.pos;
         newnode.children = node.children;
         newnode.attributes = {};
+        let dest : string = node.destination;
+        if (node.reference) {
+          const ref = this.references[node.reference];
+          if (ref) {
+            dest = ref.destination;
+            if (ref.attributes) {
+              for (let k in ref.attributes) {
+                newnode.attributes[k] = ref.attributes[k];
+              }
+            }
+          } else {
+            this.warn(`Reference ${JSON.stringify(node.reference)} not found`,
+                       node.pos && node.pos.end.offset);
+            dest = "";
+          }
+        }
         if (node.tag === "image") {
           newnode.attributes.alt = toText(node);
-          newnode.attributes.src = node.destination;
+          newnode.attributes.src = dest;
         } else {
-          newnode.attributes.href = node.destination;
+          newnode.attributes.href = dest;
         }
         if (node.attributes) {
           for (let k in node.attributes) {
@@ -262,6 +282,14 @@ class HTMLRenderer {
         } else {
           this.inTags("a", newnode, 0);
         }
+        break;
+
+      case "url":
+        // TODO
+        break;
+
+      case "email":
+        // TODO
         break;
 
       case "strong":

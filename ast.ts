@@ -265,7 +265,8 @@ interface Cell extends HasAttributes, HasBlockChildren {
 type Node = Doc | Block | Inline | ListItem | Row | Cell ;
 
 interface Reference {
-
+  destination : string;
+  attributes ?: Attributes;
 }
 
 interface Footnote {
@@ -338,7 +339,9 @@ const romanToNumber = function(s : string) : number {
 
 // in verbatim text, trim one space next to ` at beginning or end:
 const trimVerbatim = function(s : string) : string {
-  return s.replace(/^ ( *)`/, "$1`").replace(/( *) (`+)$/, "$1$2");
+  return s
+    .replace(/^ ( *)`/, "$1`")
+    .replace(/( *) (`+)$/, "$1$2");
 }
 
 const getListStart = function(marker : string, style : string) : number | null {
