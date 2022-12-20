@@ -3,7 +3,6 @@ import { parse, renderAST } from "./ast.js";
 import { renderDOM } from "./html.js";
 import fs from "fs";
 import { performance } from "perf_hooks";
-import { JSDOM } from "jsdom";
 
 const { document } = (new JSDOM(`<!DOCTYPE html><p>hello</p>`)).window;
 
