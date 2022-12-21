@@ -45,7 +45,7 @@ Road map:
   - [X] reference definitions
   - [X] tables
   - [X] captions
-  - [ ] footnote
+  - [X] footnote
   - [ ] sections
   - [ ] auto identifiers on headings/sections
   - [ ] list items/lists
@@ -53,6 +53,11 @@ Road map:
   - [ ] task lists
   - [ ] unit tests
 - [ ] html renderer
+  - [ ] footnotes and note references
+  - [ ] sections
+  - [ ] list items/lists
+  - [ ] definition lists
+  - [ ] task lists
 - [ ] filter API
 - [ ] full-featured cli
 - [ ] functional tests (from lua implementation)
