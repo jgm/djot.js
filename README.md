@@ -44,7 +44,7 @@ Road map:
   - [X] raw block
   - [X] reference definitions
   - [X] tables
-  - [ ] captions
+  - [X] captions
   - [ ] footnote
   - [ ] sections
   - [ ] auto identifiers on headings/sections

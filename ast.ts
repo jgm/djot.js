@@ -280,6 +280,7 @@ interface Reference extends HasAttributes {
 
 interface Footnote extends HasAttributes, HasBlockChildren {
   tag: "footnote";
+  label: string;
 }
 
 interface Doc extends HasBlockChildren, HasAttributes {
@@ -1029,6 +1030,29 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         addChildToTip({tag: "caption",
                        children: node.children,
                        attributes: node.attributes}, node.pos);
+        break;
+
+      case "+footnote":
+        pushContainer(sp);
+        break;
+
+      case "-footnote":
+        node = popContainer(ep);
+        if (node.data.label) {
+          footnotes[node.data.label] =
+                      {tag: "footnote",
+                       label: node.data.label || "",
+                       children: node.children,
+                       attributes: node.attributes,
+                       pos: node.pos};
+        } else {
+          warn("Ignoring footnote without a label.", event.endpos);
+        }
+        break;
+
+      case "note_label":
+        topContainer().data.label =
+          input.substring(event.startpos + 1, event.endpos);
         break;
 
       case "+code_block":
