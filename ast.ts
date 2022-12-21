@@ -84,10 +84,11 @@ interface Caption extends HasAttributes {
   children: Inline[];
 }
 
+type TablePart = Row | Caption;
+
 interface Table extends HasAttributes {
   tag: "table";
-  children: Row[];
-  caption?: Caption;
+  children: TablePart[];
 }
 
 type Inline = Str
@@ -268,7 +269,7 @@ interface Cell extends HasAttributes, HasInlineChildren {
   head: boolean;
 }
 
-type Alignment = "left" | "right" | "center";
+type Alignment = "default" | "left" | "right" | "center";
 
 type Node = Doc | Block | Inline | ListItem | Row | Cell | Caption ;
 
@@ -989,6 +990,10 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         }
         break;
 
+      case "separator_default":
+        topContainer().data.aligns.push("default");
+        break;
+
       case "separator_left":
         topContainer().data.aligns.push("left");
         break;
@@ -1021,11 +1026,9 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-caption":
         node = popContainer(ep);
-        tip = getTip();
-        tip.caption = {tag: "caption",
+        addChildToTip({tag: "caption",
                        children: node.children,
-                       attributes: node.attributes,
-                       pos: node.pos};
+                       attributes: node.attributes}, node.pos);
         break;
 
       case "+code_block":
@@ -1133,8 +1136,7 @@ const omitFields : Record<string, boolean> =
     pos: true,
     attributes: true,
     references: true,
-    footnotes: true,
-    caption: true };
+    footnotes: true };
 
 const renderNode = function(node : Record<string, any>, buff : string[], indent : number) : void {
   buff.push(" ".repeat(indent));
@@ -1159,9 +1161,6 @@ const renderNode = function(node : Record<string, any>, buff : string[], indent 
     }
   }
   buff.push("\n");
-  if (node.caption) {
-    renderNode(node.caption, buff, indent + 2);
-  }
   if (node.children) {
     node.children.forEach((child : any) => {
       renderNode(child, buff, indent + 2);

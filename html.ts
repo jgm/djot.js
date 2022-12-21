@@ -123,6 +123,10 @@ class HTMLRenderer {
         this.inTags("table", node, 2);
         break;
 
+      case "caption":
+        this.inTags("caption", node, 1);
+        break;
+
       case "row":
         this.inTags("tr", node, 2);
         break;
@@ -131,7 +135,10 @@ class HTMLRenderer {
         let cellnode : any = {};  // new node for combined attributes
         cellnode.pos = node.pos;
         cellnode.children = node.children;
-        cellnode.attributes = {style: `text-align: ${node.align};`};
+        cellnode.attributes = {};
+        if (node.align !== "default") {
+          cellnode.attributes.style = `text-align: ${node.align};`;
+        }
         for (let k in node.attributes) {
           if (cellnode.attributes[k]) { // allow adding to style
             cellnode.attributes[k] =
