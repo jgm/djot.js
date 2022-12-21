@@ -285,11 +285,31 @@ class HTMLRenderer {
         break;
 
       case "url":
-        // TODO
-        break;
-
       case "email":
-        // TODO
+        let linknode : any = {};  // new node for combined attributes
+        linknode.pos = node.pos;
+        linknode.children = {};
+        linknode.text = node.text;
+        linknode.attributes = {};
+        if (node.tag === "email") {
+          linknode.attributes.href = "mailto:" + node.text;
+        } else {
+          linknode.attributes.href = node.text;
+        }
+        if (node.attributes) {
+          for (let k in node.attributes) {
+            linknode.attributes[k] = node.attributes[k];
+          }
+        }
+        if (linknode.attributes.class) {
+          linknode.attributes.class = node.tag + " " +
+                                        linknode.attributes.class;
+        } else {
+          linknode.attributes.class = node.tag;
+        }
+        this.renderTag("a", linknode);
+        this.out(linknode.text);
+        this.renderCloseTag("a");
         break;
 
       case "strong":
