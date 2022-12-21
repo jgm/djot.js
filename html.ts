@@ -119,6 +119,30 @@ class HTMLRenderer {
         this.inTags(`h${node.level}`, node, 1);
         break;
 
+      case "table":
+        this.inTags("table", node, 2);
+        break;
+
+      case "row":
+        this.inTags("tr", node, 2);
+        break;
+
+      case "cell":
+        let cellnode : any = {};  // new node for combined attributes
+        cellnode.pos = node.pos;
+        cellnode.children = node.children;
+        cellnode.attributes = {style: `text-align: ${node.align};`};
+        for (let k in node.attributes) {
+          if (cellnode.attributes[k]) { // allow adding to style
+            cellnode.attributes[k] =
+              cellnode.attributes[k] + " " + node.attributes[k];
+          } else {
+            cellnode.attributes[k] = node.attributes[k];
+          }
+        }
+        this.inTags(node.head ? "th" : "td", cellnode, 1);
+        break;
+
       case "thematic_break":
         this.renderTag("hr", node);
         this.literal("\n");

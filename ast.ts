@@ -82,7 +82,6 @@ interface List extends HasAttributes {
 interface Table extends HasAttributes {
   tag: "table";
   children: Row[];
-  // TODO
 }
 
 type Inline = Str
@@ -252,15 +251,18 @@ interface ListItem extends HasAttributes, HasBlockChildren {
 }
 
 interface Row extends HasAttributes {
-  tag: "table_row";
+  tag: "row";
   children: Cell[];
-  // TODO
+  head: boolean;
 }
 
-interface Cell extends HasAttributes, HasBlockChildren {
-  tag: "table_cell";
-  // TODO
+interface Cell extends HasAttributes, HasInlineChildren {
+  tag: "cell";
+  align: Alignment;
+  head: boolean;
 }
+
+type Alignment = "left" | "right" | "center";
 
 type Node = Doc | Block | Inline | ListItem | Row | Cell ;
 
@@ -490,7 +492,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
   }
   // points to last child of top container, or top container if
   // it doesn't have children
-  const getTip = function() : Container {
+  const getTip = function() : any {
       let top = topContainer();
       if (top.children.length > 0) {
         return top.children[top.children.length - 1];
@@ -935,6 +937,75 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         node = popContainer(ep);
         addChildToTip({tag: "blockquote",
                        children: node.children,
+                       attributes: node.attributes }, node.pos);
+        break;
+
+      case "+table":
+        pushContainer(sp);
+        topContainer().data.aligns = [];
+        break;
+
+      case "-table":
+        node = popContainer(ep);
+        addChildToTip({tag: "table",
+                       children: node.children,
+                       attributes: node.attributes }, node.pos);
+        break;
+
+      case "+row":
+        pushContainer(sp);
+        topContainer().data.aligns = [];
+        break;
+
+      case "-row":
+        node = popContainer(ep);
+        if (node.children.length === 0) { // a separator line
+          // set table aligns, so they can be propagated to future rows
+          topContainer().data.aligns = node.data.aligns;
+          tip = getTip();
+          if (tip && tip.tag === "row") { // previous row of table
+            tip.head = true;
+            for (let i=0; i < tip.children.length; i++) {
+              tip.children[i].head = true;
+              tip.children[i].align = node.data.aligns[i];
+            }
+          }
+        } else {
+          // get aligns from table
+          node.data.aligns = [];
+          for (let i=0; i < node.children.length; i++) {
+            node.children[i].align = topContainer().data.aligns[i];
+          }
+          addChildToTip({tag: "row",
+                         children: node.children,
+                         head: false, // gets set later
+                         attributes: node.attributes }, node.pos);
+        }
+        break;
+
+      case "separator_left":
+        topContainer().data.aligns.push("left");
+        break;
+
+      case "separator_right":
+        topContainer().data.aligns.push("right");
+        break;
+
+      case "separator_center":
+        topContainer().data.aligns.push("center");
+        break;
+
+      case "+cell":
+        pushContainer(sp);
+        break;
+
+      case "-cell":
+        node = popContainer(ep);
+        let cellnum = topContainer().children.length;
+        addChildToTip({tag: "cell",
+                       children: node.children,
+                       head: false, // gets set in "-row"
+                       align: "left", // set at "-row"
                        attributes: node.attributes }, node.pos);
         break;
 
