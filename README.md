@@ -43,14 +43,14 @@ Road map:
   - [X] raw inline
   - [X] raw block
   - [X] reference definitions
+  - [X] tables
+  - [ ] captions
   - [ ] footnote
   - [ ] sections
   - [ ] auto identifiers on headings/sections
   - [ ] list items/lists
   - [ ] definition lists
   - [ ] task lists
-  - [ ] tables
-  - [ ] captions
   - [ ] unit tests
 - [ ] html renderer
 - [ ] filter API
