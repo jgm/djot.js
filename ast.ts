@@ -79,9 +79,15 @@ interface List extends HasAttributes {
   // TODO
 }
 
+interface Caption extends HasAttributes {
+  tag: "caption";
+  children: Inline[];
+}
+
 interface Table extends HasAttributes {
   tag: "table";
   children: Row[];
+  caption?: Caption;
 }
 
 type Inline = Str
@@ -264,7 +270,7 @@ interface Cell extends HasAttributes, HasInlineChildren {
 
 type Alignment = "left" | "right" | "center";
 
-type Node = Doc | Block | Inline | ListItem | Row | Cell ;
+type Node = Doc | Block | Inline | ListItem | Row | Cell | Caption ;
 
 interface Reference extends HasAttributes {
   tag: "reference";
