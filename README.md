@@ -42,7 +42,7 @@ Road map:
   - [X] pretty renderer
   - [X] raw inline
   - [X] raw block
-  - [ ] reference definitions
+  - [X] reference definitions
   - [ ] footnote
   - [ ] sections
   - [ ] auto identifiers on headings/sections

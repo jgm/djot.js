@@ -39,6 +39,7 @@ const pattEndline = pattern("[ \\t]*\\r?\\n");
 const pattNonNewlines = pattern("[^\\n\\r]*");
 const pattWord = pattern("^\\w+\\s");
 const pattWhitespace = pattern("[ \\t\\r\\n]");
+const pattNonWhitespace = pattern("[^ \\t\\r\\n]+");
 const pattBlockquotePrefix = pattern("[>]\\s");
 const pattBangs = pattern("#+");
 const pattCodeFence = pattern("(~~~~*|````*)([ \\t]*)(\\S*)[ \\t]*\\r?\\n");
@@ -50,7 +51,7 @@ const pattThematicBreak = pattern("[-*][ \t]*[-*][ \\t]*[-*][-* \\t]*\\r?\\n");
 const pattDivFence = pattern("(::::*)[ \\t]*\\r?\\n");
 const pattDivFenceStart = pattern("(::::*)[ \\t]*");
 const pattDivFenceEnd = pattern("([\\w_-]*)[ \\t]*\\r?\\n");
-const pattReferenceDefinition = pattern("\\[([^\\]\\r\\n]*)\\]:[ \\t]*");
+const pattReferenceDefinition = pattern("\\[([^\\]\\r\\n]*)\\]:[ \\t]*([^ \\t\\r\\n]*)[\\r\\n]");
 const pattTableRow = pattern("(\\|[^\\r\\n]*\\|)[ \\t]*\\r?\\n");
 const pattListMarker = pattern("(:?[-*+:]|\\([0-9]+\\)|[0-9]+[.)]|[ivxlcdmIVXLCDM]+[.)]|\\([ivxlcdmIVXLCDM]+\\)|[a-zA-Z][.)]|\\([a-zA-Z]\\))\\s");
 const pattTaskListMarker = pattern("[*+-] \\[[Xx ]\\]\\s");
@@ -284,7 +285,9 @@ class EventParser {
         if (container.extra.indent >= this.indent) {
           return false;
         }
-        if (this.pos < this.starteol) {
+        let nws = this.find(pattNonWhitespace);
+        if (this.pos < this.starteol &&
+             nws && nws.endpos === this.starteol - 1) {
           this.addMatch(this.pos, this.starteol - 1, "reference_value");
           this.pos = this.starteol;
           return true;
@@ -296,13 +299,15 @@ class EventParser {
         let m = this.find(pattReferenceDefinition);
         if (m) {
           let label = m.captures[0];
+          let value = m.captures[1];
           this.addContainer(new Container(spec,
              { key: label, indent: this.indent }));
           this.addMatch(m.startpos, m.startpos, "+reference_definition");
           this.addMatch(m.startpos, m.startpos + label.length + 1,
                           "reference_key");
-          if (m.endpos + 1 < this.starteol) {
-            this.addMatch(m.endpos + 1, this.starteol - 1, "reference_value");
+          if (value.length > 0) {
+            this.addMatch(this.starteol - value.length, this.starteol - 1,
+                          "reference_value");
           }
           this.pos = this.starteol - 1;
           return true;

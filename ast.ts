@@ -264,13 +264,13 @@ interface Cell extends HasAttributes, HasBlockChildren {
 
 type Node = Doc | Block | Inline | ListItem | Row | Cell ;
 
-interface Reference {
-  destination : string;
-  attributes ?: Attributes;
+interface Reference extends HasAttributes {
+  tag: "reference";
+  destination: string;
 }
 
-interface Footnote {
-
+interface Footnote extends HasAttributes, HasBlockChildren {
+  tag: "footnote";
 }
 
 interface Doc extends HasBlockChildren, HasAttributes {
@@ -286,13 +286,19 @@ interface Container {
   pos?: Pos;
 }
 
-const addStringContent = function(node : Inline, buffer : string[]) : void {
+const getStringContent = function(node : any) : string {
+  let buffer : string[] = [];
+  addStringContent(node, buffer);
+  return buffer.join("");
+}
+
+const addStringContent = function(node : any, buffer : string[]) : void {
   if ("text" in node) {
     buffer.push(node.text);
-  } else if (node.tag === "softbreak") {
+  } else if (node.tag === "softbreak" || node.tag === "hardbreak") {
     buffer.push("\n");
   } else if ("children" in node) {
-    node.children.forEach(child => {
+    node.children.forEach((child : any) => {
       addStringContent(child, buffer);
     });
   }
@@ -571,6 +577,33 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         addChildToTip({tag: "footnote_reference", text: fnref}, pos);
         break;
 
+      case "+reference_definition":
+        pushContainer(sp);
+        break;
+
+      case "-reference_definition":
+        node = popContainer(ep);
+        let r : Reference = { tag: "reference",
+                              destination: node.data.value || "",
+                              attributes: node.attributes };
+        if (node.data.key) {
+          console.log(node.data.key);
+          references[node.data.key] = r;
+        }
+        break;
+
+      case "reference_key":
+        topContainer().data.key = input.substring(event.startpos + 1,
+                                                  event.endpos);
+        topContainer().data.value = "";
+        break;
+
+      case "reference_value":
+        topContainer().data.value =
+          topContainer().data.value + input.substring(event.startpos,
+                                                      event.endpos + 1);
+        break;
+
       case "+emph":
         pushContainer(sp);
         break;
@@ -789,8 +822,12 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-reference":
         node = popContainer(ep);  // the container added by +linktext
+        let ref = accumulatedText.join("");
+        if (ref.length === 0) {
+          ref = getStringContent(node);
+        }
         addChildToTip({tag: "link",
-                       reference: accumulatedText.join(""),
+                       reference: ref,
                        children: node.children}, node.pos);
         context = Context.Normal;
         accumulatedText = [];
@@ -1071,5 +1108,6 @@ export {
   Doc,
   Reference,
   Footnote,
-  renderAST
+  renderAST,
+  getStringContent
 }

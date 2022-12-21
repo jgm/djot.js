@@ -1,4 +1,5 @@
-import { Doc, Reference, Footnote, HasChildren, Node } from "./ast";
+import { Doc, Reference, Footnote, HasChildren, Node, getStringContent }
+  from "./ast";
 const emoji = require("node-emoji");
 
 const blockTag : Record<string, boolean> = {
@@ -10,20 +11,6 @@ const blockTag : Record<string, boolean> = {
   code_block: true,
   heading: true,
   table: true
-}
-
-const toText = function(node : any) : string {
-  let buffer : string[] = [];
-  if (node.text) {
-    buffer.push(node.text);
-  } else if (node.children) {
-    node.children.forEach((child : any) => {
-      buffer.push(toText(child));
-    });
-  } else if (node.tag === "softbreak" || node.tag === "hardbreak") {
-    node.push(" ");
-  }
-  return buffer.join("");
 }
 
 const defaultWarnings = function(message : string, pos : number) {
@@ -244,7 +231,6 @@ class HTMLRenderer {
 
       case "link":
       case "image":
-        // TODO
         let newnode : any = {};  // new node for combined attributes
         newnode.pos = node.pos;
         newnode.children = node.children;
@@ -266,7 +252,7 @@ class HTMLRenderer {
           }
         }
         if (node.tag === "image") {
-          newnode.attributes.alt = toText(node);
+          newnode.attributes.alt = getStringContent(node);
           newnode.attributes.src = dest;
         } else {
           newnode.attributes.href = dest;
@@ -276,7 +262,6 @@ class HTMLRenderer {
             newnode.attributes[k] = node.attributes[k];
           }
         }
-        // TODO resolve references and override attributes
         if (node.tag === "image") {
           this.renderTag("img", newnode);
         } else {
@@ -349,6 +334,8 @@ class HTMLRenderer {
   }
 
   render (doc : Doc) : string {
+    this.references = doc.references;
+    this.footnotes = doc.footnotes;
     this.renderChildren(doc);
     return this.buffer.join("");
   }
