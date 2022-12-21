@@ -1015,6 +1015,19 @@ const parse = function(input : string, options : ParseOptions) : Doc {
                        attributes: node.attributes }, node.pos);
         break;
 
+      case "+caption":
+        pushContainer(sp);
+        break;
+
+      case "-caption":
+        node = popContainer(ep);
+        tip = getTip();
+        tip.caption = {tag: "caption",
+                       children: node.children,
+                       attributes: node.attributes,
+                       pos: node.pos};
+        break;
+
       case "+code_block":
         pushContainer(sp);
         context = Context.Verbatim;
@@ -1120,7 +1133,8 @@ const omitFields : Record<string, boolean> =
     pos: true,
     attributes: true,
     references: true,
-    footnotes: true };
+    footnotes: true,
+    caption: true };
 
 const renderNode = function(node : Record<string, any>, buff : string[], indent : number) : void {
   buff.push(" ".repeat(indent));
@@ -1145,6 +1159,9 @@ const renderNode = function(node : Record<string, any>, buff : string[], indent 
     }
   }
   buff.push("\n");
+  if (node.caption) {
+    renderNode(node.caption, buff, indent + 2);
+  }
   if (node.children) {
     node.children.forEach((child : any) => {
       renderNode(child, buff, indent + 2);
