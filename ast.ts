@@ -474,6 +474,18 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         }
       }
   };
+  const getUniqueIdentifier = function(s : string) : string {
+    let base = s.trim().replace(/[\W\s]+/g,"-")
+    let i = 0;
+    let ident = base;
+    // generate unique id
+    while (identifiers[ident]) {
+      i = i + 1;
+      ident = base + "-" + i;
+    }
+    identifiers[ident] = true;
+    return ident;
+  }
   const pushContainer = function(startpos ?: SourceLoc) {
       let container : Container = {children: [],
                                    data: {}};
@@ -933,6 +945,13 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-heading":
         node = popContainer(ep);
+        if (!node.attributes) {
+          node.attributes = {};
+        }
+        if (!node.attributes.id) {
+          // generate auto identifier
+          node.attributes.id = getUniqueIdentifier(getStringContent(node));
+        }
         addChildToTip({tag: "heading",
                        level: node.data.level,
                        children: node.children,
