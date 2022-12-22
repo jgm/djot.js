@@ -1,7 +1,7 @@
 const path = require('path');
 
 module.exports = {
-  mode: 'production',
+  mode: 'development',
   entry: './index.ts',
   module: {
     rules: [
@@ -18,5 +18,10 @@ module.exports = {
   output: {
     filename: 'bundle.js',
     path: path.resolve(__dirname, 'dist'),
+    globalObject: 'this',
+    library: {
+      name: 'djot',
+      type: 'umd'
+    }
   },
 };
