@@ -10,7 +10,7 @@
     "skipLibCheck": true,
     "outDir": "dist"
   },
-  "include": [
+  "files": [
     "attributes.ts",
     "find.ts",
     "inline.ts",
