@@ -1,4 +1,5 @@
-import { Doc, Reference, Footnote, HasChildren, Node, getStringContent }
+import { Doc, Reference, Footnote, HasChildren, HasAttributes,
+         Node, getStringContent }
   from "./ast";
 const emoji = require("node-emoji");
 
@@ -52,7 +53,7 @@ class HTMLRenderer {
     this.buffer.push(s);
   }
 
-  renderAttributes (node : any, extraClasses ?: string[]) : void {
+  renderAttributes (node : HasAttributes, extraClasses ?: string[]) : void {
     if (node.attributes) {
       for (let k in node.attributes) {
         let v = node.attributes[k];
@@ -73,11 +74,13 @@ class HTMLRenderer {
     }
   }
 
-  renderTag (tag : string, node : any, extraClasses ?: string[] )
+  renderTag (tag : string, node : Node, extraClasses ?: string[] )
       : void {
     this.literal("<");
     this.literal(tag);
-    this.renderAttributes(node, extraClasses);
+    if ("attributes" in node) {
+      this.renderAttributes(node, extraClasses);
+    }
     this.literal(">");
   }
 
@@ -87,10 +90,12 @@ class HTMLRenderer {
     this.literal(">");
   }
 
-  inTags (tag : string, node : any, newlines : number) : void {
+  inTags (tag : string, node : Node, newlines : number) : void {
     this.renderTag(tag, node);
     if (newlines >= 2) { this.literal("\n"); }
-    this.renderChildren(node);
+    if ("children" in node) {
+      this.renderChildren(node);
+    }
     this.renderCloseTag(tag);
     if (newlines >= 1) { this.literal("\n"); }
   }
@@ -101,7 +106,7 @@ class HTMLRenderer {
     });
   }
 
-  renderNode (node : any) : void {
+  renderNode (node : Node) : void {
     switch(node.tag) {
       case "para":
         this.inTags("p", node, 1);
@@ -266,7 +271,7 @@ class HTMLRenderer {
         newnode.pos = node.pos;
         newnode.children = node.children;
         newnode.attributes = {};
-        let dest : string = node.destination;
+        let dest : string = node.destination || "";
         if (node.reference) {
           const ref = this.references[node.reference];
           if (ref) {
@@ -278,7 +283,7 @@ class HTMLRenderer {
             }
           } else {
             this.warn(`Reference ${JSON.stringify(node.reference)} not found`,
-                       node.pos && node.pos.end.offset);
+                       (node.pos && node.pos.end.offset) || 0);
             dest = "";
           }
         }
