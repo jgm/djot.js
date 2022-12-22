@@ -296,19 +296,21 @@ interface Container {
   pos?: Pos;
 }
 
-const getStringContent = function(node : any) : string {
+const getStringContent = function(node : (Node | Container)) : string {
   let buffer : string[] = [];
   addStringContent(node, buffer);
   return buffer.join("");
 }
 
-const addStringContent = function(node : any, buffer : string[]) : void {
+const addStringContent = function(node : (Node | Container),
+                                  buffer : string[]) : void {
   if ("text" in node) {
     buffer.push(node.text);
-  } else if (node.tag === "softbreak" || node.tag === "hardbreak") {
+  } else if ("tag" in node &&
+             (node.tag === "softbreak" || node.tag === "hardbreak")) {
     buffer.push("\n");
   } else if ("children" in node) {
-    node.children.forEach((child : any) => {
+    node.children.forEach((child : Node) => {
       addStringContent(child, buffer);
     });
   }
@@ -500,7 +502,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
   }
   // points to last child of top container, or top container if
   // it doesn't have children
-  const getTip = function() : any {
+  const getTip = function() : (Container | Node) {
       let top = topContainer();
       if (top.children.length > 0) {
         return top.children[top.children.length - 1];
@@ -864,7 +866,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
           top.data.format = format;
         } else {
           tip = top.children[top.children.length - 1];
-          if (tip && tip.tag === "verbatim") {
+          if (tip && "tag" in tip && tip.tag === "verbatim") {
             tip.tag = "raw_inline";
             tip.format = format;
           } else {
@@ -971,7 +973,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
           // set table aligns, so they can be propagated to future rows
           topContainer().data.aligns = node.data.aligns;
           tip = getTip();
-          if (tip && tip.tag === "row") { // previous row of table
+          if (tip && "tag" in tip && tip.tag === "row") { // prev row of table
             tip.head = true;
             for (let i=0; i < tip.children.length; i++) {
               tip.children[i].head = true;
@@ -1094,7 +1096,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         break;
 
       case "thematic_break":
-        let tb : Node = { tag: "thematic_break" };
+        let tb : ThematicBreak = { tag: "thematic_break" };
         addBlockAttributes(tb);
         addChildToTip(tb, pos);
         break;
@@ -1175,7 +1177,7 @@ const renderNode = function(node : Record<string, any>, buff : string[], indent 
   }
   for (let k in node) {
     if (!omitFields[k]) {
-      let v : any = node[k];
+      let v : Node = node[k];
       buff.push(` ${k}=${JSON.stringify(v)}`);
     }
   }
@@ -1186,7 +1188,7 @@ const renderNode = function(node : Record<string, any>, buff : string[], indent 
   }
   buff.push("\n");
   if (node.children) {
-    node.children.forEach((child : any) => {
+    node.children.forEach((child : Node) => {
       renderNode(child, buff, indent + 2);
     });
   }
