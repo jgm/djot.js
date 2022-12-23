@@ -87,15 +87,13 @@ try {
   if (events) {
     let start = true;
     for (const event of new EventParser(input, warn)) {
-      let pref;
       if (start) {
-        pref = "[";
+        process.stdout.write("[");
         start = false;
       } else {
-        pref = ",";
+        process.stdout.write(",\n ");
       }
-      process.stdout.write(pref + '["' + event.annot + '",' + event.startpos +
-                             ',' + event.endpos + ']\n');
+      process.stdout.write(`{ startpos: ${event.startpos}, endpos: ${event.endpos}, annot: "${event.annot}" }`);
     }
     console.log("]");
   } else {
