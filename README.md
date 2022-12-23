@@ -47,7 +47,7 @@ Road map:
   - [X] captions
   - [X] footnote
   - [X] auto identifiers on headings/sections
-  - [ ] sections
+  - [X] sections
   - [ ] list items/lists
   - [ ] definition lists
   - [ ] task lists

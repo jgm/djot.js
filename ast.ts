@@ -33,6 +33,7 @@ interface HasBlockChildren {
 type Block = Para
            | Heading
            | ThematicBreak
+           | Section
            | Div
            | CodeBlock
            | RawBlock
@@ -51,6 +52,10 @@ interface Heading extends HasAttributes, HasInlineChildren {
 
 interface ThematicBreak extends HasAttributes {
   tag: "thematic_break";
+}
+
+interface Section extends HasAttributes, HasBlockChildren {
+  tag: "section";
 }
 
 interface Div extends HasAttributes, HasBlockChildren {
@@ -505,7 +510,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
       }
       return node;
   };
-  const topContainer = function() {
+  const topContainer = function() : Container {
       if (containers.length > 0) {
         return containers[containers.length - 1];
       } else {
@@ -611,7 +616,6 @@ const parse = function(input : string, options : ParseOptions) : Doc {
                               destination: node.data.value || "",
                               attributes: node.attributes };
         if (node.data.key) {
-          console.log(node.data.key);
           references[node.data.key] = r;
         }
         break;
@@ -952,6 +956,28 @@ const parse = function(input : string, options : ParseOptions) : Doc {
           // generate auto identifier
           node.attributes.id = getUniqueIdentifier(getStringContent(node));
         }
+        // add section structure
+        let pnode = topContainer();
+        if (pnode.data.headinglevel !== undefined) { // doc or section
+          while (pnode && pnode.data.headinglevel !== undefined &&
+                 pnode.data.headinglevel >= node.data.level) {
+            // close sections til we get to the right level
+            pnode = popContainer(ep);
+            addChildToTip({tag: "section",
+                           children: pnode.children,
+                           attributes: pnode.attributes }, pnode.pos);
+            pnode = topContainer();
+          }
+          // now we know that pnode.data.headinglevel is either
+          // undefined or < node.data.level
+          pushContainer(sp);
+          topContainer().data.headinglevel = node.data.level;
+          // move id attribute from heading to section
+          if (node.attributes && node.attributes.id) {
+            topContainer().attributes = {id: node.attributes.id};
+            delete node.attributes;
+          }
+        }
         addChildToTip({tag: "heading",
                        level: node.data.level,
                        children: node.children,
@@ -1150,7 +1176,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
   let containers : Container[] =
          [{ children: [],
-            data: {},
+            data: { headinglevel: 0 },
             pos: { start: {line: 0, col: 0, offset: 0},
                    end:   {line: 0, col: 0, offset: 0}
                  }}];
@@ -1159,6 +1185,21 @@ const parse = function(input : string, options : ParseOptions) : Doc {
   for (const event of parser) {
     handleEvent(containers, event);
     lastpos = event.endpos;
+  }
+  let lastloc;
+  if (options.sourcePositions) {
+    lastloc = getSourceLoc(lastpos);
+  }
+
+  // close any open sections:
+  let pnode = topContainer();
+  while (pnode && pnode.data.headinglevel > 0) {
+    // close sections til we get to the doc level
+    popContainer(lastloc);
+    addChildToTip({tag: "section",
+                   children: pnode.children,
+                   attributes: pnode.attributes }, pnode.pos);
+    pnode = topContainer();
   }
 
   let doc : Doc =
@@ -1170,7 +1211,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
           };
   if (options.sourcePositions) {
     doc.pos = {start: {line: 0, col: 0, offset: 0},
-               end: getSourceLoc(lastpos) };
+               end: lastloc || {line: 0, col: 0, offset: 0}};
   }
   return doc;
 }

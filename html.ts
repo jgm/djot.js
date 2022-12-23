@@ -120,6 +120,10 @@ class HTMLRenderer {
         this.inTags("div", node, 2);
         break;
 
+      case "section":
+        this.inTags("section", node, 2);
+        break;
+
       case "heading":
         this.inTags(`h${node.level}`, node, 1);
         break;
