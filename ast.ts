@@ -1202,7 +1202,7 @@ const renderNode = function(node : Record<string, any>, buff : string[], indent 
   }
   if (node.attributes) {
     for (let k in node.attributes) {
-      buff.push(` ${k}=${JSON.stringify(node[k])}`);
+      buff.push(` ${k}=${JSON.stringify(node.attributes[k])}`);
     }
   }
   buff.push("\n");
