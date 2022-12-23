@@ -66,12 +66,13 @@ enum ContentType {
   Block,
   Text,
   Cells,
-  Attributes
+  Attributes,
+  ListItem
 }
 
 type BlockSpec =
   { name : string,
-    isPara : boolean,
+    type : ContentType,
     content : ContentType,
     continue : (container : Container) => boolean,
     open : (spec : BlockSpec) => boolean,
@@ -79,6 +80,7 @@ type BlockSpec =
 
 class Container {
   name : string;
+  type : ContentType;
   content : ContentType;
   continue : (container : Container) => boolean;
   close: (container : Container) => void;
@@ -89,6 +91,7 @@ class Container {
 
   constructor(spec : BlockSpec, extra : {[key : string] : any}) {
     this.name = spec.name;
+    this.type = spec.type;
     this.content = spec.content;
     this.continue = spec.continue;
     this.close = spec.close;
@@ -114,6 +117,7 @@ class EventParser {
   finishedLine : boolean;
   returned : number;
   specs : BlockSpec[];
+  paraSpec : BlockSpec;
 
   constructor(subject : string, warn : (message : string, pos : number) => void) {
    // Ensure the subject ends with a newline character
@@ -133,9 +137,9 @@ class EventParser {
    this.lastMatchedContainer = 0;
    this.finishedLine = false;
    this.returned = 0;
-   this.specs = [
+   this.paraSpec =
      { name: "para",
-       isPara: true,
+       type: ContentType.Block,
        content: ContentType.Inline,
        continue: (container) => {
          if (this.find(pattWhitespace) === null) {
@@ -156,10 +160,11 @@ class EventParser {
          this.addMatch(ep, ep, "-para");
          this.containers.pop();
        }
-     },
+     };
 
+   this.specs = [
     { name: "blockquote",
-      isPara: false,
+      type: ContentType.Block,
       content: ContentType.Block,
       continue: (container) => {
         if (this.find(pattBlockquotePrefix) !== null) {
@@ -186,7 +191,7 @@ class EventParser {
     },
 
     { name: "heading",
-      isPara: false,
+      type: ContentType.Block,
       content: ContentType.Inline,
       continue: (container) => {
         const m = this.find(pattBangs);
@@ -220,7 +225,7 @@ class EventParser {
     },
 
     { name: "caption",
-      isPara: false,
+      type: ContentType.Block,
       content: ContentType.Inline,
       continue: (container) => {
         return (find(this.subject, pattWhitespace, this.pos) === null);
@@ -245,7 +250,7 @@ class EventParser {
 
     // should go before reference definitions
     { name: "footnote",
-      isPara: false,
+      type: ContentType.Block,
       content: ContentType.Block,
       continue: (container) => {
         if (this.indent > (container.extra.indent || 0) ||
@@ -279,7 +284,7 @@ class EventParser {
     },
 
     { name: "reference_definition",
-      isPara: false,
+      type: ContentType.Block,
       content: ContentType.None,
       continue: (container) => {
         if (container.extra.indent >= this.indent) {
@@ -324,7 +329,7 @@ class EventParser {
 
     // should go before list_item_spec
     { name: "thematic_break",
-      isPara: false,
+      type: ContentType.Block,
       content: ContentType.None,
       continue: (container) => {
         return false;
@@ -345,8 +350,74 @@ class EventParser {
       }
     },
 
+    { name: "list",
+      type: ContentType.Block,
+      content: ContentType.ListItem,
+      continue: (container) => {
+        // TODO remove code duplication btw list and list_item
+        if (this.indent > container.extra.indent ||
+                this.pos === this.starteol) {
+          return true;
+        } else { // match a list item of the correct type
+          let m = this.find(pattListMarker);
+          if (m === null) {
+            return false;
+          }
+          let marker = this.subject.substring(m.startpos, m.endpos);
+          let styles = getListStyles(marker);
+          let newstyles : string[] = [];
+          container.extra.styles.forEach((style : string) => {
+            if (styles.includes(style)) {
+              newstyles.push(style);
+            }
+          });
+          if (newstyles.length > 0) {
+            // narrow styles
+            container.extra.styles = newstyles;
+            return true;
+          }
+        }
+        return false;
+      },
+      open: (spec) => {
+        let m = this.find(pattListMarker);
+        if (m === null) {
+          return false;
+        }
+        let sp = m.startpos;
+        let ep = m.endpos;
+        let marker = this.subject.substring(sp, ep);
+        let checkbox = null;
+
+        let mtask = this.find(pattTaskListMarker);
+        if (mtask !== null) {
+          marker = this.subject.substring(mtask.startpos, mtask.startpos + 5);
+          checkbox = this.subject.substring(mtask.startpos + 3, mtask.startpos + 6);
+        }
+
+        // some items have ambiguous style
+        let styles = getListStyles(marker);
+        if (styles.length === 0) {
+          return false;
+        }
+        let data = { styles: styles, indent: this.indent };
+        // adding container will close others
+        this.addContainer(new Container(spec, data));
+        let annot = "+list";
+        styles.forEach(style => {
+          annot = annot + "|" + style ;
+        });
+        this.addMatch(sp, ep - 1, annot);
+        return true;
+      },
+      close: (container) => {
+        this.addMatch(this.pos, this.pos, "-list");
+        this.containers.pop();
+      }
+    },
+
     { name: "list_item",
-      isPara: false,
+      type: ContentType.ListItem,
       content: ContentType.Block,
       continue: (container) => {
         return (this.indent > container.extra.indent ||
@@ -364,8 +435,8 @@ class EventParser {
 
         let mtask = this.find(pattTaskListMarker);
         if (mtask !== null) {
-          marker = this.subject.substr(mtask.startpos, 5);
-          checkbox = this.subject.substr(mtask.startpos + 3, 1);
+          marker = this.subject.substring(mtask.startpos, mtask.startpos + 5);
+          checkbox = this.subject.substring(mtask.startpos + 3, mtask.startpos + 6);
         }
 
         // some items have ambiguous style
@@ -378,7 +449,7 @@ class EventParser {
         this.addContainer(new Container(spec, data));
         let annot = "+list_item";
         styles.forEach(style => {
-          annot = annot + "[" + style + "]";
+          annot = annot + "|" + style;
         });
         this.addMatch(sp, ep - 1, annot);
         this.pos = ep;
@@ -399,8 +470,9 @@ class EventParser {
       }
     },
 
+
     { name: "table",
-      isPara: false,
+      type: ContentType.Block,
       content: ContentType.Cells,
       continue: (container) => {
         let m = this.find(pattTableRow);
@@ -436,7 +508,7 @@ class EventParser {
     },
 
     { name: "attributes",
-      isPara: false,
+      type: ContentType.Block,
       content: ContentType.Attributes,
       open: (spec) => {
         if (this.subject.codePointAt(this.pos) === 123) { // {
@@ -485,10 +557,9 @@ class EventParser {
         // attribute parsing failed; convert to para and continue with that
         this.addMatch(container.extra.startpos,
                       container.extra.startpos, "+para");
-        let paraSpec = this.specs[0];
         let attrContainer = this.containers.pop(); // remove attribute contain
         // add para container
-        let para = this.addContainer(new Container(paraSpec, {}));
+        let para = this.addContainer(new Container(this.paraSpec, {}));
         // reparse the text we couldn't parse as a block attribute:
         if (!para.inlineParser || !attrContainer) {
           throw("Missing inlineParser or attrContainer");
@@ -514,7 +585,7 @@ class EventParser {
     },
 
     { name: "fenced_div",
-      isPara: false,
+      type: ContentType.Block,
       content: ContentType.Block,
       continue: (container) => {
         let tip = this.tip();
@@ -567,7 +638,7 @@ class EventParser {
     },
 
     { name: "code_block",
-      isPara: false,
+      type: ContentType.Block,
       content: ContentType.Text,
       continue: (container) => {
         const m = this.find(
@@ -662,7 +733,7 @@ class EventParser {
     this.closeUnmatchedContainers();
     // close containers that can't contain this one:
     let tip = this.tip();
-    while (tip && tip.content !== ContentType.Block) {
+    while (tip && tip.content !== container.type) {
       tip.close(tip);
       tip = this.tip();
     }
@@ -827,7 +898,6 @@ class EventParser {
   // and annotation.
   [Symbol.iterator]() : EventIterator {
     const specs = this.specs;
-    const paraSpec = specs[0];
     const subjectlen = this.subject.length;
     this.returned = 0;
     const self = this;
@@ -879,25 +949,29 @@ class EventParser {
           self.skipSpace();
           let isBlank = (self.pos === self.starteol);
           let newStarts = false;
-          const lastMatch = self.containers[self.lastMatchedContainer];
+          let lastMatch = self.containers[self.lastMatchedContainer];
           let checkStarts = !isBlank &&
                               (!lastMatch ||
-                                lastMatch.content === ContentType.Block) &&
+                                lastMatch.content === ContentType.Block ||
+                                lastMatch.content === ContentType.ListItem) &&
                               !self.find(pattWord); // optimization
           while (checkStarts) {
             checkStarts = false;
             for (const spec of specs) {
-              if (!spec.isPara) {
+              if ((!lastMatch && spec.type === ContentType.Block) ||
+                    (lastMatch && lastMatch.content === spec.type)) {
                 if (spec.open(spec)) {
                   const tip = self.tip();
                   if (tip) {
                     self.lastMatchedContainer = self.containers.length - 1;
+                    lastMatch = self.containers[self.lastMatchedContainer];
                     if (self.finishedLine) {
                       checkStarts = false;
                     } else {
                       self.skipSpace();
                       newStarts = true;
-                      checkStarts = spec.content === ContentType.Block;
+                      checkStarts = spec.content === ContentType.Block ||
+                                    spec.content === ContentType.ListItem;
                     }
                   } else {
                     throw "No tip after opening container";
@@ -933,7 +1007,7 @@ class EventParser {
                   self.addMatch(self.pos, self.endeol, "blankline");
                 }
               } else {
-                paraSpec.open(paraSpec);
+                self.paraSpec.open(self.paraSpec);
                 tip = self.tip();
                 if (tip) {
                   tip.inlineParser = new InlineParser(self.subject, self.warn);

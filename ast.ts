@@ -81,7 +81,8 @@ interface RawBlock extends HasAttributes {
 interface List extends HasAttributes {
   tag: "list";
   children: ListItem[];
-  // TODO
+  style: string;
+  start?: number;
 }
 
 interface Caption extends HasAttributes {
@@ -565,7 +566,15 @@ const parse = function(input : string, options : ParseOptions) : Doc {
       ep = getSourceLoc(event.endpos);
       pos = {start: sp, end: ep};
     }
-    switch (event.annot) {
+    let annot = event.annot;
+    let suffixes : string[] = [];
+    if (event.annot.includes("|")) {
+      let parts = event.annot.split("|");
+      annot = parts[0];
+      suffixes = parts.slice(1);
+    }
+
+    switch (annot) {
 
       case "str":
         let txt = input.substring(event.startpos, event.endpos + 1);
@@ -995,6 +1004,39 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         }
         addChildToTip({tag: "heading",
                        level: node.data.level,
+                       children: node.children,
+                       attributes: node.attributes }, node.pos);
+        break;
+
+      case "+list":
+        pushContainer(sp);
+        topContainer().data.styles = suffixes;
+        break;
+
+      case "-list":
+        node = popContainer(ep);
+        // take first if ambiguous
+        let listStyle = node.data.styles[0];
+        if (!listStyle) {
+          throw("No style defined for list");
+        }
+        addChildToTip({tag: "list",
+                       style: listStyle,
+                       children: node.children,
+                       attributes: node.attributes }, node.pos);
+        break;
+
+      case "+list_item":
+        // narrow styles
+        if (suffixes.length < topContainer().data.styles.length) {
+          topContainer().data.styles = suffixes;
+        }
+        pushContainer(sp);
+        break;
+
+      case "-list_item":
+        node = popContainer(ep);
+        addChildToTip({tag: "list_item",
                        children: node.children,
                        attributes: node.attributes }, node.pos);
         break;
