@@ -262,6 +262,19 @@ interface ListItem extends HasAttributes, HasBlockChildren {
   // TODO
 }
 
+interface DefinitionListItem extends HasAttributes {
+  tag: "definition_list_item";
+  children: (Term | Definition)[];
+}
+
+interface Term extends HasAttributes, HasInlineChildren {
+  tag: "term";
+}
+
+interface Definition extends HasAttributes, HasBlockChildren {
+  tag: "term";
+}
+
 interface Row extends HasAttributes {
   tag: "row";
   children: Cell[];
@@ -276,7 +289,9 @@ interface Cell extends HasAttributes, HasInlineChildren {
 
 type Alignment = "default" | "left" | "right" | "center";
 
-type Node = Doc | Block | Inline | ListItem | Row | Cell | Caption ;
+type Node = Doc | Block | Inline | ListItem
+                | DefinitionListItem | Term | Definition
+                | Row | Cell | Caption ;
 
 interface Reference extends HasAttributes {
   tag: "reference";
