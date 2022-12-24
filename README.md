@@ -50,14 +50,11 @@ Road map:
   - [X] sections
   - [X] definition lists
   - [X] list items/lists
-  - [ ] list tight/loose
+  - [X] list tight/loose
   - [ ] task lists
   - [ ] unit tests
 - [ ] html renderer
   - [ ] footnotes and note references
-  - [ ] sections
-  - [ ] list items/lists
-  - [ ] definition lists
   - [ ] task lists
 - [ ] filter API
 - [ ] full-featured cli
