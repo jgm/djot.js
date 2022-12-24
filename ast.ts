@@ -82,7 +82,7 @@ interface List extends HasAttributes {
   tag: "list";
   children: ListItem[];
   style: string;
-  start?: number;
+  start: number | null;
 }
 
 interface Caption extends HasAttributes {
@@ -383,7 +383,7 @@ const romanToNumber = function(s : string) : number {
   return total;
 }
 
-const getListStart = function(marker : string, style : string) : number {
+const getListStart = function(marker : string, style : string) : number | null {
   let numtype = style.replace(/[().]/g, "");
   let s = marker.replace(/[().]/g, "");
   switch (numtype) {
@@ -393,7 +393,7 @@ const getListStart = function(marker : string, style : string) : number {
     case "I": return romanToNumber(s);
     case "i": return romanToNumber(s);
   }
-  return 1;
+  return null;
 }
 
   /*  NOTE: this was in addChildToTip
@@ -1020,8 +1020,11 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         if (!listStyle) {
           throw("No style defined for list");
         }
+        console.log(listStyle, node.data.firstMarker);
+        let listStart = getListStart(node.data.firstMarker, listStyle);
         addChildToTip({tag: "list",
                        style: listStyle,
+                       start: listStart,
                        children: node.children,
                        attributes: node.attributes }, node.pos);
         break;
@@ -1030,6 +1033,10 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         // narrow styles
         if (suffixes.length < topContainer().data.styles.length) {
           topContainer().data.styles = suffixes;
+        }
+        if (!topContainer().data.firstMarker) {
+          topContainer().data.firstMarker =
+            input.substring(event.startpos, event.endpos + 1);
         }
         pushContainer(sp);
         break;
