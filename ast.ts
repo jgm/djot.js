@@ -1020,7 +1020,6 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         if (!listStyle) {
           throw("No style defined for list");
         }
-        console.log(listStyle, node.data.firstMarker);
         let listStart = getListStart(node.data.firstMarker, listStyle);
         addChildToTip({tag: "list",
                        style: listStyle,
@@ -1349,6 +1348,7 @@ export {
   HasChildren,
   HasAttributes,
   Doc,
+  List,
   Reference,
   Footnote,
   renderAST,

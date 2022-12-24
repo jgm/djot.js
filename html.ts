@@ -1,5 +1,5 @@
 import { Doc, Reference, Footnote, HasChildren, HasAttributes,
-         Node, getStringContent }
+         Node, List, getStringContent }
   from "./ast";
 const emoji = require("node-emoji");
 
@@ -122,6 +122,35 @@ class HTMLRenderer {
 
       case "section":
         this.inTags("section", node, 2);
+        break;
+
+      case "list_item":
+        this.inTags("li", node, 2);
+        break;
+
+      case "list":
+        if (node.style === "-" || node.style === "*" || node.style === "+") {
+          this.inTags("ul", node, 2);
+        } else {
+          let newattrs : Record<string,string> = {};
+          for (let k in node.attributes) {
+            newattrs[k] = node.attributes[k];
+          }
+          if (typeof node.start === "number" && node.start !== 1) {
+            newattrs.start = node.start.toString();
+          }
+          if (node.style.match(/[aAiI]/)) {
+            newattrs.type = node.style.replace(/[().]/g,"");
+          }
+          let linode : List =
+                       { tag: "list",
+                         children: node.children,
+                         pos: node.pos,
+                         attributes: newattrs,
+                         style: node.style,
+                         start: node.start };
+          this.inTags("ol", linode, 2);
+        }
         break;
 
       case "heading":
