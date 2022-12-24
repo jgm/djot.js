@@ -162,7 +162,8 @@ class HTMLRenderer {
                          pos: node.pos,
                          attributes: newattrs,
                          style: node.style,
-                         start: node.start };
+                         start: node.start,
+                         tight: node.tight };
           this.inTags("ol", linode, 2);
         }
         break;

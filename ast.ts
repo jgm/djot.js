@@ -83,6 +83,7 @@ interface List extends HasAttributes {
   children: ListItem[];
   style: string;
   start?: number;
+  tight: boolean;
 }
 
 interface Caption extends HasAttributes {
@@ -547,6 +548,23 @@ const parse = function(input : string, options : ParseOptions) : Doc {
       suffixes = parts.slice(1);
     }
 
+    if (annot !== "blankline" && annot !== "-list" && annot !== "-list_item"
+         && annot !== "+list") {
+      let ln ;
+      top = topContainer();
+      if (top) {
+        if (top.data && "tight" in top.data) {
+          ln = top;
+        } else if (containers.length >= 2 &&
+                   "tight" in containers[containers.length - 2].data) {
+          ln = containers[containers.length - 2];
+        }
+        if (ln && ln.data.blanklines) {
+          ln.data.tight = false;
+        }
+      }
+    }
+
     switch (annot) {
 
       case "str":
@@ -984,6 +1002,8 @@ const parse = function(input : string, options : ParseOptions) : Doc {
       case "+list":
         pushContainer(sp);
         topContainer().data.styles = suffixes;
+        topContainer().data.blanklines = false;
+        topContainer().data.tight = true;
         break;
 
       case "-list":
@@ -993,11 +1013,13 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         if (!listStyle) {
           throw("No style defined for list");
         }
+        let tight = false; // TODO
         let listStart = getListStart(node.data.firstMarker, listStyle);
         addChildToTip({tag: "list",
                        style: listStyle,
                        children: node.children,
                        start: listStart,
+                       tight: node.data.tight,
                        attributes: node.attributes }, node.pos);
         break;
 
@@ -1223,6 +1245,16 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         break;
 
       case "blankline":
+        let listnode ;
+        if ("tight" in topContainer().data) {
+          listnode = topContainer();
+        } else if (containers.length >= 2 &&
+                   "tight" in containers[containers.length - 2].data) {
+          listnode = containers[containers.length - 2];
+        }
+        if (listnode) {
+          listnode.data.blanklines = true;
+        }
         break;
 
       default:
