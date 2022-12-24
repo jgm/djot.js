@@ -337,6 +337,13 @@ const addStringContent = function(node : (Node | Container),
   }
 }
 
+// in verbatim text, trim one space next to ` at beginning or end:
+const trimVerbatim = function(s : string) : string {
+  return s
+    .replace(/^ ( *)`/, "$1`")
+    .replace(/( *) (`+)$/, "$1$2");
+}
+
 const romanDigits : Record<string, number> = {
   i: 1,
   v: 5,
@@ -376,14 +383,7 @@ const romanToNumber = function(s : string) : number {
   return total;
 }
 
-// in verbatim text, trim one space next to ` at beginning or end:
-const trimVerbatim = function(s : string) : string {
-  return s
-    .replace(/^ ( *)`/, "$1`")
-    .replace(/( *) (`+)$/, "$1$2");
-}
-
-const getListStart = function(marker : string, style : string) : number | null {
+const getListStart = function(marker : string, style : string) : number {
   let numtype = style.replace(/[().]/g, "");
   let s = marker.replace(/[().]/g, "");
   switch (numtype) {
@@ -393,7 +393,7 @@ const getListStart = function(marker : string, style : string) : number | null {
     case "I": return romanToNumber(s);
     case "i": return romanToNumber(s);
   }
-  return null;
+  return 1;
 }
 
   /*  NOTE: this was in addChildToTip
