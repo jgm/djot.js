@@ -82,7 +82,7 @@ interface List extends HasAttributes {
   tag: "list";
   children: ListItem[];
   style: string;
-  start: number | null;
+  start?: number;
 }
 
 interface Caption extends HasAttributes {
@@ -273,7 +273,7 @@ interface Term extends HasAttributes, HasInlineChildren {
 }
 
 interface Definition extends HasAttributes, HasBlockChildren {
-  tag: "term";
+  tag: "definition";
 }
 
 interface Row extends HasAttributes {
@@ -383,7 +383,7 @@ const romanToNumber = function(s : string) : number {
   return total;
 }
 
-const getListStart = function(marker : string, style : string) : number | null {
+const getListStart = function(marker : string, style : string) : number | undefined {
   let numtype = style.replace(/[().]/g, "");
   let s = marker.replace(/[().]/g, "");
   switch (numtype) {
@@ -393,7 +393,7 @@ const getListStart = function(marker : string, style : string) : number | null {
     case "I": return romanToNumber(s);
     case "i": return romanToNumber(s);
   }
-  return null;
+  return undefined;
 }
 
   /*  NOTE: this was in addChildToTip
@@ -1023,8 +1023,8 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         let listStart = getListStart(node.data.firstMarker, listStyle);
         addChildToTip({tag: "list",
                        style: listStyle,
-                       start: listStart,
                        children: node.children,
+                       start: listStart,
                        attributes: node.attributes }, node.pos);
         break;
 
@@ -1038,13 +1038,33 @@ const parse = function(input : string, options : ParseOptions) : Doc {
             input.substring(event.startpos, event.endpos + 1);
         }
         pushContainer(sp);
+        if (suffixes.length === 1 && suffixes[0] === ":") {
+          topContainer().data.definitionList = true;
+        }
         break;
 
       case "-list_item":
         node = popContainer(ep);
-        addChildToTip({tag: "list_item",
-                       children: node.children,
-                       attributes: node.attributes }, node.pos);
+        if (node.data.definitionList) {
+          if (node.children[0] && node.children[0].tag === "para") {
+            let term : Term =
+                       { tag: "term",
+                         children: node.children[0].children };
+            node.children.shift();
+            let definition : Definition =
+                             { tag: "definition",
+                               children: node.children };
+            addChildToTip({tag: "definition_list_item",
+                           children: [term, definition],
+                           attributes: node.attributes }, node.pos);
+          } else {
+            throw("Definition list item has no term.")
+          }
+        } else {
+          addChildToTip({tag: "list_item",
+                         children: node.children,
+                         attributes: node.attributes }, node.pos);
+        }
         break;
 
       case "+blockquote":
@@ -1301,7 +1321,9 @@ const renderNode = function(node : Record<string, any>, buff : string[], indent 
   for (let k in node) {
     if (!omitFields[k]) {
       let v : Node = node[k];
-      buff.push(` ${k}=${JSON.stringify(v)}`);
+      if (v !== undefined && v !== null) {
+        buff.push(` ${k}=${JSON.stringify(v)}`);
+      }
     }
   }
   if (node.attributes) {

@@ -128,9 +128,23 @@ class HTMLRenderer {
         this.inTags("li", node, 2);
         break;
 
+      case "definition_list_item":
+        this.renderChildren(node);
+        break;
+
+      case "definition":
+        this.inTags("dd", node, 2);
+        break;
+
+      case "term":
+        this.inTags("dt", node, 2);
+        break;
+
       case "list":
         if (node.style === "-" || node.style === "*" || node.style === "+") {
           this.inTags("ul", node, 2);
+        } else if (node.style === ":") {
+          this.inTags("dl", node, 2);
         } else {
           let newattrs : Record<string,string> = {};
           for (let k in node.attributes) {
