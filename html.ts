@@ -101,15 +101,26 @@ class HTMLRenderer {
   }
 
   renderChildren (node : HasChildren) : void {
+    let oldtight = this.tight;
+    if ("tight" in node) {
+      this.tight = !!node.tight;
+    }
     node.children.forEach(child => {
       this.renderNode(child);
     });
+    if ("tight" in node) {
+      this.tight = oldtight;
+    }
   }
 
   renderNode (node : Node) : void {
     switch(node.tag) {
       case "para":
-        this.inTags("p", node, 1);
+        if (this.tight) {
+          this.renderChildren(node);
+        } else {
+          this.inTags("p", node, 1);
+        }
         break;
 
       case "blockquote":

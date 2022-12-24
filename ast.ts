@@ -548,8 +548,13 @@ const parse = function(input : string, options : ParseOptions) : Doc {
       suffixes = parts.slice(1);
     }
 
-    if (annot !== "blankline" && annot !== "-list" && annot !== "-list_item"
-         && annot !== "+list") {
+    // The following is for tight/loose determination.
+    // If blanklines have already been seen, and we're
+    // about to process something other than a blankline,
+    // the end of a list or list item, or the start of
+    // a list, then it's a loose list.
+    if (annot !== "blankline" && annot !== "-list" &&
+        annot !== "-list_item" && annot !== "+list") {
       let ln ;
       top = topContainer();
       if (top) {
@@ -1244,6 +1249,8 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         addChildToTip({tag: "em_dash", text: "---"}, pos);
         break;
 
+      // We set the blanklines property of a parent list or
+      // sublist to aid with tight/loose list determination.
       case "blankline":
         let listnode ;
         if ("tight" in topContainer().data) {
