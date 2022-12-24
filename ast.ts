@@ -396,33 +396,6 @@ const getListStart = function(marker : string, style : string) : number | undefi
   return undefined;
 }
 
-  /*  NOTE: this was in addChildToTip
-   *
-  if containers[#containers].t == "list" and
-      not (child.t == "list_item" or child.t == "definition_list_item") then
-    -- close list
-    local oldlist = table.remove(containers)
-    add_child_to_tip(containers, oldlist)
-  end
-  if child.t == "list" then
-    if child.pos then
-      child.pos[2] = child.c[#child.c].pos[2]
-    end
-    -- calculate tightness (TODO not quite right)
-    local tight = true
-    for i=1,#child.c do
-      tight = tight and is_tight(child.c[i].startidx,
-                                   child.c[i].endidx, i == #child.c)
-      child.c[i].startidx = nil
-      child.c[i].endidx = nil
-    end
-    child.tight = tight
-
-    -- resolve style if still ambiguous
-    resolve_style(child)
-  end
-  */
-
 interface ParseOptions {
   sourcePositions?: boolean;
   warn?: (message : string, pos : number) => void;
