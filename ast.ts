@@ -344,8 +344,8 @@ const addStringContent = function(node: (Node | Container),
 // in verbatim text, trim one space next to ` at beginning or end:
 const trimVerbatim = function(s: string): string {
   return s
-    .replace(/^ ( *)`/, "$1`")
-    .replace(/( *) (`+)$/, "$1$2");
+    .replace(/^ `/, "`")
+    .replace(/` $/, "`");
 }
 
 const romanDigits: Record<string, number> = {
