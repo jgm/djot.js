@@ -175,7 +175,10 @@ class HTMLRenderer {
         } else if (node.style === "X") {
           this.inTags("ul", node, 2, { class: "task-list" });
         } else {
-          extraAttr = { type: node.style.replace(/[().]/g, "") };
+          extraAttr = {};
+          if (node.style && node.style !== "1") {
+            extraAttr.type = node.style.replace(/[().]/g, "");
+          }
           if (node.start && node.start !== 1) {
             extraAttr.start = node.start.toString()
           }
@@ -296,7 +299,7 @@ class HTMLRenderer {
 
       case "math":
         this.renderTag("span", node,
-          { class: "math " + node.display ? "display" : "inline" });
+          { class: "math " + (node.display ? "display" : "inline") });
         if (node.display) {
           this.out("\\[");
         } else {
