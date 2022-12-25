@@ -376,6 +376,11 @@ class EventParser {
               return false;
             }
             let marker = this.subject.substring(m.startpos, m.endpos);
+            let mtask = this.find(pattTaskListMarker);
+            if (mtask !== null) {
+              marker = this.subject.substring(mtask.startpos, mtask.startpos + 5);
+            }
+
             let styles = getListStyles(marker);
             let newstyles: string[] = [];
             container.extra.styles.forEach((style: string) => {
