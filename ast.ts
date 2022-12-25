@@ -1104,7 +1104,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
         break;
 
       case "checkbox_unchecked":
-        topContainer().data.checkbox = "checked";
+        topContainer().data.checkbox = "unchecked";
         break;
 
       case "+blockquote":
