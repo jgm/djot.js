@@ -2,9 +2,7 @@ import { parse, ParseOptions } from "./ast";
 import { renderHTML } from "./html";
 const fs = require('fs');
 
-const ignoreWarnings = () => { /* do nothing */ };
-
-const testcases = [
+const testfiles = [
   "attributes.test",
   "blockquote.test",
   "code_blocks.test",
@@ -109,9 +107,18 @@ const parseTests = function(fp: string): Test[] {
   return tests;
 }
 
-describe("experimenting...", () => {
-  it("reads line by line spans.test", () => {
-    console.log(parseTests("test/spans.test"));
+testfiles.forEach((file: string) => {
+
+  let fp = "test/" + file;
+  describe(fp, () => {
+    let tests = parseTests(fp);
+    tests.forEach((test: Test) => {
+      it("line " + test.linenum, () => {
+        let ast = parse(test.input, {});
+        expect(renderHTML(ast)).toStrictEqual(test.output);
+      });
+    });
   });
+
 });
 
