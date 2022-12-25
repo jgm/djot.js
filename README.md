@@ -13,12 +13,11 @@ Road map:
 - [X] inline parsing (inline.ts)
 - [X] block parsing (block.ts)
 - [X] parsing to an ast (ast.ts)
-- [ ] html renderer
-  - [ ] footnotes and note references
+- [X] html renderer (html.ts)
+- [ ] functional tests (from lua implementation)
 - [ ] more unit tests for ast, html
 - [ ] filter API
 - [ ] full-featured cli
-- [ ] functional tests (from lua implementation)
 - [ ] pathological tests
 - [ ] benchmarks
 - [ ] node module
