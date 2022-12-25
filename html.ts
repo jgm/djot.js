@@ -57,23 +57,25 @@ class HTMLRenderer {
 
   renderAttributes(node: HasAttributes, extraAttrs?: Record<string, string>)
     : void {
+    if (extraAttrs) {
+      for (let k in extraAttrs) {
+        if (k === "class") {
+          let v = extraAttrs[k];
+          if (node.attributes && node.attributes.class) {
+            v = v + " " + node.attributes.class;
+          }
+          this.literal(` ${k}="${this.escape(v)}"`);
+        } else {
+          this.literal(` ${k}="${this.escape(extraAttrs[k])}"`);
+        }
+      }
+    }
     if (node.attributes) {
       for (let k in node.attributes) {
         let v = node.attributes[k];
-        if (extraAttrs && extraAttrs[k]) {
-          if (k === "class") {
-            v = v + " " + extraAttrs[k];
-          } else {
-            v = extraAttrs[k];
-          }
-          delete extraAttrs[k];
+        if (!(k === "class" && extraAttrs && extraAttrs.class)) {
+          this.literal(` ${k}="${this.escape(v)}"`);
         }
-        this.literal(` ${k}="${this.escape(v)}"`);
-      }
-    }
-    if (extraAttrs) {
-      for (let k in extraAttrs) {
-        this.literal(` ${k}="${this.escape(extraAttrs[k])}"`);
       }
     }
     if (node.pos) {
