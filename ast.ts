@@ -296,8 +296,7 @@ type Alignment = "default" | "left" | "right" | "center";
 
 type Node = Doc | Block | Inline | ListItem
   | DefinitionListItem | Term | Definition
-  | Row | Cell | Caption
-  | Reference | Footnote;
+  | Row | Cell | Caption;
 
 interface Reference extends HasAttributes {
   tag: "reference";
@@ -1235,7 +1234,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
 
       case "note_label":
         topContainer().data.label =
-          input.substring(event.startpos + 1, event.endpos);
+          input.substring(event.startpos, event.endpos + 1);
         break;
 
       case "+code_block":

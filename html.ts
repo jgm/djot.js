@@ -205,10 +205,6 @@ class HTMLRenderer {
         this.literal("</sup></a>");
         break;
 
-      case "footnote":
-        // TODO
-        break;
-
       case "table":
         this.inTags("table", node, 2);
         break;
@@ -427,6 +423,22 @@ class HTMLRenderer {
     this.references = doc.references;
     this.footnotes = doc.footnotes;
     this.renderChildren(doc);
+    if (this.nextFootnoteIndex > 1) {
+      // render notes
+      let orderedFootnotes = [];
+      for (let k in this.footnotes) {
+        let index = this.footnoteIndex[k];
+        orderedFootnotes[index] = this.footnotes[k];
+      }
+      this.literal(`<section role="doc-endnotes">\n<hr>\n<ol>\n`);
+      for (let i = 1; i < orderedFootnotes.length; i++) {
+        this.literal(`<li id="fn${i}">\n`);
+        // TODO add backlink
+        this.renderChildren(orderedFootnotes[i]);
+        this.literal(`</li>\n`);
+      }
+      this.literal(`</ol>\n</section>\n`);
+    }
     return this.buffer.join("");
   }
 }
