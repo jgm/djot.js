@@ -176,11 +176,11 @@ class HTMLRenderer {
           this.inTags("ul", node, 2, { class: "task-list" });
         } else {
           extraAttr = {};
-          if (node.style && node.style !== "1") {
-            extraAttr.type = node.style.replace(/[().]/g, "");
-          }
           if (node.start && node.start !== 1) {
             extraAttr.start = node.start.toString()
+          }
+          if (node.style && !node.style.match(/1/)) {
+            extraAttr.type = node.style.replace(/[().]/g, "");
           }
           this.inTags("ol", node, 2, extraAttr);
         }
