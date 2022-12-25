@@ -87,7 +87,7 @@ class HTMLRenderer {
     : void {
     this.literal("<");
     this.literal(tag);
-    if ("attributes" in node) {
+    if ("attributes" in node || extraAttrs) {
       this.renderAttributes(node, extraAttrs);
     }
     this.literal(">");
@@ -124,6 +124,7 @@ class HTMLRenderer {
   }
 
   renderNode(node: Node): void {
+    let extraAttr: Record<string, string> = {};
     switch (node.tag) {
       case "para":
         if (this.tight) {
@@ -146,7 +147,8 @@ class HTMLRenderer {
         break;
 
       case "list_item":
-        this.inTags("li", node, 2);
+        extraAttr = {};
+        this.inTags("li", node, 2, extraAttr);
         break;
 
       case "definition_list_item":
@@ -167,27 +169,11 @@ class HTMLRenderer {
         } else if (node.style === ":") {
           this.inTags("dl", node, 2);
         } else {
-          let newattrs: Record<string, string> = {};
-          for (let k in node.attributes) {
-            newattrs[k] = node.attributes[k];
+          extraAttr = { type: node.style.replace(/[().]/g, "") };
+          if (node.start && node.start !== 1) {
+            extraAttr.start = node.start.toString()
           }
-          if (typeof node.start === "number" && node.start !== 1) {
-            newattrs.start = node.start.toString();
-          }
-          if (node.style.match(/[aAiI]/)) {
-            newattrs.type = node.style.replace(/[().]/g, "");
-          }
-          let linode: List =
-          {
-            tag: "list",
-            children: node.children,
-            pos: node.pos,
-            attributes: newattrs,
-            style: node.style,
-            start: node.start,
-            tight: node.tight
-          };
-          this.inTags("ol", linode, 2);
+          this.inTags("ol", node, 2, extraAttr);
         }
         break;
 
@@ -208,22 +194,11 @@ class HTMLRenderer {
         break;
 
       case "cell":
-        let cellnode: any = {};  // new node for combined attributes
-        cellnode.pos = node.pos;
-        cellnode.children = node.children;
-        cellnode.attributes = {};
+        let cellAttr: Record<string, string> = {};
         if (node.align !== "default") {
-          cellnode.attributes.style = `text-align: ${node.align};`;
+          cellAttr.style = `text-align: ${node.align};`;
         }
-        for (let k in node.attributes) {
-          if (cellnode.attributes[k]) { // allow adding to style
-            cellnode.attributes[k] =
-              cellnode.attributes[k] + " " + node.attributes[k];
-          } else {
-            cellnode.attributes[k] = node.attributes[k];
-          }
-        }
-        this.inTags(node.head ? "th" : "td", cellnode, 1);
+        this.inTags(node.head ? "th" : "td", node, 1, cellAttr);
         break;
 
       case "thematic_break":
@@ -338,10 +313,7 @@ class HTMLRenderer {
 
       case "link":
       case "image":
-        let newnode: any = {};  // new node for combined attributes
-        newnode.pos = node.pos;
-        newnode.children = node.children;
-        newnode.attributes = {};
+        extraAttr = {};
         let dest: string = node.destination || "";
         if (node.reference) {
           const ref = this.references[node.reference];
@@ -349,7 +321,10 @@ class HTMLRenderer {
             dest = ref.destination;
             if (ref.attributes) {
               for (let k in ref.attributes) {
-                newnode.attributes[k] = ref.attributes[k];
+                if (node.attributes && !node.attributes[k]) {
+                  // attribus on link take priority over attribs on reference
+                  extraAttr[k] = ref.attributes[k];
+                }
               }
             }
           } else {
@@ -359,48 +334,28 @@ class HTMLRenderer {
           }
         }
         if (node.tag === "image") {
-          newnode.attributes.alt = getStringContent(node);
-          newnode.attributes.src = dest;
+          extraAttr.alt = getStringContent(node);
+          extraAttr.src = dest;
         } else {
-          newnode.attributes.href = dest;
-        }
-        if (node.attributes) {
-          for (let k in node.attributes) {
-            newnode.attributes[k] = node.attributes[k];
-          }
+          extraAttr.href = dest;
         }
         if (node.tag === "image") {
-          this.renderTag("img", newnode);
+          this.renderTag("img", node, extraAttr);
         } else {
-          this.inTags("a", newnode, 0);
+          this.inTags("a", node, 0, extraAttr);
         }
         break;
 
       case "url":
       case "email":
-        let linknode: any = {};  // new node for combined attributes
-        linknode.pos = node.pos;
-        linknode.children = {};
-        linknode.text = node.text;
-        linknode.attributes = {};
+        extraAttr = {};
         if (node.tag === "email") {
-          linknode.attributes.href = "mailto:" + node.text;
+          extraAttr.href = "mailto:" + node.text;
         } else {
-          linknode.attributes.href = node.text;
+          extraAttr.href = node.text;
         }
-        if (node.attributes) {
-          for (let k in node.attributes) {
-            linknode.attributes[k] = node.attributes[k];
-          }
-        }
-        if (linknode.attributes.class) {
-          linknode.attributes.class = node.tag + " " +
-            linknode.attributes.class;
-        } else {
-          linknode.attributes.class = node.tag;
-        }
-        this.renderTag("a", linknode);
-        this.out(linknode.text);
+        this.renderTag("a", node, extraAttr);
+        this.out(node.text);
         this.renderCloseTag("a");
         break;
 
