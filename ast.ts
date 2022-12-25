@@ -1156,7 +1156,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
           // get aligns from table
           node.data.aligns = [];
           for (let i = 0; i < node.children.length; i++) {
-            node.children[i].align = topContainer().data.aligns[i];
+            node.children[i].align = topContainer().data.aligns[i] || "default";
           }
           addChildToTip({
             tag: "row",
@@ -1194,7 +1194,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
           tag: "cell",
           children: node.children,
           head: false, // gets set in "-row"
-          align: "left", // set at "-row"
+          align: "default", // set at "-row"
           attributes: node.attributes
         }, node.pos);
         break;
