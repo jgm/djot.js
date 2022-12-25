@@ -148,6 +148,10 @@ class HTMLRenderer {
 
       case "list_item":
         extraAttr = {};
+        if (node.checkbox) {
+          extraAttr.class =
+            node.checkbox === "checked" ? "checked" : "unchecked";
+        }
         this.inTags("li", node, 2, extraAttr);
         break;
 
@@ -168,6 +172,8 @@ class HTMLRenderer {
           this.inTags("ul", node, 2);
         } else if (node.style === ":") {
           this.inTags("dl", node, 2);
+        } else if (node.style === "X") {
+          this.inTags("ul", node, 2, { class: "task-list" });
         } else {
           extraAttr = { type: node.style.replace(/[().]/g, "") };
           if (node.start && node.start !== 1) {
