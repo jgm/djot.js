@@ -1,9 +1,11 @@
-import { Doc, Reference, Footnote, HasChildren, HasAttributes,
-         Node, List, getStringContent }
+import {
+  Doc, Reference, Footnote, HasChildren, HasAttributes,
+  Node, List, getStringContent
+}
   from "./ast";
 const emoji = require("node-emoji");
 
-const blockTag : Record<string, boolean> = {
+const blockTag: Record<string, boolean> = {
   para: true,
   blockquote: true,
   thematic_break: true,
@@ -14,20 +16,20 @@ const blockTag : Record<string, boolean> = {
   table: true
 }
 
-const defaultWarnings = function(message : string, pos : number) {
+const defaultWarnings = function(message: string, pos: number) {
   process.stderr.write(message + (pos ? " at " + pos : "") + "\n");
 }
 
 class HTMLRenderer {
-  warn : (message : string, pos : number) => void;
-  buffer : string[];
-  tight : boolean;
-  footnoteIndex : Record<string, any>; // TODO
-  nextFootnoteIndex : number; // TODO?
+  warn: (message: string, pos: number) => void;
+  buffer: string[];
+  tight: boolean;
+  footnoteIndex: Record<string, any>; // TODO
+  nextFootnoteIndex: number; // TODO?
   references: Record<string, Reference>;
   footnotes: Record<string, Footnote>;
 
-  constructor(warn ?: (message : string, pos : number) => void) {
+  constructor(warn?: (message: string, pos: number) => void) {
     this.warn = warn || defaultWarnings;
     this.buffer = [];
     this.tight = false;
@@ -37,35 +39,42 @@ class HTMLRenderer {
     this.footnotes = {};
   }
 
-  escape (s : string) : string {
+  escape(s: string): string {
     return s
-         .replace(/&/g, "&amp;")
-         .replace(/</g, "&lt;")
-         .replace(/>/g, "&gt;")
-         .replace(/"/g, "&quot;");
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
   }
 
-  out (s : string) : void {
+  out(s: string): void {
     this.buffer.push(this.escape(s));
   }
 
-  literal (s : string) : void {
+  literal(s: string): void {
     this.buffer.push(s);
   }
 
-  renderAttributes (node : HasAttributes, extraClasses ?: string[]) : void {
+  renderAttributes(node: HasAttributes, extraAttrs?: Record<string, string>)
+    : void {
     if (node.attributes) {
       for (let k in node.attributes) {
         let v = node.attributes[k];
-        if (k === "class" && extraClasses) {
-          v = extraClasses.join(" ") + " " + v;
-          extraClasses = undefined;
+        if (extraAttrs && extraAttrs[k]) {
+          if (k === "class") {
+            v = v + " " + extraAttrs[k];
+          } else {
+            v = extraAttrs[k];
+          }
+          delete extraAttrs[k];
         }
         this.literal(` ${k}="${this.escape(v)}"`);
       }
     }
-    if (extraClasses) {
-      this.literal(` class="${extraClasses.join(' ')}"`);
+    if (extraAttrs) {
+      for (let k in extraAttrs) {
+        this.literal(` ${k}="${this.escape(extraAttrs[k])}"`);
+      }
     }
     if (node.pos) {
       let sp = node.pos.start;
@@ -74,24 +83,25 @@ class HTMLRenderer {
     }
   }
 
-  renderTag (tag : string, node : Node, extraClasses ?: string[] )
-      : void {
+  renderTag(tag: string, node: Node, extraAttrs?: Record<string, string>)
+    : void {
     this.literal("<");
     this.literal(tag);
     if ("attributes" in node) {
-      this.renderAttributes(node, extraClasses);
+      this.renderAttributes(node, extraAttrs);
     }
     this.literal(">");
   }
 
-  renderCloseTag (tag : string) : void {
+  renderCloseTag(tag: string): void {
     this.literal("</");
     this.literal(tag);
     this.literal(">");
   }
 
-  inTags (tag : string, node : Node, newlines : number) : void {
-    this.renderTag(tag, node);
+  inTags(tag: string, node: Node, newlines: number,
+    extraAttrs?: Record<string, string>): void {
+    this.renderTag(tag, node, extraAttrs);
     if (newlines >= 2) { this.literal("\n"); }
     if ("children" in node) {
       this.renderChildren(node);
@@ -100,7 +110,7 @@ class HTMLRenderer {
     if (newlines >= 1) { this.literal("\n"); }
   }
 
-  renderChildren (node : HasChildren) : void {
+  renderChildren(node: HasChildren): void {
     let oldtight = this.tight;
     if ("tight" in node) {
       this.tight = !!node.tight;
@@ -113,8 +123,8 @@ class HTMLRenderer {
     }
   }
 
-  renderNode (node : Node) : void {
-    switch(node.tag) {
+  renderNode(node: Node): void {
+    switch (node.tag) {
       case "para":
         if (this.tight) {
           this.renderChildren(node);
@@ -157,7 +167,7 @@ class HTMLRenderer {
         } else if (node.style === ":") {
           this.inTags("dl", node, 2);
         } else {
-          let newattrs : Record<string,string> = {};
+          let newattrs: Record<string, string> = {};
           for (let k in node.attributes) {
             newattrs[k] = node.attributes[k];
           }
@@ -165,16 +175,18 @@ class HTMLRenderer {
             newattrs.start = node.start.toString();
           }
           if (node.style.match(/[aAiI]/)) {
-            newattrs.type = node.style.replace(/[().]/g,"");
+            newattrs.type = node.style.replace(/[().]/g, "");
           }
-          let linode : List =
-                       { tag: "list",
-                         children: node.children,
-                         pos: node.pos,
-                         attributes: newattrs,
-                         style: node.style,
-                         start: node.start,
-                         tight: node.tight };
+          let linode: List =
+          {
+            tag: "list",
+            children: node.children,
+            pos: node.pos,
+            attributes: newattrs,
+            style: node.style,
+            start: node.start,
+            tight: node.tight
+          };
           this.inTags("ol", linode, 2);
         }
         break;
@@ -196,7 +208,7 @@ class HTMLRenderer {
         break;
 
       case "cell":
-        let cellnode : any = {};  // new node for combined attributes
+        let cellnode: any = {};  // new node for combined attributes
         cellnode.pos = node.pos;
         cellnode.children = node.children;
         cellnode.attributes = {};
@@ -285,7 +297,7 @@ class HTMLRenderer {
 
       case "math":
         this.renderTag("span", node,
-                       ["math", node.display ? "display" : "inline"]);
+          { class: "math " + node.display ? "display" : "inline" });
         if (node.display) {
           this.out("\\[");
         } else {
@@ -326,11 +338,11 @@ class HTMLRenderer {
 
       case "link":
       case "image":
-        let newnode : any = {};  // new node for combined attributes
+        let newnode: any = {};  // new node for combined attributes
         newnode.pos = node.pos;
         newnode.children = node.children;
         newnode.attributes = {};
-        let dest : string = node.destination || "";
+        let dest: string = node.destination || "";
         if (node.reference) {
           const ref = this.references[node.reference];
           if (ref) {
@@ -342,7 +354,7 @@ class HTMLRenderer {
             }
           } else {
             this.warn(`Reference ${JSON.stringify(node.reference)} not found`,
-                       (node.pos && node.pos.end.offset) || 0);
+              (node.pos && node.pos.end.offset) || 0);
             dest = "";
           }
         }
@@ -366,7 +378,7 @@ class HTMLRenderer {
 
       case "url":
       case "email":
-        let linknode : any = {};  // new node for combined attributes
+        let linknode: any = {};  // new node for combined attributes
         linknode.pos = node.pos;
         linknode.children = {};
         linknode.text = node.text;
@@ -383,7 +395,7 @@ class HTMLRenderer {
         }
         if (linknode.attributes.class) {
           linknode.attributes.class = node.tag + " " +
-                                        linknode.attributes.class;
+            linknode.attributes.class;
         } else {
           linknode.attributes.class = node.tag;
         }
@@ -428,7 +440,7 @@ class HTMLRenderer {
     }
   }
 
-  render (doc : Doc) : string {
+  render(doc: Doc): string {
     this.references = doc.references;
     this.footnotes = doc.footnotes;
     this.renderChildren(doc);
@@ -436,7 +448,7 @@ class HTMLRenderer {
   }
 }
 
-const renderHTML = function(ast : Doc) : string {
+const renderHTML = function(ast: Doc): string {
   let renderer = new HTMLRenderer();
   return renderer.render(ast);
 }

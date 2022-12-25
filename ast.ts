@@ -31,15 +31,15 @@ interface HasBlockChildren {
 }
 
 type Block = Para
-           | Heading
-           | ThematicBreak
-           | Section
-           | Div
-           | CodeBlock
-           | RawBlock
-           | BlockQuote
-           | List
-           | Table ;
+  | Heading
+  | ThematicBreak
+  | Section
+  | Div
+  | CodeBlock
+  | RawBlock
+  | BlockQuote
+  | List
+  | Table;
 
 interface Para extends HasAttributes, HasInlineChildren {
   tag: "para";
@@ -82,8 +82,8 @@ interface List extends HasAttributes {
   tag: "list";
   children: ListItem[];
   style: string;
-  start?: number;
   tight: boolean;
+  start?: number;
 }
 
 interface Caption extends HasAttributes {
@@ -99,34 +99,34 @@ interface Table extends HasAttributes {
 }
 
 type Inline = Str
-            | SoftBreak
-            | HardBreak
-            | Nbsp
-            | Emoji
-            | Verbatim
-            | RawInline
-            | Math
-            | Url
-            | Email
-            | FootnoteReference
-            | RightSingleQuote
-            | LeftDoubleQuote
-            | Ellipses
-            | EmDash
-            | EnDash
-            | Emph
-            | Strong
-            | Link
-            | Image
-            | Span
-            | Mark
-            | Superscript
-            | Subscript
-            | Insert
-            | Delete
-            | DoubleQuoted
-            | SingleQuoted
-            ;
+  | SoftBreak
+  | HardBreak
+  | Nbsp
+  | Emoji
+  | Verbatim
+  | RawInline
+  | Math
+  | Url
+  | Email
+  | FootnoteReference
+  | RightSingleQuote
+  | LeftDoubleQuote
+  | Ellipses
+  | EmDash
+  | EnDash
+  | Emph
+  | Strong
+  | Link
+  | Image
+  | Span
+  | Mark
+  | Superscript
+  | Subscript
+  | Insert
+  | Delete
+  | DoubleQuoted
+  | SingleQuoted
+  ;
 
 interface Str extends HasAttributes {
   tag: "str";
@@ -259,8 +259,11 @@ interface SingleQuoted extends HasAttributes, HasInlineChildren {
   tag: "single_quoted";
 }
 
+type CheckboxStatus = "checked" | "unchecked";
+
 interface ListItem extends HasAttributes, HasBlockChildren {
   tag: "list_item";
+  checkbox?: CheckboxStatus;
   // TODO
 }
 
@@ -292,8 +295,8 @@ interface Cell extends HasAttributes, HasInlineChildren {
 type Alignment = "default" | "left" | "right" | "center";
 
 type Node = Doc | Block | Inline | ListItem
-                | DefinitionListItem | Term | Definition
-                | Row | Cell | Caption ;
+  | DefinitionListItem | Term | Definition
+  | Row | Cell | Caption;
 
 interface Reference extends HasAttributes {
   tag: "reference";
@@ -318,34 +321,34 @@ interface Container {
   pos?: Pos;
 }
 
-const getStringContent = function(node : (Node | Container)) : string {
-  let buffer : string[] = [];
+const getStringContent = function(node: (Node | Container)): string {
+  let buffer: string[] = [];
   addStringContent(node, buffer);
   return buffer.join("");
 }
 
-const addStringContent = function(node : (Node | Container),
-                                  buffer : string[]) : void {
+const addStringContent = function(node: (Node | Container),
+  buffer: string[]): void {
   if ("text" in node) {
     buffer.push(node.text);
   } else if ("tag" in node &&
-             (node.tag === "softbreak" || node.tag === "hardbreak")) {
+    (node.tag === "softbreak" || node.tag === "hardbreak")) {
     buffer.push("\n");
   } else if ("children" in node) {
-    node.children.forEach((child : Node) => {
+    node.children.forEach((child: Node) => {
       addStringContent(child, buffer);
     });
   }
 }
 
 // in verbatim text, trim one space next to ` at beginning or end:
-const trimVerbatim = function(s : string) : string {
+const trimVerbatim = function(s: string): string {
   return s
     .replace(/^ ( *)`/, "$1`")
     .replace(/( *) (`+)$/, "$1$2");
 }
 
-const romanDigits : Record<string, number> = {
+const romanDigits: Record<string, number> = {
   i: 1,
   v: 5,
   x: 10,
@@ -362,7 +365,7 @@ const romanDigits : Record<string, number> = {
   M: 1000
 };
 
-const romanToNumber = function(s : string) : number {
+const romanToNumber = function(s: string): number {
   // go backwards through the digits
   let total = 0;
   let prevdigit = 0;
@@ -371,7 +374,7 @@ const romanToNumber = function(s : string) : number {
     let c = s.charAt(i);
     let n = romanDigits[c];
     if (!n) {
-      throw("Encountered bad character in roman numeral " + s);
+      throw ("Encountered bad character in roman numeral " + s);
     }
     if (n < prevdigit) { // e.g. ix
       total = total - n;
@@ -384,11 +387,11 @@ const romanToNumber = function(s : string) : number {
   return total;
 }
 
-const getListStart = function(marker : string, style : string) : number | undefined {
+const getListStart = function(marker: string, style: string): number | undefined {
   let numtype = style.replace(/[().]/g, "");
   let s = marker.replace(/[().]/g, "");
   switch (numtype) {
-    case "1": return parseInt(s,10);
+    case "1": return parseInt(s, 10);
     case "A": return ((s.codePointAt(0) || 65) - 65 + 1); // 65 = "A"
     case "a": return ((s.codePointAt(0) || 97) - 97 + 1); // 97 = "a"
     case "I": return romanToNumber(s);
@@ -399,7 +402,7 @@ const getListStart = function(marker : string, style : string) : number | undefi
 
 interface ParseOptions {
   sourcePositions?: boolean;
-  warn?: (message : string, pos : number) => void;
+  warn?: (message: string, pos: number) => void;
 }
 
 // Parsing ocntext:
@@ -409,12 +412,12 @@ enum Context {
   Literal = 2    // gather str, softbreak, hardbreak in accumulatedText
 }
 
-const parse = function(input : string, options : ParseOptions) : Doc {
+const parse = function(input: string, options: ParseOptions): Doc {
 
-  let linestarts : number[] = [0];
+  let linestarts: number[] = [0];
 
   if (options.sourcePositions) { // construct map of newline positions
-    for(var i=0; i < input.length; i++) {
+    for (var i = 0; i < input.length; i++) {
       if (input[i] === "\n") {
         linestarts.push(i);
       }
@@ -422,7 +425,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
   }
 
   // use binary search on linestarts to find line number and col
-  const getSourceLoc = function(pos : number) :  SourceLoc {
+  const getSourceLoc = function(pos: number): SourceLoc {
     let numlines = linestarts.length;
     let bottom = 0;
     let top = numlines - 1;
@@ -450,27 +453,27 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
 
   let context = Context.Normal;
-  let accumulatedText : string[] = [];
-  const references : Record<string, Reference> = {};
-  const footnotes : Record<string, Footnote> = {};
-  const identifiers : Record<string, boolean> = {}; // identifiers used
-  const blockAttributes : Attributes = {}; // accumulated block attributes
-  const defaultWarnings = function(message : string, pos : number) {
+  let accumulatedText: string[] = [];
+  const references: Record<string, Reference> = {};
+  const footnotes: Record<string, Footnote> = {};
+  const identifiers: Record<string, boolean> = {}; // identifiers used
+  const blockAttributes: Attributes = {}; // accumulated block attributes
+  const defaultWarnings = function(message: string, pos: number) {
     process.stderr.write(message + (pos ? " at " + pos : "") + "\n");
   }
   const warn = options.warn || defaultWarnings;
   const parser = new EventParser(input, warn);
-  const addBlockAttributes = function(container : HasAttributes) {
-      if (Object.keys(blockAttributes).length > 0) {
-        container.attributes = container.attributes || {};
-        for (const k in blockAttributes) {
-          container.attributes[k] = blockAttributes[k];
-          delete blockAttributes[k];
-        }
+  const addBlockAttributes = function(container: HasAttributes) {
+    if (Object.keys(blockAttributes).length > 0) {
+      container.attributes = container.attributes || {};
+      for (const k in blockAttributes) {
+        container.attributes[k] = blockAttributes[k];
+        delete blockAttributes[k];
       }
+    }
   };
-  const getUniqueIdentifier = function(s : string) : string {
-    let base = s.trim().replace(/[\W\s]+/g,"-")
+  const getUniqueIdentifier = function(s: string): string {
+    let base = s.trim().replace(/[\W\s]+/g, "-")
     let i = 0;
     let ident = base;
     // generate unique id
@@ -481,44 +484,46 @@ const parse = function(input : string, options : ParseOptions) : Doc {
     identifiers[ident] = true;
     return ident;
   }
-  const pushContainer = function(startpos ?: SourceLoc) {
-      let container : Container = {children: [],
-                                   data: {}};
-      if (startpos) {
-        container.pos = {start: startpos, end: startpos};
-      }
-      addBlockAttributes(container);
-      containers.push(container);
+  const pushContainer = function(startpos?: SourceLoc) {
+    let container: Container = {
+      children: [],
+      data: {}
+    };
+    if (startpos) {
+      container.pos = { start: startpos, end: startpos };
+    }
+    addBlockAttributes(container);
+    containers.push(container);
   };
-  const popContainer = function(endpos ?: SourceLoc) {
-      let node = containers.pop();
-      if (!node) {
-        throw("Container stack is empty (popContainer)");
-      }
-      if (endpos && node.pos) {
-        node.pos.end = endpos;
-      }
-      return node;
+  const popContainer = function(endpos?: SourceLoc) {
+    let node = containers.pop();
+    if (!node) {
+      throw ("Container stack is empty (popContainer)");
+    }
+    if (endpos && node.pos) {
+      node.pos.end = endpos;
+    }
+    return node;
   };
-  const topContainer = function() : Container {
-      if (containers.length > 0) {
-        return containers[containers.length - 1];
-      } else {
-        throw("Container stack is empty (topContainer)");
-      }
+  const topContainer = function(): Container {
+    if (containers.length > 0) {
+      return containers[containers.length - 1];
+    } else {
+      throw ("Container stack is empty (topContainer)");
+    }
   }
   // points to last child of top container, or top container if
   // it doesn't have children
-  const getTip = function() : (Container | Node) {
-      let top = topContainer();
-      if (top.children.length > 0) {
-        return top.children[top.children.length - 1];
-      } else {
-        return top;
-      }
+  const getTip = function(): (Container | Node) {
+    let top = topContainer();
+    if (top.children.length > 0) {
+      return top.children[top.children.length - 1];
+    } else {
+      return top;
+    }
   }
 
-  const addChildToTip = function(child : Node, pos ?: Pos) : void {
+  const addChildToTip = function(child: Node, pos?: Pos): void {
     if (containers.length > 0) {
       let tip = containers[containers.length - 1];
       if (pos) {
@@ -528,7 +533,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
     }
   }
 
-  const handleEvent = function(containers : Container[], event : Event) : void {
+  const handleEvent = function(containers: Container[], event: Event): void {
     let node;
     let top;
     let tip;
@@ -538,10 +543,10 @@ const parse = function(input : string, options : ParseOptions) : Doc {
     if (options.sourcePositions) {
       sp = getSourceLoc(event.startpos);
       ep = getSourceLoc(event.endpos);
-      pos = {start: sp, end: ep};
+      pos = { start: sp, end: ep };
     }
     let annot = event.annot;
-    let suffixes : string[] = [];
+    let suffixes: string[] = [];
     if (event.annot.includes("|")) {
       let parts = event.annot.split("|");
       annot = parts[0];
@@ -554,14 +559,14 @@ const parse = function(input : string, options : ParseOptions) : Doc {
     // the end of a list or list item, or the start of
     // a list, then it's a loose list.
     if (annot !== "blankline" && annot !== "-list" &&
-        annot !== "-list_item" && annot !== "+list") {
-      let ln ;
+      annot !== "-list_item" && annot !== "+list") {
+      let ln;
       top = topContainer();
       if (top) {
         if (top.data && "tight" in top.data) {
           ln = top;
         } else if (containers.length >= 2 &&
-                   "tight" in containers[containers.length - 2].data) {
+          "tight" in containers[containers.length - 2].data) {
           ln = containers[containers.length - 2];
         }
         if (ln && ln.data.blanklines) {
@@ -575,7 +580,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
       case "str":
         let txt = input.substring(event.startpos, event.endpos + 1);
         if (context === Context.Normal) {
-          addChildToTip({tag: "str", text: txt}, pos);
+          addChildToTip({ tag: "str", text: txt }, pos);
         } else {
           accumulatedText.push(txt);
         }
@@ -583,7 +588,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "softbreak":
         if (context === Context.Normal) {
-          addChildToTip({tag: "softbreak"}, pos);
+          addChildToTip({ tag: "softbreak" }, pos);
         } else {
           accumulatedText.push("\n");
         }
@@ -597,7 +602,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "hardbreak":
         if (context === Context.Normal) {
-          addChildToTip({tag: "hardbreak"}, pos);
+          addChildToTip({ tag: "hardbreak" }, pos);
         } else {
           accumulatedText.push("\n");
         }
@@ -607,14 +612,14 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         if (context === Context.Verbatim) {
           accumulatedText.push("\\ ");
         } else {
-          addChildToTip({tag: "nbsp"}, pos);
+          addChildToTip({ tag: "nbsp" }, pos);
         }
         break;
 
       case "emoji":
         if (context === Context.Normal) {
           let alias = input.substring(event.startpos + 1, event.endpos);
-          addChildToTip({tag: "emoji", alias: alias}, pos);
+          addChildToTip({ tag: "emoji", alias: alias }, pos);
         } else {
           let txt = input.substring(event.startpos, event.endpos + 1);
           accumulatedText.push(txt);
@@ -623,7 +628,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "footnote_reference":
         let fnref = input.substring(event.startpos + 2, event.endpos);
-        addChildToTip({tag: "footnote_reference", text: fnref}, pos);
+        addChildToTip({ tag: "footnote_reference", text: fnref }, pos);
         break;
 
       case "+reference_definition":
@@ -632,9 +637,11 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-reference_definition":
         node = popContainer(ep);
-        let r : Reference = { tag: "reference",
-                              destination: node.data.value || "",
-                              attributes: node.attributes };
+        let r: Reference = {
+          tag: "reference",
+          destination: node.data.value || "",
+          attributes: node.attributes
+        };
         if (node.data.key) {
           references[node.data.key] = r;
         }
@@ -642,14 +649,14 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "reference_key":
         topContainer().data.key = input.substring(event.startpos + 1,
-                                                  event.endpos);
+          event.endpos);
         topContainer().data.value = "";
         break;
 
       case "reference_value":
         topContainer().data.value =
           topContainer().data.value + input.substring(event.startpos,
-                                                      event.endpos + 1);
+            event.endpos + 1);
         break;
 
       case "+emph":
@@ -658,7 +665,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-emph":
         node = popContainer(ep);
-        addChildToTip({tag: "emph", children: node.children}, node.pos);
+        addChildToTip({ tag: "emph", children: node.children }, node.pos);
         break;
 
       case "+strong":
@@ -667,7 +674,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-strong":
         node = popContainer(ep);
-        addChildToTip({tag: "strong", children: node.children}, node.pos);
+        addChildToTip({ tag: "strong", children: node.children }, node.pos);
         break;
 
       case "+span":
@@ -676,7 +683,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-span":
         node = popContainer(ep);
-        addChildToTip({tag: "span", children: node.children}, node.pos);
+        addChildToTip({ tag: "span", children: node.children }, node.pos);
         break;
 
       case "+mark":
@@ -685,7 +692,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-mark":
         node = popContainer(ep);
-        addChildToTip({tag: "mark", children: node.children}, node.pos);
+        addChildToTip({ tag: "mark", children: node.children }, node.pos);
         break;
 
       case "+superscript":
@@ -694,7 +701,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-superscript":
         node = popContainer(ep);
-        addChildToTip({tag: "superscript", children: node.children}, node.pos);
+        addChildToTip({ tag: "superscript", children: node.children }, node.pos);
         break;
 
       case "+subscript":
@@ -703,7 +710,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-subscript":
         node = popContainer(ep);
-        addChildToTip({tag: "subscript", children: node.children}, node.pos);
+        addChildToTip({ tag: "subscript", children: node.children }, node.pos);
         break;
 
       case "+delete":
@@ -712,7 +719,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-delete":
         node = popContainer(ep);
-        addChildToTip({tag: "delete", children: node.children}, node.pos);
+        addChildToTip({ tag: "delete", children: node.children }, node.pos);
         break;
 
       case "+insert":
@@ -721,7 +728,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-insert":
         node = popContainer(ep);
-        addChildToTip({tag: "insert", children: node.children}, node.pos);
+        addChildToTip({ tag: "insert", children: node.children }, node.pos);
         break;
 
       case "+double_quoted":
@@ -730,7 +737,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-double_quoted":
         node = popContainer(ep);
-        addChildToTip({tag: "double_quoted", children: node.children}, node.pos);
+        addChildToTip({ tag: "double_quoted", children: node.children }, node.pos);
         break;
 
       case "+single_quoted":
@@ -739,7 +746,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-single_quoted":
         node = popContainer(ep);
-        addChildToTip({tag: "single_quoted", children: node.children}, node.pos);
+        addChildToTip({ tag: "single_quoted", children: node.children }, node.pos);
         break;
 
       case "+attributes":
@@ -757,7 +764,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
             if (k === "class") {
               if (tip.attributes[k]) {
                 tip.attributes[k] = tip.attributes[k] +
-                                      " " + node.attributes[k];
+                  " " + node.attributes[k];
               } else {
                 tip.attributes[k] = node.attributes[k];
               }
@@ -779,7 +786,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
             if (k === "class") {
               if (blockAttributes[k]) {
                 blockAttributes[k] = blockAttributes[k] +
-                                      " " + node.attributes[k];
+                  " " + node.attributes[k];
               } else {
                 blockAttributes[k] = node.attributes[k];
               }
@@ -828,7 +835,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         if (top.data.key) {
           top.attributes[top.data.key] = val;
         } else {
-          throw("Encountered value without key");
+          throw ("Encountered value without key");
         }
         top.data.key = null;
         break;
@@ -857,9 +864,11 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-destination":
         node = popContainer(ep);  // the container added by +linktext/+imagetext
-        addChildToTip({tag: node.data.isimage ? "image" : "link",
-                       destination: accumulatedText.join(""),
-                       children: node.children}, node.pos);
+        addChildToTip({
+          tag: node.data.isimage ? "image" : "link",
+          destination: accumulatedText.join(""),
+          children: node.children
+        }, node.pos);
         context = Context.Normal;
         accumulatedText = [];
         break;
@@ -874,9 +883,11 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         if (ref.length === 0) {
           ref = getStringContent(node);
         }
-        addChildToTip({tag: "link",
-                       reference: ref,
-                       children: node.children}, node.pos);
+        addChildToTip({
+          tag: "link",
+          reference: ref,
+          children: node.children
+        }, node.pos);
         context = Context.Normal;
         accumulatedText = [];
         break;
@@ -888,9 +899,11 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-verbatim":
         node = popContainer(ep);
-        addChildToTip({tag: "verbatim",
-                       text: trimVerbatim(accumulatedText.join(""))},
-                      node.pos);
+        addChildToTip({
+          tag: "verbatim",
+          text: trimVerbatim(accumulatedText.join(""))
+        },
+          node.pos);
         context = Context.Normal;
         accumulatedText = [];
         break;
@@ -906,7 +919,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
             tip.tag = "raw_inline";
             tip.format = format;
           } else {
-            throw("raw_format is not after verbatim or code_block");
+            throw ("raw_format is not after verbatim or code_block");
           }
         }
         break;
@@ -920,9 +933,11 @@ const parse = function(input : string, options : ParseOptions) : Doc {
       case "-display_math":
       case "-inline_math":
         node = popContainer(ep);
-        addChildToTip({tag: "math", display: event.annot === "-display_math",
-                       text: trimVerbatim(accumulatedText.join(""))},
-                      node.pos);
+        addChildToTip({
+          tag: "math", display: event.annot === "-display_math",
+          text: trimVerbatim(accumulatedText.join(""))
+        },
+          node.pos);
         context = Context.Normal;
         accumulatedText = [];
         break;
@@ -934,7 +949,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-url":
         node = popContainer(ep);
-        addChildToTip({tag: "url", text: accumulatedText.join("")}, node.pos);
+        addChildToTip({ tag: "url", text: accumulatedText.join("") }, node.pos);
         context = Context.Normal;
         accumulatedText = [];
         break;
@@ -946,7 +961,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-email":
         node = popContainer(ep);
-        addChildToTip({tag: "email", text: accumulatedText.join("")}, node.pos);
+        addChildToTip({ tag: "email", text: accumulatedText.join("") }, node.pos);
         context = Context.Normal;
         accumulatedText = [];
         break;
@@ -957,14 +972,16 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-para":
         node = popContainer(ep);
-        addChildToTip({tag: "para",
-                       children: node.children,
-                       attributes: node.attributes }, node.pos);
+        addChildToTip({
+          tag: "para",
+          children: node.children,
+          attributes: node.attributes
+        }, node.pos);
         break;
 
       case "+heading":
         pushContainer(sp);
-        topContainer().data.level =  1 + event.endpos - event.startpos;
+        topContainer().data.level = 1 + event.endpos - event.startpos;
         break;
 
       case "-heading":
@@ -980,12 +997,14 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         let pnode = topContainer();
         if (pnode.data.headinglevel !== undefined) { // doc or section
           while (pnode && pnode.data.headinglevel !== undefined &&
-                 pnode.data.headinglevel >= node.data.level) {
+            pnode.data.headinglevel >= node.data.level) {
             // close sections til we get to the right level
             pnode = popContainer(ep);
-            addChildToTip({tag: "section",
-                           children: pnode.children,
-                           attributes: pnode.attributes }, pnode.pos);
+            addChildToTip({
+              tag: "section",
+              children: pnode.children,
+              attributes: pnode.attributes
+            }, pnode.pos);
             pnode = topContainer();
           }
           // now we know that pnode.data.headinglevel is either
@@ -994,14 +1013,16 @@ const parse = function(input : string, options : ParseOptions) : Doc {
           topContainer().data.headinglevel = node.data.level;
           // move id attribute from heading to section
           if (node.attributes && node.attributes.id) {
-            topContainer().attributes = {id: node.attributes.id};
+            topContainer().attributes = { id: node.attributes.id };
             delete node.attributes;
           }
         }
-        addChildToTip({tag: "heading",
-                       level: node.data.level,
-                       children: node.children,
-                       attributes: node.attributes }, node.pos);
+        addChildToTip({
+          tag: "heading",
+          level: node.data.level,
+          children: node.children,
+          attributes: node.attributes
+        }, node.pos);
         break;
 
       case "+list":
@@ -1016,16 +1037,18 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         // take first if ambiguous
         let listStyle = node.data.styles[0];
         if (!listStyle) {
-          throw("No style defined for list");
+          throw ("No style defined for list");
         }
         let tight = false; // TODO
         let listStart = getListStart(node.data.firstMarker, listStyle);
-        addChildToTip({tag: "list",
-                       style: listStyle,
-                       children: node.children,
-                       start: listStart,
-                       tight: node.data.tight,
-                       attributes: node.attributes }, node.pos);
+        addChildToTip({
+          tag: "list",
+          style: listStyle,
+          children: node.children,
+          start: listStart,
+          tight: node.data.tight,
+          attributes: node.attributes
+        }, node.pos);
         break;
 
       case "+list_item":
@@ -1047,24 +1070,41 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         node = popContainer(ep);
         if (node.data.definitionList) {
           if (node.children[0] && node.children[0].tag === "para") {
-            let term : Term =
-                       { tag: "term",
-                         children: node.children[0].children };
+            let term: Term =
+            {
+              tag: "term",
+              children: node.children[0].children
+            };
             node.children.shift();
-            let definition : Definition =
-                             { tag: "definition",
-                               children: node.children };
-            addChildToTip({tag: "definition_list_item",
-                           children: [term, definition],
-                           attributes: node.attributes }, node.pos);
+            let definition: Definition =
+            {
+              tag: "definition",
+              children: node.children
+            };
+            addChildToTip({
+              tag: "definition_list_item",
+              children: [term, definition],
+              attributes: node.attributes
+            }, node.pos);
           } else {
-            throw("Definition list item has no term.")
+            throw ("Definition list item has no term.")
           }
         } else {
-          addChildToTip({tag: "list_item",
-                         children: node.children,
-                         attributes: node.attributes }, node.pos);
+          addChildToTip({
+            tag: "list_item",
+            children: node.children,
+            attributes: node.attributes,
+            checkbox: node.data.checkbox,
+          }, node.pos);
         }
+        break;
+
+      case "checkbox_checked":
+        topContainer().data.checkbox = "checked";
+        break;
+
+      case "checkbox_unchecked":
+        topContainer().data.checkbox = "checked";
         break;
 
       case "+blockquote":
@@ -1073,9 +1113,11 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-blockquote":
         node = popContainer(ep);
-        addChildToTip({tag: "blockquote",
-                       children: node.children,
-                       attributes: node.attributes }, node.pos);
+        addChildToTip({
+          tag: "blockquote",
+          children: node.children,
+          attributes: node.attributes
+        }, node.pos);
         break;
 
       case "+table":
@@ -1085,9 +1127,11 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-table":
         node = popContainer(ep);
-        addChildToTip({tag: "table",
-                       children: node.children,
-                       attributes: node.attributes }, node.pos);
+        addChildToTip({
+          tag: "table",
+          children: node.children,
+          attributes: node.attributes
+        }, node.pos);
         break;
 
       case "+row":
@@ -1103,7 +1147,7 @@ const parse = function(input : string, options : ParseOptions) : Doc {
           tip = getTip();
           if (tip && "tag" in tip && tip.tag === "row") { // prev row of table
             tip.head = true;
-            for (let i=0; i < tip.children.length; i++) {
+            for (let i = 0; i < tip.children.length; i++) {
               tip.children[i].head = true;
               tip.children[i].align = node.data.aligns[i];
             }
@@ -1111,13 +1155,15 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         } else {
           // get aligns from table
           node.data.aligns = [];
-          for (let i=0; i < node.children.length; i++) {
+          for (let i = 0; i < node.children.length; i++) {
             node.children[i].align = topContainer().data.aligns[i];
           }
-          addChildToTip({tag: "row",
-                         children: node.children,
-                         head: false, // gets set later
-                         attributes: node.attributes }, node.pos);
+          addChildToTip({
+            tag: "row",
+            children: node.children,
+            head: false, // gets set later
+            attributes: node.attributes
+          }, node.pos);
         }
         break;
 
@@ -1144,11 +1190,13 @@ const parse = function(input : string, options : ParseOptions) : Doc {
       case "-cell":
         node = popContainer(ep);
         let cellnum = topContainer().children.length;
-        addChildToTip({tag: "cell",
-                       children: node.children,
-                       head: false, // gets set in "-row"
-                       align: "left", // set at "-row"
-                       attributes: node.attributes }, node.pos);
+        addChildToTip({
+          tag: "cell",
+          children: node.children,
+          head: false, // gets set in "-row"
+          align: "left", // set at "-row"
+          attributes: node.attributes
+        }, node.pos);
         break;
 
       case "+caption":
@@ -1157,9 +1205,11 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-caption":
         node = popContainer(ep);
-        addChildToTip({tag: "caption",
-                       children: node.children,
-                       attributes: node.attributes}, node.pos);
+        addChildToTip({
+          tag: "caption",
+          children: node.children,
+          attributes: node.attributes
+        }, node.pos);
         break;
 
       case "+footnote":
@@ -1170,11 +1220,13 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         node = popContainer(ep);
         if (node.data.label) {
           footnotes[node.data.label] =
-                      {tag: "footnote",
-                       label: node.data.label || "",
-                       children: node.children,
-                       attributes: node.attributes,
-                       pos: node.pos};
+          {
+            tag: "footnote",
+            label: node.data.label || "",
+            children: node.children,
+            attributes: node.attributes,
+            pos: node.pos
+          };
         } else {
           warn("Ignoring footnote without a label.", event.endpos);
         }
@@ -1193,15 +1245,19 @@ const parse = function(input : string, options : ParseOptions) : Doc {
       case "-code_block":
         node = popContainer(ep);
         if (node.data.format) {
-          addChildToTip({tag: "raw_block",
-                         format: node.data.format,
-                         text: accumulatedText.join(""),
-                         attributes: node.attributes }, node.pos);
+          addChildToTip({
+            tag: "raw_block",
+            format: node.data.format,
+            text: accumulatedText.join(""),
+            attributes: node.attributes
+          }, node.pos);
         } else {
-          addChildToTip({tag: "code_block",
-                         text: accumulatedText.join(""),
-                         lang:  node.data.lang,
-                         attributes: node.attributes }, node.pos);
+          addChildToTip({
+            tag: "code_block",
+            text: accumulatedText.join(""),
+            lang: node.data.lang,
+            attributes: node.attributes
+          }, node.pos);
         }
         context = Context.Normal;
         accumulatedText = [];
@@ -1218,45 +1274,47 @@ const parse = function(input : string, options : ParseOptions) : Doc {
 
       case "-div":
         node = popContainer(ep);
-        addChildToTip({tag: "div",
-                       children: node.children,
-                       attributes: node.attributes }, node.pos);
+        addChildToTip({
+          tag: "div",
+          children: node.children,
+          attributes: node.attributes
+        }, node.pos);
         break;
 
       case "thematic_break":
-        let tb : ThematicBreak = { tag: "thematic_break" };
+        let tb: ThematicBreak = { tag: "thematic_break" };
         addBlockAttributes(tb);
         addChildToTip(tb, pos);
         break;
 
       case "right_single_quote":
-        addChildToTip({tag: "right_single_quote", text: "'"}, pos);
+        addChildToTip({ tag: "right_single_quote", text: "'" }, pos);
         break;
 
       case "left_double_quote":
-        addChildToTip({tag: "left_double_quote", text: "'"}, pos);
+        addChildToTip({ tag: "left_double_quote", text: "'" }, pos);
         break;
 
       case "ellipses":
-        addChildToTip({tag: "ellipses", text: "..."}, pos);
+        addChildToTip({ tag: "ellipses", text: "..." }, pos);
         break;
 
       case "en_dash":
-        addChildToTip({tag: "en_dash", text: "--"}, pos);
+        addChildToTip({ tag: "en_dash", text: "--" }, pos);
         break;
 
       case "em_dash":
-        addChildToTip({tag: "em_dash", text: "---"}, pos);
+        addChildToTip({ tag: "em_dash", text: "---" }, pos);
         break;
 
       // We set the blanklines property of a parent list or
       // sublist to aid with tight/loose list determination.
       case "blankline":
-        let listnode ;
+        let listnode;
         if ("tight" in topContainer().data) {
           listnode = topContainer();
         } else if (containers.length >= 2 &&
-                   "tight" in containers[containers.length - 2].data) {
+          "tight" in containers[containers.length - 2].data) {
           listnode = containers[containers.length - 2];
         }
         if (listnode) {
@@ -1265,16 +1323,19 @@ const parse = function(input : string, options : ParseOptions) : Doc {
         break;
 
       default:
-        // throw("Unknown event " + event.annot);
+      // throw("Unknown event " + event.annot);
     }
   }
 
-  let containers : Container[] =
-         [{ children: [],
-            data: { headinglevel: 0 },
-            pos: { start: {line: 0, col: 0, offset: 0},
-                   end:   {line: 0, col: 0, offset: 0}
-                 }}];
+  let containers: Container[] =
+    [{
+      children: [],
+      data: { headinglevel: 0 },
+      pos: {
+        start: { line: 0, col: 0, offset: 0 },
+        end: { line: 0, col: 0, offset: 0 }
+      }
+    }];
 
   let lastpos = 0;
   for (const event of parser) {
@@ -1291,35 +1352,42 @@ const parse = function(input : string, options : ParseOptions) : Doc {
   while (pnode && pnode.data.headinglevel > 0) {
     // close sections til we get to the doc level
     popContainer(lastloc);
-    addChildToTip({tag: "section",
-                   children: pnode.children,
-                   attributes: pnode.attributes }, pnode.pos);
+    addChildToTip({
+      tag: "section",
+      children: pnode.children,
+      attributes: pnode.attributes
+    }, pnode.pos);
     pnode = topContainer();
   }
 
-  let doc : Doc =
-         { tag: "doc",
-           references: references,
-           footnotes: footnotes,
-           children: containers[0].children,
-           attributes: containers[0].attributes
-          };
+  let doc: Doc =
+  {
+    tag: "doc",
+    references: references,
+    footnotes: footnotes,
+    children: containers[0].children,
+    attributes: containers[0].attributes
+  };
   if (options.sourcePositions) {
-    doc.pos = {start: {line: 0, col: 0, offset: 0},
-               end: lastloc || {line: 0, col: 0, offset: 0}};
+    doc.pos = {
+      start: { line: 0, col: 0, offset: 0 },
+      end: lastloc || { line: 0, col: 0, offset: 0 }
+    };
   }
   return doc;
 }
 
-const omitFields : Record<string, boolean> =
-  { children: true,
-    tag: true,
-    pos: true,
-    attributes: true,
-    references: true,
-    footnotes: true };
+const omitFields: Record<string, boolean> =
+{
+  children: true,
+  tag: true,
+  pos: true,
+  attributes: true,
+  references: true,
+  footnotes: true
+};
 
-const renderNode = function(node : Record<string, any>, buff : string[], indent : number) : void {
+const renderNode = function(node: Record<string, any>, buff: string[], indent: number): void {
   buff.push(" ".repeat(indent));
   if (indent > 128) {
     buff.push("(((DEEPLY NESTED CONTENT OMITTED)))\n");
@@ -1332,7 +1400,7 @@ const renderNode = function(node : Record<string, any>, buff : string[], indent 
   }
   for (let k in node) {
     if (!omitFields[k]) {
-      let v : Node = node[k];
+      let v: Node = node[k];
       if (v !== undefined && v !== null) {
         buff.push(` ${k}=${JSON.stringify(v)}`);
       }
@@ -1345,7 +1413,7 @@ const renderNode = function(node : Record<string, any>, buff : string[], indent 
   }
   buff.push("\n");
   if (node.children) {
-    node.children.forEach((child : Node) => {
+    node.children.forEach((child: Node) => {
       renderNode(child, buff, indent + 2);
     });
   }
@@ -1353,8 +1421,8 @@ const renderNode = function(node : Record<string, any>, buff : string[], indent 
 
 // Render an AST in human-readable form, with indentation
 // showing the hierarchy.
-const renderAST = function(doc : Doc) : string {
-  let buff : string[] = [];
+const renderAST = function(doc: Doc): string {
+  let buff: string[] = [];
   renderNode(doc, buff, 0)
   if (Object.keys(doc.references).length > 0) {
     buff.push("references\n");
