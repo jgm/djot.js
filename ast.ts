@@ -296,7 +296,8 @@ type Alignment = "default" | "left" | "right" | "center";
 
 type Node = Doc | Block | Inline | ListItem
   | DefinitionListItem | Term | Definition
-  | Row | Cell | Caption;
+  | Row | Cell | Caption
+  | Reference | Footnote;
 
 interface Reference extends HasAttributes {
   tag: "reference";

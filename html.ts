@@ -187,6 +187,28 @@ class HTMLRenderer {
         this.inTags(`h${node.level}`, node, 1);
         break;
 
+      case "footnote_reference":
+        let label = node.text;
+        let index = this.footnoteIndex[label];
+        if (!index) {
+          index = this.nextFootnoteIndex;
+          this.footnoteIndex[label] = index;
+          this.nextFootnoteIndex++;
+        }
+        this.renderTag("a", node, {
+          id: "fnref" + index,
+          href: "#fn" + index,
+          role: "doc-noteref"
+        });
+        this.literal("<sup>");
+        this.out(index.toString());
+        this.literal("</sup></a>");
+        break;
+
+      case "footnote":
+        // TODO
+        break;
+
       case "table":
         this.inTags("table", node, 2);
         break;
