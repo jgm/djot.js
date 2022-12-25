@@ -264,13 +264,13 @@ class HTMLRenderer {
       case "double_quoted":
         this.literal("&ldquo;");
         this.renderChildren(node);
-        this.literal("rldquo;");
+        this.literal("&rdquo;");
         break;
 
       case "single_quoted":
         this.literal("&lsquo;");
         this.renderChildren(node);
-        this.literal("rsquo;");
+        this.literal("&rsquo;");
         break;
 
       case "ellipses":
