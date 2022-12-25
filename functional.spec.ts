@@ -1,4 +1,4 @@
-import { parse, ParseOptions } from "./ast";
+import { parse, ParseOptions, renderAST } from "./ast";
 import { renderHTML } from "./html";
 const fs = require('fs');
 
@@ -114,8 +114,18 @@ testfiles.forEach((file: string) => {
     let tests = parseTests(fp);
     tests.forEach((test: Test) => {
       it("line " + test.linenum, () => {
-        let ast = parse(test.input, {});
-        expect(renderHTML(ast)).toStrictEqual(test.output);
+        let options = { sourcePositions: false };
+        if (test.options.match(/p/)) {
+          options.sourcePositions = true;
+        }
+        let ast = parse(test.input, options);
+        let result;
+        if (test.options.match(/a/)) {
+          result = renderAST(ast);
+        } else {
+          result = renderHTML(ast);
+        }
+        expect(result).toStrictEqual(test.output);
       });
     });
   });
