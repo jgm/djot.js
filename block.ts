@@ -1,6 +1,6 @@
 import { Event } from "./event";
 import { AttributeParser } from "./attributes";
-import { pattern, find, boundedFind } from "./find";
+import { pattern, find } from "./find";
 import { InlineParser } from "./inline";
 
 // Return array of list styles that match a marker.
