@@ -884,7 +884,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
           ref = getStringContent(node);
         }
         addChildToTip({
-          tag: "link",
+          tag: node.data.isimage ? "image" : "link",
           reference: ref,
           children: node.children
         }, node.pos);
