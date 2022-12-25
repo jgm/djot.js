@@ -129,6 +129,7 @@ class HTMLRenderer {
       case "para":
         if (this.tight) {
           this.renderChildren(node);
+          this.literal("\n");
         } else {
           this.inTags("p", node, 1);
         }
