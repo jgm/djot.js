@@ -477,9 +477,9 @@ const parse = function(input: string, options: ParseOptions): Doc {
     let i = 0;
     let ident = base;
     // generate unique id
-    while (identifiers[ident]) {
+    while (!ident || identifiers[ident]) {
       i = i + 1;
-      ident = base + "-" + i;
+      ident = (base || "s") + "-" + i;
     }
     identifiers[ident] = true;
     return ident;
@@ -990,6 +990,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
           node.attributes = {};
         }
         let headingStr = getStringContent(node).trim();
+
         if (!node.attributes.id) {
           // generate auto identifier
           node.attributes.id = getUniqueIdentifier(headingStr);
@@ -1001,6 +1002,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
             destination: "#" + node.attributes.id
           };
         }
+
         // add section structure
         let pnode = topContainer();
         if (pnode.data.headinglevel !== undefined) { // doc or section
