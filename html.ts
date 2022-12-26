@@ -351,7 +351,7 @@ class HTMLRenderer {
             dest = ref.destination;
             if (ref.attributes) {
               for (let k in ref.attributes) {
-                if (node.attributes && !node.attributes[k]) {
+                if (!node.attributes || !node.attributes[k]) {
                   // attribus on link take priority over attribs on reference
                   extraAttr[k] = ref.attributes[k];
                 }
