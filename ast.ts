@@ -989,9 +989,17 @@ const parse = function(input: string, options: ParseOptions): Doc {
         if (!node.attributes) {
           node.attributes = {};
         }
+        let headingStr = getStringContent(node).trim();
         if (!node.attributes.id) {
           // generate auto identifier
-          node.attributes.id = getUniqueIdentifier(getStringContent(node));
+          node.attributes.id = getUniqueIdentifier(headingStr);
+        }
+        // add implicit heading reference
+        if (!references[headingStr]) {
+          references[headingStr] = {
+            tag: "reference",
+            destination: "#" + node.attributes.id
+          };
         }
         // add section structure
         let pnode = topContainer();

@@ -14,7 +14,6 @@ Road map:
 - [X] block parsing (block.ts)
 - [X] parsing to an ast (ast.ts)
 - [X] html renderer (html.ts)
-- [ ] ast: implement implicit heading references
 - [ ] functional tests (from lua implementation)
 - [ ] more unit tests for ast, html
 - [ ] filter API
