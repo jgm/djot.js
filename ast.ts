@@ -484,7 +484,6 @@ const parse = function(input: string, options: ParseOptions): Doc {
       i = i + 1;
       ident = (base || "s") + "-" + i;
     }
-    identifiers[ident] = true;
     return ident;
   }
   const pushContainer = function(startpos?: SourceLoc) {
@@ -759,6 +758,9 @@ const parse = function(input: string, options: ParseOptions): Doc {
       case "-attributes":
         node = popContainer(ep);
         if (node.attributes && containers.length > 0) {
+          if (node.attributes.id) {
+            identifiers[node.attributes.id] = true;
+          }
           tip = getTip();
           if (!tip.attributes) {
             tip.attributes = {};
@@ -785,6 +787,9 @@ const parse = function(input: string, options: ParseOptions): Doc {
       case "-block_attributes":
         node = popContainer(ep);
         if (node.attributes && containers.length > 0) {
+          if (node.attributes.id) {
+            identifiers[node.attributes.id] = true;
+          }
           for (const k in node.attributes) {
             if (k === "class") {
               if (blockAttributes[k]) {
@@ -997,6 +1002,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
         if (!node.attributes.id) {
           // generate auto identifier
           node.attributes.id = getUniqueIdentifier(headingStr);
+          identifiers[node.attributes.id] = true;
         }
         // add implicit heading reference
         if (!references[headingStr]) {
