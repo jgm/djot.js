@@ -1472,6 +1472,7 @@ export {
   List,
   Reference,
   Footnote,
+  Link,
   renderAST,
   getStringContent
 }

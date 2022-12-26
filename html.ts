@@ -1,5 +1,5 @@
 import {
-  Doc, Reference, Footnote, HasChildren, HasAttributes,
+  Doc, Reference, Footnote, Link, HasChildren, HasAttributes,
   Node, List, getStringContent
 }
   from "./ast";
@@ -114,6 +114,27 @@ class HTMLRenderer {
     }
     this.renderCloseTag(tag);
     if (newlines >= 1) { this.literal("\n"); }
+  }
+
+  addBacklink(orignote: Footnote, ident: number): Footnote {
+    let note = structuredClone(orignote); // we modify a deep copy
+    let backlink: Link = {
+      tag: "link",
+      destination: `#fnref${ident}`,
+      attributes: { role: "doc-backlink" },
+      children: [{ tag: "str", text: "↩︎︎" }]
+    };
+    if (note.children.length >= 1) {
+      let lastblock = note.children[note.children.length - 1];
+      if (lastblock.tag === "para") {
+        lastblock.children.push(backlink);
+      } else {
+        note.children.push({ tag: "para", children: [backlink] });
+      }
+    } else {
+      note.children.push({ tag: "para", children: [backlink] });
+    }
+    return note;
   }
 
   renderChildren(node: HasChildren): void {
@@ -443,8 +464,8 @@ class HTMLRenderer {
       this.literal(`<section role="doc-endnotes">\n<hr>\n<ol>\n`);
       for (let i = 1; i < orderedFootnotes.length; i++) {
         this.literal(`<li id="fn${i}">\n`);
-        // TODO add backlink
-        this.renderChildren(orderedFootnotes[i]);
+        let note = this.addBacklink(orderedFootnotes[i], i);
+        this.renderChildren(note);
         this.literal(`</li>\n`);
       }
       this.literal(`</ol>\n</section>\n`);
