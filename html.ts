@@ -281,7 +281,13 @@ class HTMLRenderer {
         break;
 
       case "str":
-        this.out(node.text);
+        if (node.attributes) {
+          this.renderTag("span", node);
+          this.out(node.text);
+          this.renderCloseTag("span");
+        } else {
+          this.out(node.text);
+        }
         break;
 
       case "left_double_quote":

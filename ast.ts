@@ -762,6 +762,40 @@ const parse = function(input: string, options: ParseOptions): Doc {
             identifiers[node.attributes.id] = true;
           }
           tip = getTip();
+          let endsWithSpace = false;
+          if ("tag" in tip && tip.tag === "str") { // bare word
+            // split off last consecutive word of string
+            // and attach attributes to it
+            let m = tip.text.match(/[^\s]+$/);
+            if (m && m.index && m.index > 0) {
+              let wordpos;
+              if (tip.pos) {
+                let origend = tip.pos.end;
+                tip.pos.end = {
+                  line: origend.line,
+                  col: origend.col - m[0].length,
+                  offset: origend.offset - m[0].length
+                };
+                wordpos = {
+                  start: {
+                    line: origend.line,
+                    col: origend.col - m[0].length + 1,
+                    offset: origend.offset - m[0].length + 1
+                  },
+                  end: origend
+                };
+              }
+              tip.text = tip.text.substring(0, m.index);
+              addChildToTip({ tag: "str", text: m[0] }, wordpos);
+            } else if (!m) {
+              endsWithSpace = true;
+            }
+          }
+          tip = getTip(); // get new tip, which may be the new element
+          if (endsWithSpace) {
+            warn("Ignoring unattached attribute", event.startpos);
+            break;
+          }
           if (!tip.attributes) {
             tip.attributes = {};
           }
