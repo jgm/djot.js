@@ -192,7 +192,7 @@ class HTMLRenderer {
         break;
 
       case "term":
-        this.inTags("dt", node, 2);
+        this.inTags("dt", node, 1);
         break;
 
       case "list":
