@@ -1,5 +1,5 @@
 test: build
-	yarn test
+	yarn test --noStackTrace
 .PHONY: test
 
 build:
