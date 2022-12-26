@@ -43,7 +43,11 @@ class HTMLRenderer {
     return s
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
+      .replace(/>/g, "&gt;");
+  }
+
+  escapeAttribute(s: string): string {
+    return this.escape(s)
       .replace(/"/g, "&quot;");
   }
 
@@ -64,9 +68,9 @@ class HTMLRenderer {
           if (node.attributes && node.attributes.class) {
             v = v + " " + node.attributes.class;
           }
-          this.literal(` ${k}="${this.escape(v)}"`);
+          this.literal(` ${k}="${this.escapeAttribute(v)}"`);
         } else {
-          this.literal(` ${k}="${this.escape(extraAttrs[k])}"`);
+          this.literal(` ${k}="${this.escapeAttribute(extraAttrs[k])}"`);
         }
       }
     }
@@ -74,7 +78,7 @@ class HTMLRenderer {
       for (let k in node.attributes) {
         let v = node.attributes[k];
         if (!(k === "class" && extraAttrs && extraAttrs.class)) {
-          this.literal(` ${k}="${this.escape(v)}"`);
+          this.literal(` ${k}="${this.escapeAttribute(v)}"`);
         }
       }
     }
@@ -240,7 +244,7 @@ class HTMLRenderer {
         this.renderTag("pre", node);
         this.literal("<code");
         if (node.lang) {
-          this.literal(` class="language-${this.escape(node.lang)}"`);
+          this.literal(` class="language-${this.escapeAttribute(node.lang)}"`);
         }
         this.literal(">");
         this.out(node.text);
