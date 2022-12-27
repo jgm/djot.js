@@ -426,7 +426,7 @@ enum Context {
 
 const parse = function(input: string, options: ParseOptions): Doc {
 
-  let linestarts: number[] = [0];
+  let linestarts: number[] = [-1];
 
   if (options.sourcePositions) { // construct map of newline positions
     for (var i = 0; i < input.length; i++) {
@@ -450,7 +450,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
       } else if (linestarts[mid] <= pos) {
         if (mid === top || linestarts[mid + 1] > pos) {
           line = mid + 1;
-          col = pos - linestarts[mid] + 1;
+          col = pos - linestarts[mid];
         } else {
           if (bottom === mid && bottom < top) {
             bottom = mid + 1;

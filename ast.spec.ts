@@ -152,13 +152,13 @@ describe("Parser", () => {
   it("renders pretty", () => {
     let ast = parse("hi there\nfriend\n\nnew para\n", {sourcePositions: true});
     expect(renderAST(ast)).toEqual(
-`doc (0:0:0-5:1:25)
-  para (1:1:0-3:1:15)
+`doc
+  para (1:1:0-3:0:15)
     str (1:1:0-1:8:7) text="hi there"
-    softbreak (2:1:8-2:1:8)
-    str (2:2:9-2:7:14) text="friend"
-  para (4:2:17-5:1:25)
-    str (4:2:17-4:9:24) text="new para"
+    softbreak (2:0:8-2:0:8)
+    str (2:1:9-2:6:14) text="friend"
+  para (4:1:17-5:0:25)
+    str (4:1:17-4:8:24) text="new para"
 `);
   });
 
