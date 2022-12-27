@@ -1288,11 +1288,17 @@ const parse = function(input: string, options: ParseOptions): Doc {
 
       case "-caption":
         node = popContainer(ep);
-        addChildToTip({
-          tag: "caption",
-          children: node.children,
-          attributes: node.attributes
-        }, node.pos);
+        tip = getTip();
+        if (!tip || ("tag" in tip && tip.tag !== "table")) {
+          break;
+        }
+        tip.children.unshift( // add caption as first child of table
+          {
+            tag: "caption",
+            children: node.children,
+            attributes: node.attributes,
+            pos: node.pos
+          });
         break;
 
       case "+footnote":
