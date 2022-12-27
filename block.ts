@@ -44,7 +44,7 @@ const pattBlockquotePrefix = pattern("[>][ \\t\\r\\n]");
 const pattBangs = pattern("#+");
 const pattCodeFence = pattern("(~~~~*|````*)([ \\t]*)([^ \\t\\r\\n`]*)[ \\t]*\\r?\\n");
 const pattRowSep = pattern("(:?)--*(:?)([ \\t]*\\|[ \\t]*)");
-const pattNextBar = pattern("[^|\\r\\n]*\\|");
+const pattNextBarOrTicks = pattern("[^`|\\r\\n]*(?:[|]|`+)");
 const pattCaptionStart = pattern("\\^[ \\t]+");
 const pattFootnoteStart = pattern("\\[\\^([^\\]]+)\\]:[ \\t\\r\\n]");
 const pattThematicBreak = pattern("[-*][ \t]*[-*][ \\t]*[-*][-* \\t]*\\r?\\n");
@@ -814,23 +814,23 @@ class EventParser {
     let ep = sp; // for now
     this.skipSpace();
     while (!cellComplete) {
-      let m = this.find(pattNextBar);
+      let m = this.find(pattNextBarOrTicks);
       if (m === null) {
         cellComplete = false;
-      } else { // we matched a |
+        break;
+      } else { // we matched a | or `+
         let nextbar = m.endpos;
-        if (this.subject.charAt(nextbar - 1) === "\\") {  // \|
+        if (this.subject.charAt(nextbar) === "`" ||
+            inlineParser.inVerbatim()) {
           inlineParser.feed(this.pos, nextbar);
-          this.pos = nextbar + 1;
-        } else if (inlineParser.inVerbatim()) {
+        } else if (this.subject.charAt(nextbar - 1) === "\\") {  // escaped |
           inlineParser.feed(this.pos, nextbar);
-          this.pos = nextbar + 1;
         } else {
           inlineParser.feed(this.pos, nextbar - 1);
-          this.pos = nextbar + 1;
-          cellComplete = true;
           ep = nextbar;
+          cellComplete = true;
         }
+        this.pos = nextbar + 1;
       }
     }
     if (cellComplete) {
