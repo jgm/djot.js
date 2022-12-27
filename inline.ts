@@ -499,7 +499,11 @@ const matchers = {
     const subject = self.subject;
     if (subject.codePointAt(pos - 1) === C_LEFT_BRACE ||
       subject.codePointAt(pos + 1) === C_RIGHT_BRACE) {
-      betweenMatched("-", "delete", "str", hasBrace);
+      let newpos =
+            betweenMatched("-", "delete", "str", hasBrace)(self, pos, endpos);
+      if (newpos) {
+        return newpos;
+      }
     }
     // didn't match a del, try for smart hyphens:
     let ep = pos;
