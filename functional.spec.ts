@@ -126,7 +126,7 @@ testfiles.forEach((file: string) => {
         if (test.options.match(/a/)) {
           result = renderAST(ast);
         } else {
-          result = renderHTML(ast);
+          result = renderHTML(ast, { warn: ignoreWarnings });
         }
         expect(result).toStrictEqual(test.output);
       });
