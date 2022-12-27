@@ -762,6 +762,10 @@ const parse = function(input: string, options: ParseOptions): Doc {
             identifiers[node.attributes.id] = true;
           }
           tip = getTip();
+          if (tip === topContainer()) {
+            // no inline children to add the attribute to...
+            return;
+          }
           let endsWithSpace = false;
           if ("tag" in tip && tip.tag === "str") { // bare word
             // split off last consecutive word of string
