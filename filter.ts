@@ -1,4 +1,4 @@
-import { Node } from "./ast";
+import { AstNode } from "./ast";
 
 // TODO convert code examples to js:
 /* Support filters that walk the AST and transform a
@@ -76,7 +76,7 @@ type Action = Transform | { enter ?: Transform, exit : Transform };
 type FilterPart = Record<string, Action>;
 type Filter = FilterPart[];
 
-const handleNode = function(node : any, filterpart : FilterPart) : void {
+const handleAstNode = function(node : any, filterpart : FilterPart) : void {
   if (!node || !node.tag) {
     throw("Filter caled on a non-node.");
   }
@@ -98,14 +98,14 @@ const handleNode = function(node : any, filterpart : FilterPart) : void {
     }
   }
   if ("children" in node && node.children) {
-    node.children.forEach((child : Node) => {
-      handleNode(child, filterpart);
+    node.children.forEach((child : AstNode) => {
+      handleAstNode(child, filterpart);
     });
   }
   if ("footnotes" in node && node.footnotes) {
     for (let key in node.footnotes) {
       let note = node.footnotes[key];
-      handleNode(note, filterpart);
+      handleAstNode(note, filterpart);
     }
   }
   if (actionOut) {
@@ -114,13 +114,13 @@ const handleNode = function(node : any, filterpart : FilterPart) : void {
 }
 
 // Returns the node for convenience (but modifies it in place).
-const traverse = function(node : Node, filterpart : FilterPart) : Node {
-  handleNode(node, filterpart);
+const traverse = function(node : AstNode, filterpart : FilterPart) : AstNode {
+  handleAstNode(node, filterpart);
   return node;
 }
 
 // Apply a filter to a document.
-const applyFilter = function(node : Node, filter : Filter) {
+const applyFilter = function(node : AstNode, filter : Filter) {
   filter.forEach((filterpart : FilterPart) => {
     traverse(node, filterpart);
   });

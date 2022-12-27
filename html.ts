@@ -1,6 +1,6 @@
 import {
   Doc, Reference, Footnote, Link, HasChildren, HasAttributes,
-  Node, ParseOptions, getStringContent
+  AstNode, ParseOptions, getStringContent
 }
   from "./ast";
 const emoji = require("node-emoji");
@@ -89,7 +89,7 @@ class HTMLRenderer {
     }
   }
 
-  renderTag(tag: string, node: Node, extraAttrs?: Record<string, string>)
+  renderTag(tag: string, node: AstNode, extraAttrs?: Record<string, string>)
     : void {
     this.literal("<");
     this.literal(tag);
@@ -105,7 +105,7 @@ class HTMLRenderer {
     this.literal(">");
   }
 
-  inTags(tag: string, node: Node, newlines: number,
+  inTags(tag: string, node: AstNode, newlines: number,
     extraAttrs?: Record<string, string>): void {
     this.renderTag(tag, node, extraAttrs);
     if (newlines >= 2) { this.literal("\n"); }
@@ -143,14 +143,14 @@ class HTMLRenderer {
       this.tight = !!node.tight;
     }
     node.children.forEach(child => {
-      this.renderNode(child);
+      this.renderAstNode(child);
     });
     if ("tight" in node) {
       this.tight = oldtight;
     }
   }
 
-  renderNode(node: Node): void {
+  renderAstNode(node: AstNode): void {
     let extraAttr: Record<string, string> = {};
     switch (node.tag) {
       case "para":

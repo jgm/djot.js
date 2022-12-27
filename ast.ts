@@ -306,7 +306,7 @@ interface Cell extends HasAttributes, HasInlineChildren {
 
 type Alignment = "default" | "left" | "right" | "center";
 
-type Node = Doc | Block | Inline | ListItem
+type AstNode = Doc | Block | Inline | ListItem
   | DefinitionListItem | Term | Definition
   | Row | Cell | Caption | Footnote;
 
@@ -333,13 +333,13 @@ interface Container {
   pos?: Pos;
 }
 
-const getStringContent = function(node: (Node | Container)): string {
+const getStringContent = function(node: (AstNode | Container)): string {
   let buffer: string[] = [];
   addStringContent(node, buffer);
   return buffer.join("");
 }
 
-const addStringContent = function(node: (Node | Container),
+const addStringContent = function(node: (AstNode | Container),
   buffer: string[]): void {
   if ("text" in node) {
     buffer.push(node.text);
@@ -347,7 +347,7 @@ const addStringContent = function(node: (Node | Container),
     (node.tag === "softbreak" || node.tag === "hardbreak")) {
     buffer.push("\n");
   } else if ("children" in node) {
-    node.children.forEach((child: Node) => {
+    node.children.forEach((child: AstNode) => {
       addStringContent(child, buffer);
     });
   }
@@ -528,7 +528,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
   }
   // points to last child of top container, or top container if
   // it doesn't have children
-  const getTip = function(): (Container | Node) {
+  const getTip = function(): (Container | AstNode) {
     let top = topContainer();
     if (top.children.length > 0) {
       return top.children[top.children.length - 1];
@@ -537,7 +537,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
     }
   }
 
-  const addChildToTip = function(child: Node, pos?: Pos): void {
+  const addChildToTip = function(child: AstNode, pos?: Pos): void {
     if ("attributes" in child && !child.attributes) {
       delete child.attributes;
     }
@@ -1494,7 +1494,7 @@ const omitFields: Record<string, boolean> =
   footnotes: true
 };
 
-const renderNode = function(node: Record<string, any>, buff: string[], indent: number): void {
+const renderAstNode = function(node: Record<string, any>, buff: string[], indent: number): void {
   buff.push(" ".repeat(indent));
   if (indent > 128) {
     buff.push("(((DEEPLY NESTED CONTENT OMITTED)))\n");
@@ -1507,7 +1507,7 @@ const renderNode = function(node: Record<string, any>, buff: string[], indent: n
   }
   for (let k in node) {
     if (!omitFields[k]) {
-      let v: Node = node[k];
+      let v: AstNode = node[k];
       if (v !== undefined && v !== null) {
         buff.push(` ${k}=${JSON.stringify(v)}`);
       }
@@ -1520,8 +1520,8 @@ const renderNode = function(node: Record<string, any>, buff: string[], indent: n
   }
   buff.push("\n");
   if (node.children) {
-    node.children.forEach((child: Node) => {
-      renderNode(child, buff, indent + 2);
+    node.children.forEach((child: AstNode) => {
+      renderAstNode(child, buff, indent + 2);
     });
   }
 }
@@ -1530,19 +1530,19 @@ const renderNode = function(node: Record<string, any>, buff: string[], indent: n
 // showing the hierarchy.
 const renderAST = function(doc: Doc): string {
   let buff: string[] = [];
-  renderNode(doc, buff, 0)
+  renderAstNode(doc, buff, 0)
   if (Object.keys(doc.references).length > 0) {
     buff.push("references\n");
     for (let k in doc.references) {
       buff.push(`  [${JSON.stringify(k)}] =\n`);
-      renderNode(doc.references[k], buff, 4);
+      renderAstNode(doc.references[k], buff, 4);
     }
   }
   if (Object.keys(doc.footnotes).length > 0) {
     buff.push("footnotes\n")
     for (let k in doc.footnotes) {
       buff.push(`  [${JSON.stringify(k)}] =\n`);
-      renderNode(doc.footnotes[k], buff, 4)
+      renderAstNode(doc.footnotes[k], buff, 4)
     }
   }
   return buff.join("");
@@ -1614,7 +1614,7 @@ export {
   Definition,
   Cell,
   Alignment,
-  Node,
+  AstNode,
   Doc,
   Reference,
   Footnote
