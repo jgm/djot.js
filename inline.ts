@@ -508,10 +508,7 @@ const matchers = {
       ep++;
       hyphens++;
     }
-    if (ep > endpos) {
-      ep = endpos
-    }
-    if (subject.codePointAt(ep + 1) === C_RIGHT_BRACE) {
+    if (subject.codePointAt(ep) === C_RIGHT_BRACE) {
       hyphens--;  // last hyphen is close del
     }
     if (hyphens === 0) { // this means we have '-}'
