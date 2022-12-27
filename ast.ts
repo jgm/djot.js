@@ -953,7 +953,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
         break;
 
       case "raw_format":
-        let format = input.substring(event.startpos + 2, event.endpos);
+        let format = input.substring(event.startpos + 1, event.endpos + 1);
         top = topContainer();
         if (context === Context.Verbatim) { // in a code block
           top.data.format = format;
