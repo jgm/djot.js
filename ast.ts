@@ -933,7 +933,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
         node = popContainer(ep);  // the container added by +linktext/+imagetext
         addChildToTip({
           tag: node.data.isimage ? "image" : "link",
-          destination: accumulatedText.join(""),
+          destination: accumulatedText.join("").replace(/[\r\n]/g,""),
           children: node.children
         }, node.pos);
         context = Context.Normal;
@@ -946,7 +946,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
 
       case "-reference":
         node = popContainer(ep);  // the container added by +linktext
-        let ref = accumulatedText.join("");
+        let ref = accumulatedText.join("").replace(/\r?\n/g," ");
         if (ref.length === 0) {
           ref = getStringContent(node);
         }
@@ -1018,7 +1018,9 @@ const parse = function(input: string, options: ParseOptions): Doc {
 
       case "-url":
         node = popContainer(ep);
-        addChildToTip({ tag: "url", text: accumulatedText.join("") }, node.pos);
+        addChildToTip({ tag: "url",
+                        text: accumulatedText.join("").replace(/[\r\n]/g,"")
+                      }, node.pos);
         context = Context.Normal;
         accumulatedText = [];
         break;
@@ -1030,7 +1032,9 @@ const parse = function(input: string, options: ParseOptions): Doc {
 
       case "-email":
         node = popContainer(ep);
-        addChildToTip({ tag: "email", text: accumulatedText.join("") }, node.pos);
+        addChildToTip({ tag: "email",
+                        text: accumulatedText.join("").replace(/[\r\n]/g,"")
+                      }, node.pos);
         context = Context.Normal;
         accumulatedText = [];
         break;
