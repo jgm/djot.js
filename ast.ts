@@ -888,7 +888,8 @@ const parse = function(input: string, options: ParseOptions): Doc {
         top = topContainer();
         let val = input.substring(event.startpos, event.endpos + 1)
           .replace(/[ \r\n]+/g, " ")  // collapse interior whitespace
-          .replace(/\\[.,\\\/#!$%\^&\*;:{}=\-_`~+\[\]()'"?|]/g, "$1");  // resolve backslash escapes
+          .replace(/\\(?=[.,\\\/#!$%\^&\*;:{}=\-_`~+\[\]()'"?|])/g, "");
+        // resolve backslash escapes
         if (!top.attributes) {
           top.attributes = {};
         }
