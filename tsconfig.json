@@ -17,6 +17,8 @@
     "block.ts",
     "event.ts",
     "ast.ts",
-    "html.ts"
+    "html.ts",
+    "filter.ts",
+    "index.ts"
   ]
 }
