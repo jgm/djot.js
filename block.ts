@@ -473,7 +473,6 @@ class EventParser {
           this.pos = ep;
 
           if (checkbox) {
-            console.log(checkbox);
             if (checkbox === " ") {
               this.addMatch(sp + 2, sp + 4, "checkbox_unchecked");
             } else {
