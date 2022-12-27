@@ -1,6 +1,6 @@
 import {
   Doc, Reference, Footnote, Link, HasChildren, HasAttributes,
-  Node, List, getStringContent
+  Node, ParseOptions, getStringContent
 }
   from "./ast";
 const emoji = require("node-emoji");
@@ -499,8 +499,9 @@ class HTMLRenderer {
   }
 }
 
-const renderHTML = function(ast: Doc): string {
-  let renderer = new HTMLRenderer();
+const renderHTML = function(ast: Doc, options ?: ParseOptions): string {
+  options = options || {};
+  let renderer = new HTMLRenderer(options.warn);
   return renderer.render(ast);
 }
 

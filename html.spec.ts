@@ -6,7 +6,7 @@ const ignoreWarnings = () => { /* do nothing */ };
 describe("Parser", () => {
   it("parses paragraphs", () => {
     let ast = parse("hi there\nfriend\n\nnew para", { warn: ignoreWarnings });
-    expect(renderHTML(ast)).toEqual(
+    expect(renderHTML(ast, { warn: ignoreWarnings })).toEqual(
 `<p>hi there
 friend</p>
 <p>new para</p>

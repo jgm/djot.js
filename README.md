@@ -14,11 +14,10 @@ Road map:
 - [X] block parsing (block.ts)
 - [X] parsing to an ast (ast.ts)
 - [X] html renderer (html.ts)
-- [ ] functional tests (from lua implementation)
-- [ ] more unit tests for ast, html
+- [X] functional tests (from lua implementation)
+- [X] pathological tests
 - [ ] filter API
 - [ ] full-featured cli
-- [ ] pathological tests
 - [ ] benchmarks
 - [ ] node module
 - [ ] replace current wasm in djot sandbox

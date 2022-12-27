@@ -1,6 +1,8 @@
 import { parse, ParseOptions, renderAST } from "./ast";
 import { renderHTML } from "./html";
 
+const ignoreWarnings = () => { /* do nothing */ };
+
 let n = 500;
 
 let deeplynested : string[] = [];
@@ -53,7 +55,7 @@ describe("Pathological tests", () => {
     it("does not exhibit pathological behavior on " + testname, () => {
       let test : string = tests[testname];
       setTimeout(() => {
-        let ast = parse(test, {});
+        let ast = parse(test, {warn: ignoreWarnings});
         expect(ast).toBeTruthy();
       }, 1000).unref();
     });
