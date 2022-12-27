@@ -25,8 +25,9 @@ Options:
 `;
 let files = [];
 
-for (let i=2; i < process.argv.length; i++) {
-  let arg = process.argv[i];
+let args = process.argv;
+for (let i=2; i < args.length; i++) {
+  let arg = args[i];
   switch (arg) {
     case "--sourcepos":
     case "-p":
@@ -61,7 +62,11 @@ for (let i=2; i < process.argv.length; i++) {
       process.exit(0);
       break;
     default:
-      if (arg.charAt(0) === "-") {
+      if (/^-[a-z]{2,}/.test(arg)) { // -ap = -a -p
+        for (let i=1; i < arg.length; i++) {
+          args.push("-" + arg.substring(i,i+1));
+        }
+      } else if (/^-/.test(arg)) {
         process.stderr.write("Unknown option " + arg + "\n");
         process.exit(1);
       } else {
