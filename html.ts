@@ -207,7 +207,7 @@ class HTMLRenderer {
           if (node.start && node.start !== 1) {
             extraAttr.start = node.start.toString()
           }
-          if (node.style && !node.style.match(/1/)) {
+          if (node.style && !/1/.test(node.style)) {
             extraAttr.type = node.style.replace(/[().]/g, "");
           }
           this.inTags("ol", node, 2, extraAttr);
