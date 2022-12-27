@@ -538,6 +538,9 @@ const parse = function(input: string, options: ParseOptions): Doc {
   }
 
   const addChildToTip = function(child: Node, pos?: Pos): void {
+    if ("attributes" in child && !child.attributes) {
+      delete child.attributes;
+    }
     if (containers.length > 0) {
       let tip = containers[containers.length - 1];
       if (pos) {
@@ -1474,8 +1477,10 @@ const parse = function(input: string, options: ParseOptions): Doc {
     references: references,
     footnotes: footnotes,
     children: containers[0].children,
-    attributes: containers[0].attributes
   };
+  if (containers[0].attributes) {
+    doc.attributes = containers[0].attributes;
+  }
   return doc;
 }
 
