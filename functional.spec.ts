@@ -2,6 +2,8 @@ import { parse, ParseOptions, renderAST } from "./ast";
 import { renderHTML } from "./html";
 const fs = require('fs');
 
+const ignoreWarnings = () => { /* do nothing */ };
+
 const testfiles = [
   "attributes.test",
   "blockquote.test",
@@ -114,7 +116,8 @@ testfiles.forEach((file: string) => {
     let tests = parseTests(fp);
     tests.forEach((test: Test) => {
       it("line " + test.linenum, () => {
-        let options = { sourcePositions: false };
+        let options = { sourcePositions: false,
+                        warn: ignoreWarnings };
         if (test.options.match(/p/)) {
           options.sourcePositions = true;
         }
