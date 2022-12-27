@@ -74,7 +74,7 @@ import { AstNode } from "./ast";
 type Transform = (node : any) => void | boolean;
 type Action = Transform | { enter ?: Transform, exit : Transform };
 type FilterPart = Record<string, Action>;
-type Filter = FilterPart[];
+type Filter = () => FilterPart[];
 
 const handleAstNode = function(node : any, filterpart : FilterPart) : void {
   if (!node || !node.tag) {
@@ -121,7 +121,7 @@ const traverse = function(node : AstNode, filterpart : FilterPart) : AstNode {
 
 // Apply a filter to a document.
 const applyFilter = function(node : AstNode, filter : Filter) {
-  filter.forEach((filterpart : FilterPart) => {
+  filter().forEach((filterpart : FilterPart) => {
     traverse(node, filterpart);
   });
 }

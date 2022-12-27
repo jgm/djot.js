@@ -3,7 +3,7 @@ import { Filter, applyFilter } from "./filter";
 
 const ignoreWarnings = () => { /* do nothing */ };
 
-const capitalizeFilter : Filter = [
+const capitalizeFilter : Filter = () => [
   { str: (node : any) => {
      node.text = node.text.toUpperCase();
   }}];
