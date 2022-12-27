@@ -383,7 +383,7 @@ class HTMLRenderer {
       case "link":
       case "image":
         extraAttr = {};
-        let dest: string = node.destination || "";
+        let dest: string | undefined = node.destination;
         if (node.reference) {
           const ref = this.references[node.reference];
           if (ref) {
@@ -399,14 +399,17 @@ class HTMLRenderer {
           } else {
             this.warn(`Reference ${JSON.stringify(node.reference)} not found`,
               (node.pos && node.pos.end.offset) || 0);
-            dest = "";
           }
         }
         if (node.tag === "image") {
           extraAttr.alt = getStringContent(node);
-          extraAttr.src = dest;
+          if (dest !== undefined) {
+            extraAttr.src = dest;
+          }
         } else {
-          extraAttr.href = dest;
+          if (dest !== undefined) {
+            extraAttr.href = dest;
+          }
         }
         if (node.tag === "image") {
           this.renderTag("img", node, extraAttr);
