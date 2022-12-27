@@ -7,7 +7,8 @@
   "author": "John MacFarlane",
   "keywords": [],
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "build": "webpack"
   },
   "dependencies": {
     "node-emoji": "^1.11.0"

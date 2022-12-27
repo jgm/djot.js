@@ -5,7 +5,7 @@ lua implementation](https://github.com/jgm/djot).
 
 Use `tsc` to compile the ts files to js.
 
-`yarn test` runs some tests.
+`npm test` runs some tests.
 
 Road map:
 

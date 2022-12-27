@@ -1,5 +1,5 @@
 test: build
-	yarn test --noStackTrace
+	npm test --noStackTrace
 .PHONY: test
 
 build:
@@ -7,7 +7,7 @@ build:
 .PHONY: build
 
 dist/bundle.js:
-	yarn run webpack
+	npm run build
 
 clean:
 	rm -rf dist
