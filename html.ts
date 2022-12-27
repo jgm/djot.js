@@ -388,10 +388,16 @@ class HTMLRenderer {
           const ref = this.references[node.reference];
           if (ref) {
             dest = ref.destination;
+            if (node.tag === "image") {
+              extraAttr.alt = getStringContent(node);
+              extraAttr.src = dest;
+            } else {
+              extraAttr.href = dest;
+            }
             if (ref.attributes) {
               for (let k in ref.attributes) {
                 if (!node.attributes || !node.attributes[k]) {
-                  // attribus on link take priority over attribs on reference
+                  // attribs on link take priority over attribs on reference
                   extraAttr[k] = ref.attributes[k];
                 }
               }
@@ -401,14 +407,16 @@ class HTMLRenderer {
               (node.pos && node.pos.end.offset) || 0);
           }
         }
-        if (node.tag === "image") {
-          extraAttr.alt = getStringContent(node);
-          if (dest !== undefined) {
-            extraAttr.src = dest;
-          }
-        } else {
-          if (dest !== undefined) {
-            extraAttr.href = dest;
+        else {
+          if (node.tag === "image") {
+            extraAttr.alt = getStringContent(node);
+            if (dest !== undefined) {
+              extraAttr.src = dest;
+            }
+          } else {
+            if (dest !== undefined) {
+              extraAttr.href = dest;
+            }
           }
         }
         if (node.tag === "image") {
