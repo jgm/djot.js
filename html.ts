@@ -294,6 +294,14 @@ class HTMLRenderer {
         this.literal("&ldquo;");
         break;
 
+      case "right_double_quote":
+        this.literal("&rdquo;");
+        break;
+
+      case "left_single_quote":
+        this.literal("&lsquo;");
+        break;
+
       case "right_single_quote":
         this.literal("&rsquo;");
         break;
