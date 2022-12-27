@@ -1476,12 +1476,6 @@ const parse = function(input: string, options: ParseOptions): Doc {
     children: containers[0].children,
     attributes: containers[0].attributes
   };
-  if (options.sourcePositions) {
-    doc.pos = {
-      start: { line: 0, col: 0, offset: 0 },
-      end: lastloc || { line: 0, col: 0, offset: 0 }
-    };
-  }
   return doc;
 }
 
