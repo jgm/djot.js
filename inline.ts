@@ -321,8 +321,7 @@ const matchers = {
           cp === C_SINGLE_QUOTE ||
           cp === C_HYPHEN ||
           cp === C_LEFT_PAREN ||
-          cp === C_LEFT_BRACKET ||
-          cp === C_RIGHT_BRACKET);
+          cp === C_LEFT_BRACKET);
       }
     }),
 
