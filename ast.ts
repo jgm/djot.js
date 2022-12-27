@@ -572,8 +572,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
     // about to process something other than a blankline,
     // the end of a list or list item, or the start of
     // a list, then it's a loose list.
-    if (annot !== "blankline" && annot !== "-list" &&
-      annot !== "-list_item" && annot !== "+list") {
+    if (annot !== "blankline") {
       let ln;
       top = topContainer();
       if (top) {
@@ -583,8 +582,15 @@ const parse = function(input: string, options: ParseOptions): Doc {
           "tight" in containers[containers.length - 2].data) {
           ln = containers[containers.length - 2];
         }
-        if (ln && ln.data.blanklines) {
-          ln.data.tight = false;
+      }
+      if (ln) {
+        if (!/^[+-]list/.test(annot)) {
+          if (ln.data.blanklines) {
+            ln.data.tight = false;
+          }
+        }
+        if (!/^[-+]list_item$/.test(annot)) {
+          ln.data.blanklines = false;
         }
       }
     }
