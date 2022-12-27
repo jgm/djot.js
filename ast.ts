@@ -1144,7 +1144,17 @@ const parse = function(input: string, options: ParseOptions): Doc {
               attributes: node.attributes
             }, node.pos);
           } else {
-            throw ("Definition list item has no term.")
+            let term: Term = { tag: "term", children: [] };
+            let definition: Definition =
+            {
+              tag: "definition",
+              children: node.children
+            };
+            addChildToTip({
+              tag: "definition_list_item",
+              children: [term, definition],
+              attributes: node.attributes
+            }, node.pos);
           }
         } else {
           addChildToTip({
