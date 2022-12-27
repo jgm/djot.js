@@ -749,15 +749,13 @@ class InlineParser {
           pos = ep + 1;
         } else if (result.status === "fail") {
           this.reparseAttributes();
-          pos = sp;  // we'll want to go over the whole failed portion again,
+          pos = sp;
           // as no slice was added for it
         } else if (result.status === "continue") {
-          if (this.attributeSlices !== null) {
-            if (this.attributeSlices && this.attributeSlices.length == 0) {
-              this.attributeSlices = [];
-            }
-            this.attributeSlices.push({ startpos: sp, endpos: ep });
+          if (this.attributeSlices === null) {
+            this.attributeSlices = [];
           }
+          this.attributeSlices.push({ startpos: sp, endpos: ep });
           pos = ep + 1;
         }
       } else {
