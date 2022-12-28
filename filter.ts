@@ -82,7 +82,7 @@ const handleAstNode = function(node : any, filterpart : FilterPart) : void {
   }
   let transformIn : Transform | undefined;
   let transformOut : Transform | undefined;
-  let transform = filterpart[node.tag];
+  const transform = filterpart[node.tag];
   if (transform) {
     if ("exit" in transform && transform.exit) {
       transformOut = transform.exit;
@@ -93,7 +93,7 @@ const handleAstNode = function(node : any, filterpart : FilterPart) : void {
       throw("Transform has wrong type.");
     }
     if (transformIn) {
-      let stopTraversal = transformIn(node);
+      const stopTraversal = transformIn(node);
       if (stopTraversal) {
         return;
       }
@@ -105,8 +105,8 @@ const handleAstNode = function(node : any, filterpart : FilterPart) : void {
     });
   }
   if ("footnotes" in node && node.footnotes) {
-    for (let key in node.footnotes) {
-      let note = node.footnotes[key];
+    for (const key in node.footnotes) {
+      const note = node.footnotes[key];
       handleAstNode(note, filterpart);
     }
   }
@@ -123,7 +123,7 @@ const traverse = function(node : AstNode, filterpart : FilterPart) : AstNode {
 
 // Apply a filter to a document.
 const applyFilter = function(node : AstNode, filter : Filter) : void {
-  let f : FilterPart | FilterPart[] = filter();
+  const f : FilterPart | FilterPart[] = filter();
   if (Array.isArray(f)) {
     for (let i=0; i<f.length; i++) {
       traverse(node, f[i]);

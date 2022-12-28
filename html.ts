@@ -64,7 +64,7 @@ class HTMLRenderer {
   renderAttributes(node: HasAttributes, extraAttrs?: Record<string, string>)
     : void {
     if (extraAttrs) {
-      for (let k in extraAttrs) {
+      for (const k in extraAttrs) {
         if (k === "class") {
           let v = extraAttrs[k];
           if (node.attributes && node.attributes.class) {
@@ -77,16 +77,16 @@ class HTMLRenderer {
       }
     }
     if (node.attributes) {
-      for (let k in node.attributes) {
-        let v = node.attributes[k];
+      for (const k in node.attributes) {
+        const v = node.attributes[k];
         if (!(k === "class" && extraAttrs && extraAttrs.class)) {
           this.literal(` ${k}="${this.escapeAttribute(v)}"`);
         }
       }
     }
     if (this.options.sourcePositions && node.pos) {
-      let sp = node.pos.start;
-      let ep = node.pos.end;
+      const sp = node.pos.start;
+      const ep = node.pos.end;
       this.literal(` data-startpos="${sp.line}:${sp.col}:${sp.offset}" data-endpos="${ep.line}:${ep.col}:${ep.offset}"`);
     }
   }
@@ -119,15 +119,15 @@ class HTMLRenderer {
   }
 
   addBacklink(orignote: Footnote, ident: number): Footnote {
-    let note = structuredClone(orignote); // we modify a deep copy
-    let backlink: Link = {
+    const note = structuredClone(orignote); // we modify a deep copy
+    const backlink: Link = {
       tag: "link",
       destination: `#fnref${ident}`,
       attributes: { role: "doc-backlink" },
       children: [{ tag: "str", text: "↩︎︎" }]
     };
     if (note.children.length >= 1) {
-      let lastblock = note.children[note.children.length - 1];
+      const lastblock = note.children[note.children.length - 1];
       if (lastblock.tag === "para") {
         lastblock.children.push(backlink);
       } else {
@@ -140,7 +140,7 @@ class HTMLRenderer {
   }
 
   renderChildren(node: HasChildren): void {
-    let oldtight = this.tight;
+    const oldtight = this.tight;
     if ("tight" in node) {
       this.tight = !!node.tight;
     }
@@ -221,7 +221,7 @@ class HTMLRenderer {
         break;
 
       case "footnote_reference":
-        let label = node.text;
+        const label = node.text;
         let index = this.footnoteIndex[label];
         if (!index) {
           index = this.nextFootnoteIndex;
@@ -251,7 +251,7 @@ class HTMLRenderer {
         break;
 
       case "cell":
-        let cellAttr: Record<string, string> = {};
+        const cellAttr: Record<string, string> = {};
         if (node.align !== "default") {
           cellAttr.style = `text-align: ${node.align};`;
         }
@@ -333,7 +333,7 @@ class HTMLRenderer {
         break;
 
       case "emoji":
-        let ch = emoji.get(node.alias);
+        const ch = emoji.get(node.alias);
         if (ch) {
           this.out(ch);
         } else {
@@ -397,7 +397,7 @@ class HTMLRenderer {
               extraAttr.href = dest;
             }
             if (ref.attributes) {
-              for (let k in ref.attributes) {
+              for (const k in ref.attributes) {
                 if (!node.attributes || !node.attributes[k]) {
                   // attribs on link take priority over attribs on reference
                   extraAttr[k] = ref.attributes[k];
@@ -483,15 +483,15 @@ class HTMLRenderer {
     this.renderChildren(doc);
     if (this.nextFootnoteIndex > 1) {
       // render notes
-      let orderedFootnotes = [];
-      for (let k in this.footnotes) {
-        let index = this.footnoteIndex[k];
+      const orderedFootnotes = [];
+      for (const k in this.footnotes) {
+        const index = this.footnoteIndex[k];
         orderedFootnotes[index] = this.footnotes[k];
       }
       this.literal(`<section role="doc-endnotes">\n<hr>\n<ol>\n`);
       for (let i = 1; i < orderedFootnotes.length; i++) {
         this.literal(`<li id="fn${i}">\n`);
-        let note = this.addBacklink(orderedFootnotes[i], i);
+        const note = this.addBacklink(orderedFootnotes[i], i);
         this.renderChildren(note);
         this.literal(`</li>\n`);
       }
@@ -503,7 +503,7 @@ class HTMLRenderer {
 
 const renderHTML = function(ast: Doc, options ?: ParseOptions): string {
   options = options || {};
-  let renderer = new HTMLRenderer(options);
+  const renderer = new HTMLRenderer(options);
   return renderer.render(ast);
 }
 

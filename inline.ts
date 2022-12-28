@@ -499,7 +499,7 @@ const matchers = {
     const subject = self.subject;
     if (subject.codePointAt(pos - 1) === C_LEFT_BRACE ||
       subject.codePointAt(pos + 1) === C_RIGHT_BRACE) {
-      let newpos =
+      const newpos =
             betweenMatched("-", "delete", "str", hasBrace)(self, pos, endpos);
       if (newpos) {
         return newpos;

@@ -4,7 +4,7 @@ const ignoreWarnings = () => { /* do nothing */ };
 
 describe("Parser", () => {
   it("parses paragraphs", () => {
-    let ast = parse("hi there\nfriend\n\nnew para", {});
+    const ast = parse("hi there\nfriend\n\nnew para", {});
     expect(ast).toEqual(
 {
   "tag": "doc",
@@ -42,7 +42,7 @@ describe("Parser", () => {
   });
 
   it("includes source positions", () => {
-    let ast = parse("> testing _testing_", {sourcePositions: true});
+    const ast = parse("> testing _testing_", {sourcePositions: true});
     expect(ast).toEqual(
 {
   "tag": "doc",
@@ -138,7 +138,7 @@ describe("Parser", () => {
   });
 
   it("renders pretty", () => {
-    let ast = parse("hi there\nfriend\n\nnew para\n", {sourcePositions: true});
+    const ast = parse("hi there\nfriend\n\nnew para\n", {sourcePositions: true});
     expect(renderAST(ast)).toEqual(
 `doc
   para (1:1:0-3:0:15)

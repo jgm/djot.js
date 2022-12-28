@@ -46,11 +46,11 @@ interface Test {
 
 
 const parseTests = function(fp: string): Test[] {
-  var lines = require('fs').readFileSync(fp, 'utf-8').split('\n');
-  let idx: number = 0;
+  const lines = require('fs').readFileSync(fp, 'utf-8').split('\n');
+  let idx = 0;
   const getLine = function(): string | null {
     if (idx < lines.length) {
-      let line = lines[idx];
+      const line = lines[idx];
       idx++;
       return line;
     } else {
@@ -58,27 +58,27 @@ const parseTests = function(fp: string): Test[] {
     }
   }
 
-  let tests: Test[] = [];
+  const tests: Test[] = [];
   let line: string | null;
   while (true) {
-    let inp: string = "";
-    let out: string = "";
-    let pretext: string[] = [];
+    let inp = "";
+    let out = "";
+    const pretext: string[] = [];
     line = getLine();
     while (line !== null && !line.match(/^```/)) {
       pretext.push(line);
       line = getLine();
     }
-    let testlinenum = idx;
+    const testlinenum = idx;
     if (line === null) {
       break;
     }
-    let m = line.match(/^(`+)\s*(.*)/);
+    const m = line.match(/^(`+)\s*(.*)/);
     if (!m) {
       throw ("Test start line did not have expected form.");
     }
-    let ticks = new RegExp("^" + m[1]);
-    let options = m[2];
+    const ticks = new RegExp("^" + m[1]);
+    const options = m[2];
 
     // parse input
     line = getLine();
@@ -111,17 +111,17 @@ const parseTests = function(fp: string): Test[] {
 
 testfiles.forEach((file: string) => {
 
-  let fp = "test/" + file;
+  const fp = "test/" + file;
   describe(fp, () => {
-    let tests = parseTests(fp);
+    const tests = parseTests(fp);
     tests.forEach((test: Test) => {
       it("line " + test.linenum, () => {
-        let options = { sourcePositions: false,
+        const options = { sourcePositions: false,
                         warn: ignoreWarnings };
         if (test.options.match(/p/)) {
           options.sourcePositions = true;
         }
-        let ast = parse(test.input, options);
+        const ast = parse(test.input, options);
         let result;
         if (test.options.match(/a/)) {
           result = renderAST(ast);

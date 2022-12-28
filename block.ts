@@ -235,7 +235,7 @@ class EventParser {
           return (find(this.subject, pattWhitespace, this.pos) === null);
         },
         open: (spec) => {
-          let m = this.find(pattCaptionStart);
+          const m = this.find(pattCaptionStart);
           if (m) {
             this.pos = m.endpos + 1;
             this.addContainer(new Container(spec, {}));
@@ -266,11 +266,11 @@ class EventParser {
           }
         },
         open: (spec) => {
-          let m = this.find(pattFootnoteStart);
+          const m = this.find(pattFootnoteStart);
           if (m) {
-            let sp = m.startpos;
-            let ep = m.endpos;
-            let label = m.captures[0];
+            const sp = m.startpos;
+            const ep = m.endpos;
+            const label = m.captures[0];
             // adding container will close others
             this.addContainer(new Container(spec, {
               note_label: label,
@@ -298,7 +298,7 @@ class EventParser {
           if (container.extra.indent >= this.indent) {
             return false;
           }
-          let nws = this.find(pattNonWhitespace);
+          const nws = this.find(pattNonWhitespace);
           if (this.pos < this.starteol &&
             nws && nws.endpos === this.starteol - 1) {
             this.addMatch(this.pos, this.starteol - 1, "reference_value");
@@ -309,10 +309,10 @@ class EventParser {
           }
         },
         open: (spec) => {
-          let m = this.find(pattReferenceDefinition);
+          const m = this.find(pattReferenceDefinition);
           if (m) {
-            let label = m.captures[0];
-            let value = m.captures[1];
+            const label = m.captures[0];
+            const value = m.captures[1];
             this.addContainer(new Container(spec,
               { key: label, indent: this.indent }));
             this.addMatch(m.startpos, m.startpos, "+reference_definition");
@@ -344,7 +344,7 @@ class EventParser {
           return false;
         },
         open: (spec) => {
-          let m = this.find(pattThematicBreak);
+          const m = this.find(pattThematicBreak);
           if (m) {
             this.addContainer(new Container(spec, {}));
             this.addMatch(m.startpos, m.endpos, "thematic_break");
@@ -369,18 +369,18 @@ class EventParser {
             this.pos === this.starteol) {
             return true;
           } else { // match a list item of the correct type
-            let m = this.find(pattListMarker);
+            const m = this.find(pattListMarker);
             if (m === null) {
               return false;
             }
             let marker = this.subject.substring(m.startpos, m.endpos);
-            let mtask = this.find(pattTaskListMarker);
+            const mtask = this.find(pattTaskListMarker);
             if (mtask !== null) {
               marker = this.subject.substring(mtask.startpos, mtask.startpos + 5);
             }
 
-            let styles = getListStyles(marker);
-            let newstyles: string[] = [];
+            const styles = getListStyles(marker);
+            const newstyles: string[] = [];
             container.extra.styles.forEach((style: string) => {
               if (styles.includes(style)) {
                 newstyles.push(style);
@@ -395,25 +395,25 @@ class EventParser {
           return false;
         },
         open: (spec) => {
-          let m = this.find(pattListMarker);
+          const m = this.find(pattListMarker);
           if (m === null) {
             return false;
           }
-          let sp = m.startpos;
-          let ep = m.endpos;
+          const sp = m.startpos;
+          const ep = m.endpos;
           let marker = this.subject.substring(sp, ep);
 
-          let mtask = this.find(pattTaskListMarker);
+          const mtask = this.find(pattTaskListMarker);
           if (mtask !== null) {
             marker = this.subject.substring(mtask.startpos, mtask.startpos + 5);
           }
 
           // some items have ambiguous style
-          let styles = getListStyles(marker);
+          const styles = getListStyles(marker);
           if (styles.length === 0) {
             return false;
           }
-          let data = { styles: styles, indent: this.indent };
+          const data = { styles: styles, indent: this.indent };
           // adding container will close others
           this.addContainer(new Container(spec, data));
           let annot = "+list";
@@ -438,27 +438,27 @@ class EventParser {
             this.pos === this.starteol);
         },
         open: (spec) => {
-          let m = this.find(pattListMarker);
+          const m = this.find(pattListMarker);
           if (m === null) {
             return false;
           }
-          let sp = m.startpos;
-          let ep = m.endpos;
+          const sp = m.startpos;
+          const ep = m.endpos;
           let marker = this.subject.substring(sp, ep);
           let checkbox = null;
 
-          let mtask = this.find(pattTaskListMarker);
+          const mtask = this.find(pattTaskListMarker);
           if (mtask !== null) {
             marker = this.subject.substring(mtask.startpos, mtask.startpos + 5);
             checkbox = this.subject.substring(mtask.startpos + 3, mtask.startpos + 4);
           }
 
           // some items have ambiguous style
-          let styles = getListStyles(marker);
+          const styles = getListStyles(marker);
           if (styles.length === 0) {
             return false;
           }
-          let data = { styles: styles, indent: this.indent };
+          const data = { styles: styles, indent: this.indent };
           // adding container will close others
           this.addContainer(new Container(spec, data));
           let annot = "+list_item";
@@ -490,19 +490,19 @@ class EventParser {
         type: ContentType.Block,
         content: ContentType.Cells,
         continue: (container) => {
-          let m = this.find(pattTableRow);
+          const m = this.find(pattTableRow);
           if (m) {
-            let rawrow = m.captures[0];
+            const rawrow = m.captures[0];
             return this.parseTableRow(m.startpos, m.startpos + rawrow.length - 1);
           } else {
             return false;
           }
         },
         open: (spec) => {
-          let m = this.find(pattTableRow);
+          const m = this.find(pattTableRow);
           if (m) {
             this.addContainer(new Container(spec, { columns: 0 }));
-            let rawrow = m.captures[0];
+            const rawrow = m.captures[0];
             this.addMatch(m.startpos, m.startpos, "+table");
             if (this.parseTableRow(m.startpos,
               m.startpos + rawrow.length - 1)) {
@@ -528,8 +528,8 @@ class EventParser {
         content: ContentType.Attributes,
         open: (spec) => {
           if (this.subject.codePointAt(this.pos) === 123) { // {
-            let attributeParser = new AttributeParser(this.subject);
-            let res = attributeParser.feed(this.pos, this.starteol);
+            const attributeParser = new AttributeParser(this.subject);
+            const res = attributeParser.feed(this.pos, this.starteol);
             if (res.status === "fail") {
               return false;
             } else if (res.status === "done" &&
@@ -537,7 +537,7 @@ class EventParser {
               === null) {
               return false;
             } else {
-              let container = this.addContainer(new Container(spec,
+              const container = this.addContainer(new Container(spec,
                 {
                   status: res.status,
                   indent: this.indent,
@@ -563,7 +563,7 @@ class EventParser {
               startpos: this.pos,
               endpos: this.starteol
             });
-            let res = container.attributeParser.feed(this.pos, this.endeol);
+            const res = container.attributeParser.feed(this.pos, this.endeol);
             container.extra.status = res.status;
             if (res.status !== "fail" ||
               !find(this.subject, pattEndline, res.position + 1)) {
@@ -577,9 +577,9 @@ class EventParser {
           // attribute parsing failed; convert to para and continue with that
           this.addMatch(container.extra.startpos,
             container.extra.startpos, "+para");
-          let attrContainer = this.containers.pop(); // remove attribute contain
+          const attrContainer = this.containers.pop(); // remove attribute contain
           // add para container
-          let para = this.addContainer(new Container(this.paraSpec, {}));
+          const para = this.addContainer(new Container(this.paraSpec, {}));
           // reparse the text we couldn't parse as a block attribute:
           if (!para.inlineParser || !attrContainer) {
             throw ("Missing inlineParser or attrContainer");
@@ -594,7 +594,7 @@ class EventParser {
           this.addMatch(container.extra.startpos, container.extra.startpos,
             "+block_attributes");
           if (container.attributeParser) { // should always be true
-            let attrMatches = container.attributeParser.matches;
+            const attrMatches = container.attributeParser.matches;
             attrMatches.forEach(match => {
               this.matches.push(match);
             });
@@ -609,13 +609,13 @@ class EventParser {
         type: ContentType.Block,
         content: ContentType.Block,
         continue: (container) => {
-          let tip = this.tip();
+          const tip = this.tip();
           if (tip && tip.name === "code_block") {
             return true; // see #109
           }
-          let m = this.find(pattDivFence);
+          const m = this.find(pattDivFence);
           if (m && container.extra.colons) {
-            let colons = m.captures[0];
+            const colons = m.captures[0];
             if (colons.length >= container.extra.colons) {
               container.extra.endFenceStartpos = m.startpos;
               container.extra.endFenceEndpos = m.startpos + colons.length - 1;
@@ -626,17 +626,17 @@ class EventParser {
           return true;
         },
         open: (spec) => {
-          let m = this.find(pattDivFenceStart);
+          const m = this.find(pattDivFenceStart);
           if (!m) {
             return false;
           }
-          let colons = m.captures[0];
-          let m2 = find(this.subject, pattDivFenceEnd, m.endpos + 1);
+          const colons = m.captures[0];
+          const m2 = find(this.subject, pattDivFenceEnd, m.endpos + 1);
           if (!m2) {
             return false;
           }
-          let clsp = m2.startpos;
-          let lang = m2.captures[0];
+          const clsp = m2.startpos;
+          const lang = m2.captures[0];
           this.addContainer(new Container(spec, { colons: colons.length }));
           this.addMatch(m.startpos, m.endpos, "+div");
           if (lang.length > 0) {
@@ -647,8 +647,8 @@ class EventParser {
           return true;
         },
         close: (container) => {
-          let sp = container.extra.endFenceStartpos || this.pos;
-          let ep = container.extra.endFenceEndpos || this.pos;
+          const sp = container.extra.endFenceStartpos || this.pos;
+          const ep = container.extra.endFenceEndpos || this.pos;
           // check to make sure the match is in order
           this.addMatch(sp, ep, "-div");
           if (sp === ep) {
@@ -806,18 +806,18 @@ class EventParser {
     endpos: number,
     matches: Event[]
   } {
-    let inlineParser = new InlineParser(this.subject, this.warn);
+    const inlineParser = new InlineParser(this.subject, this.warn);
     let cellComplete = false;
-    let sp = this.pos - 1; // we start on char after |
+    const sp = this.pos - 1; // we start on char after |
     let ep = sp; // for now
     this.skipSpace();
     while (!cellComplete) {
-      let m = this.find(pattNextBarOrTicks);
+      const m = this.find(pattNextBarOrTicks);
       if (m === null) {
         cellComplete = false;
         break;
       } else { // we matched a | or `+
-        let nextbar = m.endpos;
+        const nextbar = m.endpos;
         if (this.subject.charAt(nextbar) === "`" ||
             inlineParser.inVerbatim()) {
           inlineParser.feed(this.pos, nextbar);
@@ -832,7 +832,7 @@ class EventParser {
       }
     }
     if (cellComplete) {
-      let cellMatches = inlineParser.getMatches();
+      const cellMatches = inlineParser.getMatches();
       return { startpos: sp, endpos: ep, matches: cellMatches };
     } else {
       return null;
@@ -841,20 +841,20 @@ class EventParser {
 
   // Parameters are start and end position
   parseTableRow(sp: number, ep: number): boolean {
-    let origMatches = this.matches.length;   // so we can rewind
-    let startpos = this.pos;
+    const origMatches = this.matches.length;   // so we can rewind
+    const startpos = this.pos;
     this.addMatch(sp, sp, "+row");
     // skip | and any initial space in the cell:
     this.pos++;
 
     // check to see if we have a separator line
-    let seps = [];
+    const seps = [];
     let p = this.pos;
     let sepfound = false;
     while (!sepfound) {
-      let m = find(this.subject, pattRowSep, p);
+      const m = find(this.subject, pattRowSep, p);
       if (m !== null) {
-        let [left, right, trailing] = m.captures;
+        const [left, right, trailing] = m.captures;
         let st = "separator_default";
         if (left.length > 0 && right.length > 0) {
           st = "separator_center";
@@ -878,7 +878,7 @@ class EventParser {
     }
     if (sepfound) {
       for (const k in seps) {
-        let match = seps[k];
+        const match = seps[k];
         this.addMatch(match.startpos, match.endpos, match.annot);
       }
       this.addMatch(this.starteol - 1, this.starteol - 1, "-row");
@@ -889,11 +889,11 @@ class EventParser {
 
     // if we get here, we're parsing a regular row
     while (this.pos <= ep) {
-      let cell = this.parseTableCell();
+      const cell = this.parseTableCell();
       if (cell !== null) {
         // add matches for cell
         this.addMatch(cell.startpos, cell.startpos, "+cell");
-        let cellMatches = cell.matches;
+        const cellMatches = cell.matches;
         cellMatches.forEach((match, i) => {
           let { startpos: s, endpos: e, annot: ann } = match;
           if (i === cellMatches.length - 1 && ann === "str") {

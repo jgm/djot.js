@@ -334,7 +334,7 @@ interface Container {
 }
 
 const getStringContent = function(node: (AstNode | Container)): string {
-  let buffer: string[] = [];
+  const buffer: string[] = [];
   addStringContent(node, buffer);
   return buffer.join("");
 }
@@ -383,8 +383,8 @@ const romanToNumber = function(s: string): number {
   let prevdigit = 0;
   let i = s.length - 1;
   while (i >= 0) {
-    let c = s.charAt(i);
-    let n = romanDigits[c];
+    const c = s.charAt(i);
+    const n = romanDigits[c];
     if (!n) {
       throw ("Encountered bad character in roman numeral " + s);
     }
@@ -400,8 +400,8 @@ const romanToNumber = function(s: string): number {
 }
 
 const getListStart = function(marker: string, style: string): number | undefined {
-  let numtype = style.replace(/[().]/g, "");
-  let s = marker.replace(/[().]/g, "");
+  const numtype = style.replace(/[().]/g, "");
+  const s = marker.replace(/[().]/g, "");
   switch (numtype) {
     case "1": return parseInt(s, 10);
     case "A": return ((s.codePointAt(0) || 65) - 65 + 1); // 65 = "A"
@@ -426,10 +426,10 @@ enum Context {
 
 const parse = function(input: string, options: ParseOptions): Doc {
 
-  let linestarts: number[] = [-1];
+  const linestarts: number[] = [-1];
 
   if (options.sourcePositions) { // construct map of newline positions
-    for (var i = 0; i < input.length; i++) {
+    for (let i = 0; i < input.length; i++) {
       if (input[i] === "\n") {
         linestarts.push(i);
       }
@@ -438,13 +438,13 @@ const parse = function(input: string, options: ParseOptions): Doc {
 
   // use binary search on linestarts to find line number and col
   const getSourceLoc = function(pos: number): SourceLoc {
-    let numlines = linestarts.length;
+    const numlines = linestarts.length;
     let bottom = 0;
     let top = numlines - 1;
     let line = 0;
     let col = 0;
     while (!line) {
-      let mid = bottom + ~~((top - bottom) / 2);
+      const mid = bottom + ~~((top - bottom) / 2);
       if (linestarts[mid] > pos) {
         top = mid;
       } else if (linestarts[mid] <= pos) {
@@ -485,7 +485,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
     }
   };
   const getUniqueIdentifier = function(s: string): string {
-    let base = s.trim()
+    const base = s.trim()
       .replace(/[\W\s]+/g, "-")
       .replace(/-$/, "")
       .replace(/^-/, "");
@@ -499,7 +499,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
     return ident;
   }
   const pushContainer = function(startpos?: SourceLoc) {
-    let container: Container = {
+    const container: Container = {
       children: [],
       data: {}
     };
@@ -510,7 +510,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
     containers.push(container);
   };
   const popContainer = function(endpos?: SourceLoc) {
-    let node = containers.pop();
+    const node = containers.pop();
     if (!node) {
       throw ("Container stack is empty (popContainer)");
     }
@@ -529,7 +529,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
   // points to last child of top container, or top container if
   // it doesn't have children
   const getTip = function(): (Container | AstNode) {
-    let top = topContainer();
+    const top = topContainer();
     if (top.children.length > 0) {
       return top.children[top.children.length - 1];
     } else {
@@ -542,7 +542,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
       delete child.attributes;
     }
     if (containers.length > 0) {
-      let tip = containers[containers.length - 1];
+      const tip = containers[containers.length - 1];
       if (pos) {
         child.pos = pos;
       }
@@ -565,7 +565,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
     let annot = event.annot;
     let suffixes: string[] = [];
     if (event.annot.includes("|")) {
-      let parts = event.annot.split("|");
+      const parts = event.annot.split("|");
       annot = parts[0];
       suffixes = parts.slice(1);
     }
@@ -601,7 +601,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
     switch (annot) {
 
       case "str":
-        let txt = input.substring(event.startpos, event.endpos + 1);
+        const txt = input.substring(event.startpos, event.endpos + 1);
         if (context === Context.Normal) {
           addChildToTip({ tag: "str", text: txt }, pos);
         } else {
@@ -641,16 +641,16 @@ const parse = function(input: string, options: ParseOptions): Doc {
 
       case "emoji":
         if (context === Context.Normal) {
-          let alias = input.substring(event.startpos + 1, event.endpos);
+          const alias = input.substring(event.startpos + 1, event.endpos);
           addChildToTip({ tag: "emoji", alias: alias }, pos);
         } else {
-          let txt = input.substring(event.startpos, event.endpos + 1);
+          const txt = input.substring(event.startpos, event.endpos + 1);
           accumulatedText.push(txt);
         }
         break;
 
       case "footnote_reference":
-        let fnref = input.substring(event.startpos + 2, event.endpos);
+        const fnref = input.substring(event.startpos + 2, event.endpos);
         addChildToTip({ tag: "footnote_reference", text: fnref }, pos);
         break;
 
@@ -660,7 +660,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
 
       case "-reference_definition":
         node = popContainer(ep);
-        let r: Reference = {
+        const r: Reference = {
           tag: "reference",
           destination: node.data.value || "",
           attributes: node.attributes
@@ -791,11 +791,11 @@ const parse = function(input: string, options: ParseOptions): Doc {
           if ("tag" in tip && tip.tag === "str") { // bare word
             // split off last consecutive word of string
             // and attach attributes to it
-            let m = tip.text.match(/[^\s]+$/);
+            const m = tip.text.match(/[^\s]+$/);
             if (m && m.index && m.index > 0) {
               let wordpos;
               if (tip.pos) {
-                let origend = tip.pos.end;
+                const origend = tip.pos.end;
                 tip.pos.end = {
                   line: origend.line,
                   col: origend.col - m[0].length,
@@ -866,7 +866,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
 
       case "class":
         top = topContainer();
-        let cl = input.substring(event.startpos, event.endpos + 1);
+        const cl = input.substring(event.startpos, event.endpos + 1);
         if (!top.attributes) {
           top.attributes = {};
         }
@@ -879,7 +879,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
 
       case "id":
         top = topContainer();
-        let id = input.substring(event.startpos, event.endpos + 1);
+        const id = input.substring(event.startpos, event.endpos + 1);
         if (!top.attributes) {
           top.attributes = { id: id };
         } else {
@@ -889,7 +889,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
 
       case "key":
         top = topContainer();
-        let key = input.substring(event.startpos, event.endpos + 1);
+        const key = input.substring(event.startpos, event.endpos + 1);
         top.data.key = key;
         if (!top.attributes) {
           top.attributes = {};
@@ -899,7 +899,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
 
       case "value":
         top = topContainer();
-        let val = input.substring(event.startpos, event.endpos + 1)
+        const val = input.substring(event.startpos, event.endpos + 1)
           .replace(/[ \r\n]+/g, " ")  // collapse interior whitespace
           .replace(/\\(?=[.,\\\/#!$%\^&\*;:{}=\-_`~+\[\]()'"?|])/g, "");
         // resolve backslash escapes
@@ -983,7 +983,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
         break;
 
       case "raw_format":
-        let format = input.substring(event.startpos, event.endpos + 1)
+        const format = input.substring(event.startpos, event.endpos + 1)
           .replace(/^\{?=/, "")
           .replace(/\}$/, "");
         top = topContainer();
@@ -1069,7 +1069,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
         if (!node.attributes) {
           node.attributes = {};
         }
-        let headingStr = getStringContent(node).trim();
+        const headingStr = getStringContent(node).trim();
 
         if (!node.attributes.id) {
           // generate auto identifier
@@ -1126,12 +1126,12 @@ const parse = function(input: string, options: ParseOptions): Doc {
       case "-list":
         node = popContainer(ep);
         // take first if ambiguous
-        let listStyle = node.data.styles[0];
+        const listStyle = node.data.styles[0];
         if (!listStyle) {
           throw ("No style defined for list");
         }
-        let tight = false; // TODO
-        let listStart = getListStart(node.data.firstMarker, listStyle);
+        const tight = false; // TODO
+        const listStart = getListStart(node.data.firstMarker, listStyle);
         addChildToTip({
           tag: "list",
           style: listStyle,
@@ -1161,13 +1161,13 @@ const parse = function(input: string, options: ParseOptions): Doc {
         node = popContainer(ep);
         if (node.data.definitionList) {
           if (node.children[0] && node.children[0].tag === "para") {
-            let term: Term =
+            const term: Term =
             {
               tag: "term",
               children: node.children[0].children
             };
             node.children.shift();
-            let definition: Definition =
+            const definition: Definition =
             {
               tag: "definition",
               children: node.children
@@ -1178,8 +1178,8 @@ const parse = function(input: string, options: ParseOptions): Doc {
               attributes: node.attributes
             }, node.pos);
           } else {
-            let term: Term = { tag: "term", children: [] };
-            let definition: Definition =
+            const term: Term = { tag: "term", children: [] };
+            const definition: Definition =
             {
               tag: "definition",
               children: node.children
@@ -1290,7 +1290,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
 
       case "-cell":
         node = popContainer(ep);
-        let cellnum = topContainer().children.length;
+        const cellnum = topContainer().children.length;
         addChildToTip({
           tag: "cell",
           children: node.children,
@@ -1389,7 +1389,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
         break;
 
       case "thematic_break":
-        let tb: ThematicBreak = { tag: "thematic_break" };
+        const tb: ThematicBreak = { tag: "thematic_break" };
         addBlockAttributes(tb);
         addChildToTip(tb, pos);
         break;
@@ -1442,7 +1442,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
     }
   }
 
-  let containers: Container[] =
+  const containers: Container[] =
     [{
       children: [],
       data: { headinglevel: 0 },
@@ -1475,7 +1475,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
     pnode = topContainer();
   }
 
-  let doc: Doc =
+  const doc: Doc =
   {
     tag: "doc",
     references: references,
@@ -1509,16 +1509,16 @@ const renderAstNode = function(node: Record<string, any>, buff: string[], indent
   if (node.pos) {
     buff.push(` (${node.pos.start.line}:${node.pos.start.col}:${node.pos.start.offset}-${node.pos.end.line}:${node.pos.end.col}:${node.pos.end.offset})`);
   }
-  for (let k in node) {
+  for (const k in node) {
     if (!omitFields[k]) {
-      let v: AstNode = node[k];
+      const v: AstNode = node[k];
       if (v !== undefined && v !== null) {
         buff.push(` ${k}=${JSON.stringify(v)}`);
       }
     }
   }
   if (node.attributes) {
-    for (let k in node.attributes) {
+    for (const k in node.attributes) {
       buff.push(` ${k}=${JSON.stringify(node.attributes[k])}`);
     }
   }
@@ -1533,18 +1533,18 @@ const renderAstNode = function(node: Record<string, any>, buff: string[], indent
 // Render an AST in human-readable form, with indentation
 // showing the hierarchy.
 const renderAST = function(doc: Doc): string {
-  let buff: string[] = [];
+  const buff: string[] = [];
   renderAstNode(doc, buff, 0)
   if (Object.keys(doc.references).length > 0) {
     buff.push("references\n");
-    for (let k in doc.references) {
+    for (const k in doc.references) {
       buff.push(`  [${JSON.stringify(k)}] =\n`);
       renderAstNode(doc.references[k], buff, 4);
     }
   }
   if (Object.keys(doc.footnotes).length > 0) {
     buff.push("footnotes\n")
-    for (let k in doc.footnotes) {
+    for (const k in doc.footnotes) {
       buff.push(`  [${JSON.stringify(k)}] =\n`);
       renderAstNode(doc.footnotes[k], buff, 4)
     }

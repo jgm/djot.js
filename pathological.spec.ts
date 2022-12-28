@@ -3,19 +3,19 @@ import { renderHTML } from "./html";
 
 const ignoreWarnings = () => { /* do nothing */ };
 
-let n = 500;
+const n = 500;
 
-let deeplynested : string[] = [];
+const deeplynested : string[] = [];
 for (let i=0; i < n; i++) {
   deeplynested[i] = " ".repeat(i+1) + "* a\n";
 }
 
-let backticks : string[] = [];
+const backticks : string[] = [];
 for (let i=0; i < 5 * n; i++) {
   backticks[i] = "e" + "`".repeat(i+1);
 }
 
-let tests : Record<string, string> = {
+const tests : Record<string, string> = {
   ["nested strong emph"]:
     "_a *a ".repeat(65*n) + "b" + " a* a_".repeat(65*n),
   ["many emph closers with no openers"]:
@@ -51,11 +51,11 @@ let tests : Record<string, string> = {
 };
 
 describe("Pathological tests", () => {
-  for (let testname in tests) {
+  for (const testname in tests) {
     it("does not exhibit pathological behavior on " + testname, () => {
-      let test : string = tests[testname];
+      const test : string = tests[testname];
       setTimeout(() => {
-        let ast = parse(test, {warn: ignoreWarnings});
+        const ast = parse(test, {warn: ignoreWarnings});
         expect(ast).toBeTruthy();
       }, 1000).unref();
     });
