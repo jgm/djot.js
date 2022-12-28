@@ -891,6 +891,10 @@ const parse = function(input: string, options: ParseOptions): Doc {
         top = topContainer();
         let key = input.substring(event.startpos, event.endpos + 1);
         top.data.key = key;
+        if (!top.attributes) {
+          top.attributes = {};
+        }
+        top.attributes[top.data.key] = "";
         break;
 
       case "value":
@@ -903,11 +907,11 @@ const parse = function(input: string, options: ParseOptions): Doc {
           top.attributes = {};
         }
         if (top.data.key) {
-          top.attributes[top.data.key] = val;
+          top.attributes[top.data.key] = // append multiple values to key
+            top.attributes[top.data.key] + val;
         } else {
           throw ("Encountered value without key");
         }
-        top.data.key = null;
         break;
 
       case "+linktext":

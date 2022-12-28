@@ -27,6 +27,7 @@ enum State {
   SCANNING_VALUE,
   SCANNING_BARE_VALUE,
   SCANNING_QUOTED_VALUE,
+  SCANNING_QUOTED_VALUE_CONTINUATION,
   SCANNING_ESCAPED,
   SCANNING_COMMENT,
   FAIL,
@@ -185,10 +186,34 @@ handlers[State.SCANNING_QUOTED_VALUE] = function(parser : AttributeParser, pos :
     parser.addEvent(parser.begin + 1, parser.lastpos, "value");
     parser.begin = null;
     return State.SCANNING;
+  } else if (c === "\n" && parser.begin && parser.lastpos) {
+    parser.addEvent(parser.begin + 1, pos, "value");
+    parser.begin = null;
+    return State.SCANNING_QUOTED_VALUE_CONTINUATION;
   } else if (c === "\\") {
     return State.SCANNING_ESCAPED;
   } else {
     return State.SCANNING_QUOTED_VALUE;
+  }
+}
+
+handlers[State.SCANNING_QUOTED_VALUE_CONTINUATION] = function(parser : AttributeParser, pos : number) {
+  const c = parser.subject.charAt(pos);
+  if (parser.begin === null) {
+    parser.begin = pos;
+  }
+  if (c === '"' && parser.begin && parser.lastpos) {
+    parser.addEvent(parser.begin, parser.lastpos, "value");
+    parser.begin = null;
+    return State.SCANNING;
+  } else if (c === "\n" && parser.begin && parser.lastpos) {
+    parser.addEvent(parser.begin, pos, "value");
+    parser.begin = null;
+    return State.SCANNING_QUOTED_VALUE_CONTINUATION;
+  } else if (c === "\\") {
+    return State.SCANNING_ESCAPED;
+  } else {
+    return State.SCANNING_QUOTED_VALUE_CONTINUATION;
   }
 }
 
