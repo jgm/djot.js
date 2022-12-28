@@ -120,7 +120,11 @@ function render() {
   } else if (mode == "ast") {
     result.innerText = djot.renderAST(ast);
   } else if (mode == "events") {
-    // TODO result.innerText = djot.parse_and_render_events(text);
+    let events = [];
+    for (let event of new djot.Block.EventParser(text)) {
+      events.push(`{ startpos: ${event.startpos}, endpos: ${event.endpos}, annot: "${event.annot}" }`);
+    }
+    result.innerText = "[" + events.join("\n,") + "]";
   } else if (mode == "html") {
     result.innerText = djot.renderHTML(ast);
   } else if (mode == "preview") {
