@@ -83,28 +83,32 @@ const debounce = (func, delay) => {
     }
 }
 
+const ignoreWarnings = () => {
+};
+
 function parse_and_render() {
   const text = document.getElementById("input").value;
-  const filter = document.getElementById("filter").value;
-  var startTime = new Date().getTime();
+  const filter = null // TODO: document.getElementById("filter").value;
   try {
-    ast = djot.parse(text, { sourcePositions: true });
+    var startTime = new Date().getTime();
+    ast = djot.parse(text, { sourcePositions: true, warn: ignoreWarnings });
     if (filter) {
       djot.applyFilter(filter);
       document.getElementById("filter-error").innerText = err;
       /* open filter so they can edit some more and see error message */
       document.getElementById("filter-modal").style.display = "block";
       filter.style.display = "block";
+      document.getElementById("filter-error").innerText = "";
     }
+    render();
+    var endTime = new Date().getTime();
+    var elapsedTime = endTime - startTime;
+    document.getElementById("elapsed-time").innerText = elapsedTime;
+    document.getElementById("kbps").innerText = ((text.length / elapsedTime)).toFixed(1);
+    document.getElementById("timing").style.visibility = "visible";
   } catch (err) {
-    document.getElementById("filter-error").innerText = "";
+    document.getElementById("filter-error").innerText = err;
   }
-  render();
-  var endTime = new Date().getTime();
-  var elapsedTime = endTime - startTime;
-  document.getElementById("elapsed-time").innerText = elapsedTime;
-  document.getElementById("kbps").innerText = ((text.length / elapsedTime)).toFixed(1);
-  document.getElementById("timing").style.visibility = "visible";
 }
 
 function render() {
@@ -129,7 +133,6 @@ function render() {
     result.innerText = djot.renderHTML(ast, { sourcePositions: sourcepos });
   } else if (mode == "preview") {
     let rendered = djot.renderHTML(ast, { sourcePositions: true });
-    alert(rendered.length);
     inject(iframe, rendered);
   }
   iframe.style.display = mode == "preview" ? "block" : "none";
