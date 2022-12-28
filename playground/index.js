@@ -1,7 +1,64 @@
 var ast;
 var initialized = false;
 
-var filterExamples = {};
+var filterExamples =
+  { "capitalize_text":
+`// This filter capitalizes regular text, leaving code and URLs unaffected
+return {
+  str: (el) => {
+    el.text = el.text.toUpperCase();
+  }
+}`
+  , "empty_filter":
+`return {
+}`
+  , "capitalize_emph":
+`// This filter capitalizes the contents of emph
+// nodes instead of italicizing them.
+let capitalize = 0;
+return {
+   emph: {
+     enter: (e) => {
+       capitalize = capitalize + 1;
+     },
+     exit: (e) => {
+       capitalize = capitalize - 1;
+       e.tag = "span";
+     },
+   },
+   str: (e) => {
+     if (capitalize > 0) {
+       e.text = e.text.toUpperCase();
+      }
+   }
+}`
+  , "multiple_filters":
+`// This filter includes two sub-filters, run in sequence
+return [
+  { // first filter changes (TM) to trademark symbol
+    str: (e) => {
+      e.text = e.text.replace(/\\(TM\\)/, "™");
+    }
+  },
+  { // second filter changes '[]' to '()' in text
+    str: (e) => {
+      e.text = e.text.replace(/\\(/,"[").replace(/\\)/,"]");
+    }
+  }
+]`,
+  "letter_enumerated_lists_to_roman":
+`// Changes letter-enumerated lists to roman-numbered
+return {
+  list: (e) => {
+    if (e.style === 'a.') {
+      e.style = 'i.';
+    } else if (e.style === 'A.') {
+      e.style = 'I.';
+    }
+  }
+}`
+  };
+
 
 window.onload = () => {
   const input = document.getElementById("input");
