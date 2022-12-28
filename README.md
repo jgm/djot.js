@@ -17,7 +17,7 @@ Road map:
 - [X] functional tests (from lua implementation)
 - [X] pathological tests
 - [X] filter API
-- [ ] replace current wasm in djot sandbox
+- [X] replace current wasm in djot sandbox
 - [ ] full-featured cli
 - [ ] benchmarks
 - [ ] node module
