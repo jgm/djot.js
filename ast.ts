@@ -19,7 +19,7 @@ interface HasAttributes {
 }
 
 interface HasChildren {
-  children: any[];
+  children: AstNode[];
 }
 
 interface HasInlineChildren {
@@ -329,7 +329,7 @@ interface Doc extends HasBlockChildren, HasAttributes {
 interface Container {
   children: any[];
   attributes?: Attributes;
-  data?: any;
+  data: Record<string,any>;
   pos?: Pos;
 }
 
