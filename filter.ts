@@ -74,24 +74,26 @@ import { AstNode } from "./ast";
 type Transform = (node : any) => void | boolean;
 type Action = Transform | { enter ?: Transform, exit : Transform };
 type FilterPart = Record<string, Action>;
-type Filter = () => FilterPart[];
+type Filter = () => (FilterPart | FilterPart[]);
 
 const handleAstNode = function(node : any, filterpart : FilterPart) : void {
   if (!node || !node.tag) {
     throw("Filter caled on a non-node.");
   }
-  let actionIn : Transform | undefined;
-  let actionOut : Transform | undefined;
-  let action = filterpart[node.tag];
-  if (action) {
-    if ("exit" in action) {
-      actionOut = action.exit;
-      actionIn = action.enter;
+  let transformIn : Transform | undefined;
+  let transformOut : Transform | undefined;
+  let transform = filterpart[node.tag];
+  if (transform) {
+    if ("exit" in transform && transform.exit) {
+      transformOut = transform.exit;
+      transformIn = transform.enter;
+    } else if (typeof transform === "function") {
+      transformOut = transform;
     } else {
-      actionOut = action;
+      throw("Transform has wrong type.");
     }
-    if (actionIn) {
-      let stopTraversal = actionIn(node);
+    if (transformIn) {
+      let stopTraversal = transformIn(node);
       if (stopTraversal) {
         return;
       }
@@ -108,8 +110,8 @@ const handleAstNode = function(node : any, filterpart : FilterPart) : void {
       handleAstNode(note, filterpart);
     }
   }
-  if (actionOut) {
-    actionOut(node);
+  if (transformOut) {
+    transformOut(node);
   }
 }
 
@@ -120,10 +122,17 @@ const traverse = function(node : AstNode, filterpart : FilterPart) : AstNode {
 }
 
 // Apply a filter to a document.
-const applyFilter = function(node : AstNode, filter : Filter) {
-  filter().forEach((filterpart : FilterPart) => {
-    traverse(node, filterpart);
-  });
+const applyFilter = function(node : AstNode, filter : Filter) : void {
+  let f : FilterPart | FilterPart[] = filter();
+  if (Array.isArray(f)) {
+    for (let i=0; i<f.length; i++) {
+      traverse(node, f[i]);
+    }
+  } else if (typeof f === "object") {
+    traverse(node, f);
+  } else {
+    throw("Filter returned wrong type: " + typeof f);
+  }
 }
 
 export {
