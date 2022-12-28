@@ -16,9 +16,9 @@ Road map:
 - [X] html renderer (html.ts)
 - [X] functional tests (from lua implementation)
 - [X] pathological tests
-- [ ] filter API
+- [X] filter API
+- [ ] replace current wasm in djot sandbox
 - [ ] full-featured cli
 - [ ] benchmarks
 - [ ] node module
-- [ ] replace current wasm in djot sandbox
 
