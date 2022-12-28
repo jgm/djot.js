@@ -3,7 +3,6 @@ import {
   AstNode, ParseOptions, getStringContent
 }
   from "./ast";
-const emoji = require("node-emoji");
 
 const defaultWarnings = function(message: string, pos: number) {
   console.log(message + (pos ? " at " + pos : "") + "\n");
@@ -323,13 +322,8 @@ class HTMLRenderer {
         this.literal("&ndash;");
         break;
 
-      case "emoji": {
-        const ch = emoji.get(node.alias);
-        if (ch) {
-          this.out(ch);
-        } else {
-          this.out(`:${node.alias}:`);
-        }
+      case "symbol": {
+        this.out(`:${node.alias}:`);
         break;
       }
 

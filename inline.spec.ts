@@ -208,12 +208,12 @@ describe("InlineParser", () => {
     ]);
   });
 
-  it("parses emojis", () => {
+  it("parses symbols", () => {
     const parser = new InlineParser(':+1:', ignoreWarnings);
     //                             0123
     parser.feed(0,3);
     expect(parser.getMatches()).toStrictEqual([
-      { annot: "emoji", startpos: 0, endpos: 3 }
+      { annot: "symbol", startpos: 0, endpos: 3 }
     ]);
   });
 

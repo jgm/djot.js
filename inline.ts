@@ -114,7 +114,7 @@ const pattLineEnd = pattern("[ \\t]*\\r?\\n");
 const pattPunctuation = pattern("['!\"#$%&\\\\'()\\*+,\\-\\.\\/:;<=>?@\\[\\]\\^_`{|}~']");
 const pattAutolink = pattern("\\<([^<>\\s]+)\\>");
 const pattDelim = pattern("[_*~^+='\"-]");
-const pattEmoji = pattern(":[\\w_+-]+:");
+const pattSymbol = pattern(":[\\w_+-]+:");
 const pattTwoPeriods = pattern("\\.\\.");
 const pattBackticks0 = pattern("`*");
 const pattBackticks1 = pattern("`+");
@@ -344,9 +344,9 @@ const matchers = {
   },
 
   [C_COLON]: function(self: InlineParser, pos: number, endpos: number): number | null {
-    const m = boundedFind(self.subject, pattEmoji, pos, endpos)
+    const m = boundedFind(self.subject, pattSymbol, pos, endpos)
     if (m) {
-      self.addMatch(m.startpos, m.endpos, "emoji");
+      self.addMatch(m.startpos, m.endpos, "symbol");
       return m.endpos + 1;
     } else {
       self.addMatch(pos, pos, "str");

@@ -102,7 +102,7 @@ type Inline = Str
   | SoftBreak
   | HardBreak
   | Nbsp
-  | Emoji
+  | Symb
   | Verbatim
   | RawInline
   | Math
@@ -187,8 +187,8 @@ interface Nbsp extends HasAttributes {
   tag: "nbsp";
 }
 
-interface Emoji extends HasAttributes {
-  tag: "emoji";
+interface Symb extends HasAttributes {
+  tag: "symbol";
   alias: string;
 }
 
@@ -593,10 +593,10 @@ const parse = function(input: string, options: ParseOptions): Doc {
         }
       },
 
-      emoji: (suffixes, startpos, endpos, pos) => {
+      symbol: (suffixes, startpos, endpos, pos) => {
         if (context === Context.Normal) {
           const alias = input.substring(startpos + 1, endpos);
-          addChildToTip({ tag: "emoji", alias: alias }, pos);
+          addChildToTip({ tag: "symbol", alias: alias }, pos);
         } else {
           const txt = input.substring(startpos, endpos + 1);
           accumulatedText.push(txt);
@@ -1598,7 +1598,7 @@ export {
   SoftBreak,
   HardBreak,
   Nbsp,
-  Emoji,
+  Symb,
   Verbatim,
   RawInline,
   Math,
