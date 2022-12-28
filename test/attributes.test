@@ -288,11 +288,11 @@ doc
 
 ``` a
 > {key="bar
->    bim"}
+>    a\$bim"}
 > ou
 .
 doc
   blockquote
-    para key="bar bim"
+    para key="bar a$bim"
       str text="ou"
 ```

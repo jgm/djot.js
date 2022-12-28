@@ -29,6 +29,7 @@ enum State {
   SCANNING_QUOTED_VALUE,
   SCANNING_QUOTED_VALUE_CONTINUATION,
   SCANNING_ESCAPED,
+  SCANNING_ESCAPED_IN_CONTINUATION,
   SCANNING_COMMENT,
   FAIL,
   DONE,
@@ -180,6 +181,10 @@ handlers[State.SCANNING_ESCAPED] = function(parser : AttributeParser, pos : numb
   return State.SCANNING_QUOTED_VALUE;
 }
 
+handlers[State.SCANNING_ESCAPED_IN_CONTINUATION] = function(parser : AttributeParser, pos : number) {
+  return State.SCANNING_QUOTED_VALUE_CONTINUATION;
+}
+
 handlers[State.SCANNING_QUOTED_VALUE] = function(parser : AttributeParser, pos : number) {
   const c = parser.subject.charAt(pos);
   if (c === '"' && parser.begin && parser.lastpos) {
@@ -211,7 +216,7 @@ handlers[State.SCANNING_QUOTED_VALUE_CONTINUATION] = function(parser : Attribute
     parser.begin = null;
     return State.SCANNING_QUOTED_VALUE_CONTINUATION;
   } else if (c === "\\") {
-    return State.SCANNING_ESCAPED;
+    return State.SCANNING_ESCAPED_IN_CONTINUATION;
   } else {
     return State.SCANNING_QUOTED_VALUE_CONTINUATION;
   }
