@@ -198,7 +198,7 @@ class EventParser {
         content: ContentType.Inline,
         continue: (container) => {
           const m = this.find(pattBangs);
-          if (m && container.extra.level == (m.endpos - m.startpos + 1) &&
+          if (m && container.extra.level === (m.endpos - m.startpos + 1) &&
             find(this.subject, pattWhitespace, m.endpos + 1)) {
             this.pos = m.endpos + 1;
             return true;

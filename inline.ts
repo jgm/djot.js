@@ -520,8 +520,8 @@ const matchers = {
       return pos + 2;
     }
     // Try to construct a homogeneous sequence of dashes
-    const all_em = hyphens % 3 == 0;
-    const all_en = hyphens % 2 == 0;
+    const all_em = hyphens % 3 === 0;
+    const all_en = hyphens % 2 === 0;
     while (hyphens > 0) {
       if (all_em) {
         self.addMatch(pos, pos + 2, "em_dash");
@@ -711,10 +711,10 @@ class InlineParser {
 
     // Feed a slice to the parser, updating state.
     const subject = this.subject;
-    if (this.firstpos == -1 || startpos < this.firstpos) {
+    if (this.firstpos === -1 || startpos < this.firstpos) {
       this.firstpos = startpos;
     }
-    if (this.lastpos == 0 || endpos > this.lastpos) {
+    if (this.lastpos === 0 || endpos > this.lastpos) {
       this.lastpos = endpos;
     }
     let pos = startpos;
@@ -798,7 +798,7 @@ class InlineParser {
               if (m.endpos - pos + 1 === this.verbatim) {
                 // check for raw attribute
                 const m2 = boundedFind(subject, pattRawAttribute, endchar + 1, endpos);
-                if (m2 && this.verbatimType == "verbatim") { // raw
+                if (m2 && this.verbatimType === "verbatim") { // raw
                   this.addMatch(pos, endchar, "-" + this.verbatimType);
                   this.addMatch(m2.startpos, m2.endpos, "raw_format");
                   pos = m2.endpos + 1;
