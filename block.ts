@@ -668,7 +668,9 @@ class EventParser {
         content: ContentType.Text,
         continue: (container) => {
           const m = this.find(
-            pattern("(" + container.extra.border + "*)[ \\t]*[\\r\\n]"));
+            pattern("(" + container.extra.border +
+                          container.extra.border.substring(0,1) +
+                          "*)[ \\t]*[\\r\\n]"));
           if (m) {
             container.extra.endFenceStartpos = m.startpos;
             container.extra.endFenceEndpos = m.startpos + m.captures[0].length - 1;
