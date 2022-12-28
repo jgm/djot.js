@@ -10,8 +10,6 @@ const getListStyles = function(marker: string): string[] {
     return [marker];
   } else if (/^[+*-] \[[Xx ]\]/.exec(marker)) {
     return ["X"]; // task list
-  } else if (/^\[[Xx ]\]/.exec(marker)) {
-    return ["X"];
   } else if (/^[(]?[0-9]+[).]/.exec(marker)) {
     return [marker.replace(/[0-9]+/, "1")];
   } else if (/^[(]?[ivxlcdm][).]/.exec(marker)) {
