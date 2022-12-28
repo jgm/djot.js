@@ -1439,10 +1439,8 @@ const parse = function(input: string, options: ParseOptions): Doc {
         }
       }
       if (ln) {
-        if (!/^[+-]list/.test(annot)) {
-          if (ln.data.blanklines) {
-            ln.data.tight = false;
-          }
+        if (!/^[+-]list/.test(annot) && ln.data.blanklines) {
+          ln.data.tight = false;
         }
         if (!/^[-+]list_item$/.test(annot)) {
           ln.data.blanklines = false;
