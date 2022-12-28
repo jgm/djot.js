@@ -551,14 +551,15 @@ const parse = function(input: string, options: ParseOptions): Doc {
   }
 
 
-  const callHandler = function(event : Event,
-                               annot : string,
-                               suffixes : string[],
-                               pos : Pos | undefined) : void {
+  const callHandler = function( annot : string,
+                                suffixes : string[],
+                                startpos : number,
+                                endpos : number,
+                                pos : Pos | undefined) : void {
     switch (annot) {
 
       case "str": {
-        const txt = input.substring(event.startpos, event.endpos + 1);
+        const txt = input.substring(startpos, endpos + 1);
         if (context === Context.Normal) {
           addChildToTip({ tag: "str", text: txt }, pos);
         } else {
@@ -603,17 +604,17 @@ const parse = function(input: string, options: ParseOptions): Doc {
 
       case "emoji": {
         if (context === Context.Normal) {
-          const alias = input.substring(event.startpos + 1, event.endpos);
+          const alias = input.substring(startpos + 1, endpos);
           addChildToTip({ tag: "emoji", alias: alias }, pos);
         } else {
-          const txt = input.substring(event.startpos, event.endpos + 1);
+          const txt = input.substring(startpos, endpos + 1);
           accumulatedText.push(txt);
         }
         break;
       }
 
       case "footnote_reference": {
-        const fnref = input.substring(event.startpos + 2, event.endpos);
+        const fnref = input.substring(startpos + 2, endpos);
         addChildToTip({ tag: "footnote_reference", text: fnref }, pos);
         break;
       }
@@ -637,16 +638,16 @@ const parse = function(input: string, options: ParseOptions): Doc {
       }
 
       case "reference_key": {
-        topContainer().data.key = input.substring(event.startpos + 1,
-          event.endpos);
+        topContainer().data.key = input.substring(startpos + 1,
+          endpos);
         topContainer().data.value = "";
         break;
       }
 
       case "reference_value": {
         topContainer().data.value =
-          topContainer().data.value + input.substring(event.startpos,
-            event.endpos + 1);
+          topContainer().data.value + input.substring(startpos,
+            endpos + 1);
         break;
       }
 
@@ -807,7 +808,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
           }
           tip = getTip(); // get new tip, which may be the new element
           if (endsWithSpace) {
-            warn("Ignoring unattached attribute", event.startpos);
+            warn("Ignoring unattached attribute", startpos);
             break;
           }
           if (!tip.attributes) {
@@ -858,7 +859,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
 
       case "class": {
         const top = topContainer();
-        const cl = input.substring(event.startpos, event.endpos + 1);
+        const cl = input.substring(startpos, endpos + 1);
         if (!top.attributes) {
           top.attributes = {};
         }
@@ -872,7 +873,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
 
       case "id": {
         const top = topContainer();
-        const id = input.substring(event.startpos, event.endpos + 1);
+        const id = input.substring(startpos, endpos + 1);
         if (!top.attributes) {
           top.attributes = { id: id };
         } else {
@@ -883,7 +884,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
 
       case "key": {
         const top = topContainer();
-        const key = input.substring(event.startpos, event.endpos + 1);
+        const key = input.substring(startpos, endpos + 1);
         top.data.key = key;
         if (!top.attributes) {
           top.attributes = {};
@@ -894,7 +895,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
 
       case "value": {
         const top = topContainer();
-        const val = input.substring(event.startpos, event.endpos + 1)
+        const val = input.substring(startpos, endpos + 1)
           .replace(/[ \r\n]+/g, " ")  // collapse interior whitespace
           .replace(/\\(?=[.,\\/#!$%^&*;:{}=\-_`~+[\]()'"?|])/g, "");
         // resolve backslash escapes
@@ -989,7 +990,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
       }
 
       case "raw_format": {
-        const format = input.substring(event.startpos, event.endpos + 1)
+        const format = input.substring(startpos, endpos + 1)
           .replace(/^\{?=/, "")
           .replace(/\}$/, "");
         const top = topContainer();
@@ -1018,7 +1019,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
       case "-inline_math": {
         const node = popContainer(pos);
         addChildToTip({
-          tag: "math", display: event.annot === "-display_math",
+          tag: "math", display: annot === "-display_math",
           text: trimVerbatim(accumulatedText.join(""))
         },
           node.pos);
@@ -1076,7 +1077,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
 
       case "+heading": {
         pushContainer(pos);
-        topContainer().data.level = 1 + event.endpos - event.startpos;
+        topContainer().data.level = 1 + endpos - startpos;
         break;
       }
 
@@ -1167,7 +1168,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
         }
         if (!topContainer().data.firstMarker) {
           topContainer().data.firstMarker =
-            input.substring(event.startpos, event.endpos + 1);
+            input.substring(startpos, endpos + 1);
         }
         pushContainer(pos);
         if (suffixes.length === 1 && suffixes[0] === ":") {
@@ -1371,14 +1372,14 @@ const parse = function(input: string, options: ParseOptions): Doc {
             pos: node.pos
           };
         } else {
-          warn("Ignoring footnote without a label.", event.endpos);
+          warn("Ignoring footnote without a label.", endpos);
         }
         break;
       }
 
       case "note_label": {
         topContainer().data.label =
-          input.substring(event.startpos, event.endpos + 1);
+          input.substring(startpos, endpos + 1);
         break;
       }
 
@@ -1412,7 +1413,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
 
       case "code_language": {
         const top = topContainer();
-        top.data.lang = input.substring(event.startpos, event.endpos + 1);
+        top.data.lang = input.substring(startpos, endpos + 1);
         break;
       }
 
@@ -1490,7 +1491,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
       }
 
       default:
-      // throw("Unknown event " + event.annot);
+      // throw("Unknown event " + annot);
     }
   }
 
@@ -1538,7 +1539,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
         }
       }
     }
-    callHandler(event, annot, suffixes, pos);
+    callHandler(annot, suffixes, event.startpos, event.endpos, pos);
 
   }
 
