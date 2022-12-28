@@ -551,58 +551,49 @@ const parse = function(input: string, options: ParseOptions): Doc {
   }
 
 
-  const callHandler = function( annot : string,
-                                suffixes : string[],
-                                startpos : number,
-                                endpos : number,
-                                pos : Pos | undefined) : void {
-    switch (annot) {
-
-      case "str": {
+  const handlers : Record<string, (suffixes : string[],
+                                   startpos : number,
+                                   endpos : number,
+                                   pos : Pos | undefined) => void> =
+   {  str: (suffixes, startpos, endpos, pos) => {
         const txt = input.substring(startpos, endpos + 1);
         if (context === Context.Normal) {
           addChildToTip({ tag: "str", text: txt }, pos);
         } else {
           accumulatedText.push(txt);
         }
-        break;
-      }
-
-      case "softbreak": {
+      },
+      softbreak: (suffixes, startpos, endpos, pos) => {
         if (context === Context.Normal) {
           addChildToTip({ tag: "softbreak" }, pos);
         } else {
           accumulatedText.push("\n");
         }
-        break;
-      }
+      },
 
-      case "escape": {
+      escape: (suffixes, startpos, endpos, pos) => {
         if (context === Context.Verbatim) {
           accumulatedText.push("\\");
         }
-        break;
-      }
+      },
 
-      case "hardbreak": {
+      hardbreak: (suffixes, startpos, endpos, pos) => {
         if (context === Context.Normal) {
           addChildToTip({ tag: "hardbreak" }, pos);
         } else {
           accumulatedText.push("\n");
         }
-        break;
-      }
+      },
 
-      case "nbsp": {
+      nbsp: (suffixes, startpos, endpos, pos) => {
         if (context === Context.Verbatim) {
           accumulatedText.push("\\ ");
         } else {
           addChildToTip({ tag: "nbsp" }, pos);
         }
-        break;
-      }
+      },
 
-      case "emoji": {
+      emoji: (suffixes, startpos, endpos, pos) => {
         if (context === Context.Normal) {
           const alias = input.substring(startpos + 1, endpos);
           addChildToTip({ tag: "emoji", alias: alias }, pos);
@@ -610,21 +601,18 @@ const parse = function(input: string, options: ParseOptions): Doc {
           const txt = input.substring(startpos, endpos + 1);
           accumulatedText.push(txt);
         }
-        break;
-      }
+      },
 
-      case "footnote_reference": {
+      footnote_reference: (suffixes, startpos, endpos, pos) => {
         const fnref = input.substring(startpos + 2, endpos);
         addChildToTip({ tag: "footnote_reference", text: fnref }, pos);
-        break;
-      }
+      },
 
-      case "+reference_definition": {
+      ["+reference_definition"]: (suffixes, startpos, endpos, pos) => {
         pushContainer(pos);
-        break;
-      }
+      },
 
-      case "-reference_definition": {
+      ["-reference_definition"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         const r: Reference = {
           tag: "reference",
@@ -634,139 +622,115 @@ const parse = function(input: string, options: ParseOptions): Doc {
         if (node.data.key) {
           references[node.data.key] = r;
         }
-        break;
-      }
+      },
 
-      case "reference_key": {
+      reference_key: (suffixes, startpos, endpos, pos) => {
         topContainer().data.key = input.substring(startpos + 1,
           endpos);
         topContainer().data.value = "";
-        break;
-      }
+      },
 
-      case "reference_value": {
+      reference_value: (suffixes, startpos, endpos, pos) => {
         topContainer().data.value =
           topContainer().data.value + input.substring(startpos,
             endpos + 1);
-        break;
-      }
+      },
 
-      case "+emph": {
+      ["+emph"]: (suffixes, startpos, endpos, pos) => {
         pushContainer(pos);
-        break;
-      }
+      },
 
-      case "-emph": {
+      ["-emph"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         addChildToTip({ tag: "emph", children: node.children }, node.pos);
-        break;
-      }
+      },
 
-      case "+strong": {
+      ["+strong"]: (suffixes, startpos, endpos, pos) => {
         pushContainer(pos);
-        break;
-      }
+      },
 
-      case "-strong": {
+      ["-strong"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         addChildToTip({ tag: "strong", children: node.children }, node.pos);
-        break;
-      }
+      },
 
-      case "+span": {
+      ["+span"]: (suffixes, startpos, endpos, pos) => {
         pushContainer(pos);
-        break;
-      }
+      },
 
-      case "-span": {
+      ["-span"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         addChildToTip({ tag: "span", children: node.children }, node.pos);
-        break;
-      }
+      },
 
-      case "+mark": {
+      ["+mark"]: (suffixes, startpos, endpos, pos) => {
         pushContainer(pos);
-        break;
-      }
+      },
 
-      case "-mark": {
+      ["-mark"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         addChildToTip({ tag: "mark", children: node.children }, node.pos);
-        break;
-      }
+      },
 
-      case "+superscript": {
+      ["+superscript"]: (suffixes, startpos, endpos, pos) => {
         pushContainer(pos);
-        break;
-      }
+      },
 
-      case "-superscript": {
+      ["-superscript"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         addChildToTip({ tag: "superscript", children: node.children }, node.pos);
-        break;
-      }
+      },
 
-      case "+subscript": {
+      ["+subscript"]: (suffixes, startpos, endpos, pos) => {
         pushContainer(pos);
-        break;
-      }
+      },
 
-      case "-subscript": {
+      ["-subscript"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         addChildToTip({ tag: "subscript", children: node.children }, node.pos);
-        break;
-      }
+      },
 
-      case "+delete": {
+      ["+delete"]: (suffixes, startpos, endpos, pos) => {
         pushContainer(pos);
-        break;
-      }
+      },
 
-      case "-delete": {
+      ["-delete"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         addChildToTip({ tag: "delete", children: node.children }, node.pos);
-        break;
-      }
+      },
 
-      case "+insert": {
+      ["+insert"]: (suffixes, startpos, endpos, pos) => {
         pushContainer(pos);
-        break;
-      }
+      },
 
-      case "-insert": {
+      ["-insert"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         addChildToTip({ tag: "insert", children: node.children }, node.pos);
-        break;
-      }
+      },
 
-      case "+double_quoted": {
+      ["+double_quoted"]: (suffixes, startpos, endpos, pos) => {
         pushContainer(pos);
-        break;
-      }
+      },
 
-      case "-double_quoted": {
+      ["-double_quoted"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         addChildToTip({ tag: "double_quoted", children: node.children }, node.pos);
-        break;
-      }
+      },
 
-      case "+single_quoted": {
+      ["+single_quoted"]: (suffixes, startpos, endpos, pos) => {
         pushContainer(pos);
-        break;
-      }
+      },
 
-      case "-single_quoted": {
+      ["-single_quoted"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         addChildToTip({ tag: "single_quoted", children: node.children }, node.pos);
-        break;
-      }
+      },
 
-      case "+attributes": {
+      ["+attributes"]: (suffixes, startpos, endpos, pos) => {
         pushContainer(pos);
-        break;
-      }
+      },
 
-      case "-attributes": {
+      ["-attributes"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         if (node.attributes && containers.length > 0) {
           if (node.attributes.id) {
@@ -809,7 +773,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
           tip = getTip(); // get new tip, which may be the new element
           if (endsWithSpace) {
             warn("Ignoring unattached attribute", startpos);
-            break;
+            return;
           }
           if (!tip.attributes) {
             tip.attributes = {};
@@ -827,15 +791,13 @@ const parse = function(input: string, options: ParseOptions): Doc {
             }
           }
         }
-        break;
-      }
+      },
 
-      case "+block_attributes": {
+      ["+block_attributes"]: (suffixes, startpos, endpos, pos) => {
         pushContainer(pos);
-        break;
-      }
+      },
 
-      case "-block_attributes": {
+      ["-block_attributes"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         if (node.attributes && containers.length > 0) {
           if (node.attributes.id) {
@@ -854,10 +816,9 @@ const parse = function(input: string, options: ParseOptions): Doc {
             }
           }
         }
-        break;
-      }
+      },
 
-      case "class": {
+      class: (suffixes, startpos, endpos, pos) => {
         const top = topContainer();
         const cl = input.substring(startpos, endpos + 1);
         if (!top.attributes) {
@@ -868,10 +829,9 @@ const parse = function(input: string, options: ParseOptions): Doc {
         } else {
           top.attributes.class = cl;
         }
-        break;
-      }
+      },
 
-      case "id": {
+      id: (suffixes, startpos, endpos, pos) => {
         const top = topContainer();
         const id = input.substring(startpos, endpos + 1);
         if (!top.attributes) {
@@ -879,10 +839,9 @@ const parse = function(input: string, options: ParseOptions): Doc {
         } else {
           top.attributes.id = id;
         }
-        break;
-      }
+      },
 
-      case "key": {
+      key: (suffixes, startpos, endpos, pos) => {
         const top = topContainer();
         const key = input.substring(startpos, endpos + 1);
         top.data.key = key;
@@ -890,10 +849,9 @@ const parse = function(input: string, options: ParseOptions): Doc {
           top.attributes = {};
         }
         top.attributes[top.data.key] = "";
-        break;
-      }
+      },
 
-      case "value": {
+      value: (suffixes, startpos, endpos, pos) => {
         const top = topContainer();
         const val = input.substring(startpos, endpos + 1)
           .replace(/[ \r\n]+/g, " ")  // collapse interior whitespace
@@ -908,37 +866,31 @@ const parse = function(input: string, options: ParseOptions): Doc {
         } else {
           throw ("Encountered value without key");
         }
-        break;
-      }
+      },
 
-      case "+linktext": {
+      ["+linktext"]: (suffixes, startpos, endpos, pos) => {
         pushContainer(pos);
         topContainer().data.isimage = false;
-        break;
-      }
+      },
 
-      case "-linktext": {
+      ["-linktext"]: (suffixes, startpos, endpos, pos) => {
         // we don't pop yet, but wait for -destination
-        break;
-      }
+      },
 
-      case "+imagetext": {
+      ["+imagetext"]: (suffixes, startpos, endpos, pos) => {
         pushContainer(pos);
         topContainer().data.isimage = true;
-        break;
-      }
+      },
 
-      case "-imagetext": {
+      ["-imagetext"]: (suffixes, startpos, endpos, pos) => {
         // we don't pop yet, but wait for -destination
-        break;
-      }
+      },
 
-      case "+destination": {
+      ["+destination"]: (suffixes, startpos, endpos, pos) => {
         context = Context.Literal;
-        break;
-      }
+      },
 
-      case "-destination": {
+      ["-destination"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);  // the container added by +linktext/+imagetext
         addChildToTip({
           tag: node.data.isimage ? "image" : "link",
@@ -947,15 +899,13 @@ const parse = function(input: string, options: ParseOptions): Doc {
         }, node.pos);
         context = Context.Normal;
         accumulatedText = [];
-        break;
-      }
+      },
 
-      case "+reference": {
+      ["+reference"]: (suffixes, startpos, endpos, pos) => {
         context = Context.Literal;
-        break;
-      }
+      },
 
-      case "-reference": {
+      ["-reference"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);  // the container added by +linktext
         let ref = accumulatedText.join("").replace(/\r?\n/g," ");
         if (ref.length === 0) {
@@ -968,16 +918,14 @@ const parse = function(input: string, options: ParseOptions): Doc {
         }, node.pos);
         context = Context.Normal;
         accumulatedText = [];
-        break;
-      }
+      },
 
-      case "+verbatim": {
+      ["+verbatim"]: (suffixes, startpos, endpos, pos) => {
         context = Context.Verbatim;
         pushContainer(pos);
-        break;
-      }
+      },
 
-      case "-verbatim": {
+      ["-verbatim"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         addChildToTip({
           tag: "verbatim",
@@ -986,10 +934,9 @@ const parse = function(input: string, options: ParseOptions): Doc {
           node.pos);
         context = Context.Normal;
         accumulatedText = [];
-        break;
-      }
+      },
 
-      case "raw_format": {
+      raw_format: (suffixes, startpos, endpos, pos) => {
         const format = input.substring(startpos, endpos + 1)
           .replace(/^\{?=/, "")
           .replace(/\}$/, "");
@@ -1005,83 +952,87 @@ const parse = function(input: string, options: ParseOptions): Doc {
             throw ("raw_format is not after verbatim or code_block");
           }
         }
-        break;
-      }
+      },
 
-      case "+display_math":
-      case "+inline_math": {
+      ["+display_math"]: (suffixes, startpos, endpos, pos) => {
         context = Context.Verbatim;
         pushContainer(pos);
-        break;
-      }
+      },
 
-      case "-display_math":
-      case "-inline_math": {
+      ["+inline_math"]: (suffixes, startpos, endpos, pos) => {
+        context = Context.Verbatim;
+        pushContainer(pos);
+      },
+
+      ["-display_math"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         addChildToTip({
-          tag: "math", display: annot === "-display_math",
+          tag: "math", display: true,
           text: trimVerbatim(accumulatedText.join(""))
         },
           node.pos);
         context = Context.Normal;
         accumulatedText = [];
-        break;
-      }
+      },
 
-      case "+url": {
+      ["-inline_math"]: (suffixes, startpos, endpos, pos) => {
+        const node = popContainer(pos);
+        addChildToTip({
+          tag: "math", display: false,
+          text: trimVerbatim(accumulatedText.join(""))
+        },
+          node.pos);
+        context = Context.Normal;
+        accumulatedText = [];
+      },
+
+      ["+url"]: (suffixes, startpos, endpos, pos) => {
         context = Context.Literal;
         pushContainer(pos);
-        break;
-      }
+      },
 
-      case "-url": {
+      ["-url"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         addChildToTip({ tag: "url",
                         text: accumulatedText.join("").replace(/[\r\n]/g,"")
                       }, node.pos);
         context = Context.Normal;
         accumulatedText = [];
-        break;
-      }
+      },
 
-      case "+email": {
+      ["+email"]: (suffixes, startpos, endpos, pos) => {
         context = Context.Literal;
         pushContainer(pos);
-        break;
-      }
+      },
 
-      case "-email": {
+      ["-email"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         addChildToTip({ tag: "email",
                         text: accumulatedText.join("").replace(/[\r\n]/g,"")
                       }, node.pos);
         context = Context.Normal;
         accumulatedText = [];
-        break;
-      }
+      },
 
-      case "+para": {
+      ["+para"]: (suffixes, startpos, endpos, pos) => {
         pushContainer(pos);
-        break;
-      }
+      },
 
-      case "-para": {
+      ["-para"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         addChildToTip({
           tag: "para",
           children: node.children,
           attributes: node.attributes
         }, node.pos);
-        break;
-      }
+      },
 
-      case "+heading": {
+      ["+heading"]: (suffixes, startpos, endpos, pos) => {
         pushContainer(pos);
         topContainer().data.level = 1 + endpos - startpos;
-        break;
-      }
+      },
 
-      case "-heading": {
+      ["-heading"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         if (!node.attributes) {
           node.attributes = {};
@@ -1131,18 +1082,16 @@ const parse = function(input: string, options: ParseOptions): Doc {
           children: node.children,
           attributes: node.attributes
         }, node.pos);
-        break;
-      }
+      },
 
-      case "+list": {
+      ["+list"]: (suffixes, startpos, endpos, pos) => {
         pushContainer(pos);
         topContainer().data.styles = suffixes;
         topContainer().data.blanklines = false;
         topContainer().data.tight = true;
-        break;
-      }
+      },
 
-      case "-list": {
+      ["-list"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         // take first if ambiguous
         const listStyle = node.data.styles[0];
@@ -1158,10 +1107,9 @@ const parse = function(input: string, options: ParseOptions): Doc {
           tight: node.data.tight,
           attributes: node.attributes
         }, node.pos);
-        break;
-      }
+      },
 
-      case "+list_item": {
+      ["+list_item"]: (suffixes, startpos, endpos, pos) => {
         // narrow styles
         if (suffixes.length < topContainer().data.styles.length) {
           topContainer().data.styles = suffixes;
@@ -1174,10 +1122,9 @@ const parse = function(input: string, options: ParseOptions): Doc {
         if (suffixes.length === 1 && suffixes[0] === ":") {
           topContainer().data.definitionList = true;
         }
-        break;
-      }
+      },
 
-      case "-list_item": {
+      ["-list_item"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         if (node.data.definitionList) {
           if (node.children[0] && node.children[0].tag === "para") {
@@ -1218,57 +1165,49 @@ const parse = function(input: string, options: ParseOptions): Doc {
             checkbox: node.data.checkbox,
           }, node.pos);
         }
-        break;
-      }
+      },
 
-      case "checkbox_checked": {
+      checkbox_checked: (suffixes, startpos, endpos, pos) => {
         topContainer().data.checkbox = "checked";
-        break;
-      }
+      },
 
-      case "checkbox_unchecked": {
+      checkbox_unchecked: (suffixes, startpos, endpos, pos) => {
         topContainer().data.checkbox = "unchecked";
-        break;
-      }
+      },
 
-      case "+blockquote": {
+      ["+blockquote"]: (suffixes, startpos, endpos, pos) => {
         pushContainer(pos);
-        break;
-      }
+      },
 
-      case "-blockquote": {
+      ["-blockquote"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         addChildToTip({
           tag: "blockquote",
           children: node.children,
           attributes: node.attributes
         }, node.pos);
-        break;
-      }
+      },
 
-      case "+table": {
+      ["+table"]: (suffixes, startpos, endpos, pos) => {
         pushContainer(pos);
         topContainer().data.aligns = [];
-        break;
-      }
+      },
 
-      case "-table": {
+      ["-table"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         addChildToTip({
           tag: "table",
           children: node.children,
           attributes: node.attributes
         }, node.pos);
-        break;
-      }
+      },
 
-      case "+row": {
+      ["+row"]: (suffixes, startpos, endpos, pos) => {
         pushContainer(pos);
         topContainer().data.aligns = [];
-        break;
-      }
+      },
 
-      case "-row": {
+      ["-row"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         if (node.children.length === 0) { // a separator line
           // set table aligns, so they can be propagated to future rows
@@ -1294,35 +1233,29 @@ const parse = function(input: string, options: ParseOptions): Doc {
             attributes: node.attributes
           }, node.pos);
         }
-        break;
-      }
+      },
 
-      case "separator_default": {
+      separator_default: (suffixes, startpos, endpos, pos) => {
         topContainer().data.aligns.push("default");
-        break;
-      }
+      },
 
-      case "separator_left": {
+      separator_left: (suffixes, startpos, endpos, pos) => {
         topContainer().data.aligns.push("left");
-        break;
-      }
+      },
 
-      case "separator_right": {
+      separator_right: (suffixes, startpos, endpos, pos) => {
         topContainer().data.aligns.push("right");
-        break;
-      }
+      },
 
-      case "separator_center": {
+      separator_center: (suffixes, startpos, endpos, pos) => {
         topContainer().data.aligns.push("center");
-        break;
-      }
+      },
 
-      case "+cell": {
+      ["+cell"]: (suffixes, startpos, endpos, pos) => {
         pushContainer(pos);
-        break;
-      }
+      },
 
-      case "-cell": {
+      ["-cell"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         addChildToTip({
           tag: "cell",
@@ -1331,19 +1264,17 @@ const parse = function(input: string, options: ParseOptions): Doc {
           align: "default", // set at "-row"
           attributes: node.attributes
         }, node.pos);
-        break;
-      }
+      },
 
-      case "+caption": {
+      ["+caption"]: (suffixes, startpos, endpos, pos) => {
         pushContainer(pos);
-        break;
-      }
+      },
 
-      case "-caption": {
+      ["-caption"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         const tip = getTip();
         if (!tip || ("tag" in tip && tip.tag !== "table")) {
-          break;
+          return;
         }
         tip.children.unshift( // add caption as first child of table
           {
@@ -1352,15 +1283,13 @@ const parse = function(input: string, options: ParseOptions): Doc {
             attributes: node.attributes,
             pos: node.pos
           });
-        break;
-      }
+      },
 
-      case "+footnote": {
+      ["+footnote"]: (suffixes, startpos, endpos, pos) => {
         pushContainer(pos);
-        break;
-      }
+      },
 
-      case "-footnote": {
+      ["-footnote"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         if (node.data.label) {
           footnotes[node.data.label] =
@@ -1374,22 +1303,19 @@ const parse = function(input: string, options: ParseOptions): Doc {
         } else {
           warn("Ignoring footnote without a label.", endpos);
         }
-        break;
-      }
+      },
 
-      case "note_label": {
+      note_label: (suffixes, startpos, endpos, pos) => {
         topContainer().data.label =
           input.substring(startpos, endpos + 1);
-        break;
-      }
+      },
 
-      case "+code_block": {
+      ["+code_block"]: (suffixes, startpos, endpos, pos) => {
         pushContainer(pos);
         context = Context.Verbatim;
-        break;
-      }
+      },
 
-      case "-code_block": {
+      ["-code_block"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         if (node.data.format) {
           addChildToTip({
@@ -1408,75 +1334,63 @@ const parse = function(input: string, options: ParseOptions): Doc {
         }
         context = Context.Normal;
         accumulatedText = [];
-        break;
-      }
+      },
 
-      case "code_language": {
+      code_language: (suffixes, startpos, endpos, pos) => {
         const top = topContainer();
         top.data.lang = input.substring(startpos, endpos + 1);
-        break;
-      }
+      },
 
-      case "+div": {
+      ["+div"]: (suffixes, startpos, endpos, pos) => {
         pushContainer(pos);
-        break;
-      }
+      },
 
-      case "-div": {
+      ["-div"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         addChildToTip({
           tag: "div",
           children: node.children,
           attributes: node.attributes
         }, node.pos);
-        break;
-      }
+      },
 
-      case "thematic_break": {
+      thematic_break: (suffixes, startpos, endpos, pos) => {
         const tb: ThematicBreak = { tag: "thematic_break" };
         addBlockAttributes(tb);
         addChildToTip(tb, pos);
-        break;
-      }
+      },
 
-      case "left_single_quote": {
+      left_single_quote: (suffixes, startpos, endpos, pos) => {
         addChildToTip({ tag: "left_single_quote", text: "'" }, pos);
-        break;
-      }
+      },
 
-      case "right_single_quote": {
+      right_single_quote: (suffixes, startpos, endpos, pos) => {
         addChildToTip({ tag: "right_single_quote", text: "'" }, pos);
-        break;
-      }
+      },
 
-      case "left_double_quote": {
+      left_double_quote: (suffixes, startpos, endpos, pos) => {
         addChildToTip({ tag: "left_double_quote", text: '"' }, pos);
-        break;
-      }
+      },
 
-      case "right_double_quote": {
+      right_double_quote: (suffixes, startpos, endpos, pos) => {
         addChildToTip({ tag: "right_double_quote", text: '"' }, pos);
-        break;
-      }
+      },
 
-      case "ellipses": {
+      ellipses: (suffixes, startpos, endpos, pos) => {
         addChildToTip({ tag: "ellipses", text: "..." }, pos);
-        break;
-      }
+      },
 
-      case "en_dash": {
+      en_dash: (suffixes, startpos, endpos, pos) => {
         addChildToTip({ tag: "en_dash", text: "--" }, pos);
-        break;
-      }
+      },
 
-      case "em_dash": {
+      em_dash: (suffixes, startpos, endpos, pos) => {
         addChildToTip({ tag: "em_dash", text: "---" }, pos);
-        break;
-      }
+      },
 
       // We set the blanklines property of a parent list or
       // sublist to aid with tight/loose list determination.
-      case "blankline": {
+      blankline: (suffixes, startpos, endpos, pos) => {
         let listnode;
         if ("tight" in topContainer().data) {
           listnode = topContainer();
@@ -1487,13 +1401,9 @@ const parse = function(input: string, options: ParseOptions): Doc {
         if (listnode) {
           listnode.data.blanklines = true;
         }
-        break;
       }
 
-      default:
-      // throw("Unknown event " + annot);
-    }
-  }
+    };
 
   const handleEvent = function(containers: Container[], event: Event): void {
     let sp ;
@@ -1539,7 +1449,11 @@ const parse = function(input: string, options: ParseOptions): Doc {
         }
       }
     }
-    callHandler(annot, suffixes, event.startpos, event.endpos, pos);
+
+    const fn = handlers[annot];
+    if (fn) {
+      fn(suffixes, event.startpos, event.endpos, pos);
+    }
 
   }
 
