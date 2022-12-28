@@ -17,7 +17,7 @@ const blockTag: Record<string, boolean> = {
 }
 
 const defaultWarnings = function(message: string, pos: number) {
-  process.stderr.write(message + (pos ? " at " + pos : "") + "\n");
+  console.log(message + (pos ? " at " + pos : "") + "\n");
 }
 
 class HTMLRenderer {

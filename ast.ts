@@ -471,7 +471,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
   const identifiers: Record<string, boolean> = {}; // identifiers used
   const blockAttributes: Attributes = {}; // accumulated block attributes
   const defaultWarnings = function(message: string, pos: number) {
-    process.stderr.write(message + (pos ? " at " + pos : "") + "\n");
+    console.log(message + (pos ? " at " + pos : "") + "\n");
   }
   const warn = options.warn || defaultWarnings;
   const parser = new EventParser(input, warn);
