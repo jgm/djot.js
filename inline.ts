@@ -626,7 +626,7 @@ class InlineParser {
       if (this.matches[i]) {
         const { startpos: sp, endpos: ep, annot: annot } = this.matches[i];
         const lastsorted = sorted[sorted.length - 1];
-        if (annot == "str" && lastsorted && lastsorted.annot === "str" &&
+        if (lastsorted && annot === "str" && lastsorted.annot === "str" &&
           lastsorted.endpos === sp - 1) {
           // consolidate adjacent strs
           lastsorted.endpos = ep;
