@@ -85,11 +85,10 @@ const debounce = (func, delay) => {
 
 function parse_and_render() {
   const text = document.getElementById("input").value;
-  const sourcepos = document.getElementById("sourcepos").checked;
   const filter = document.getElementById("filter").value;
   var startTime = new Date().getTime();
   try {
-    ast = djot.parse(text, { sourcePositions: sourcepos });
+    ast = djot.parse(text, { sourcePositions: true });
     if (filter) {
       djot.applyFilter(filter);
       document.getElementById("filter-error").innerText = err;
@@ -114,6 +113,7 @@ function render() {
   const iframe = document.getElementById("preview");
   document.getElementById("result").innerHTML = "";
   const result = document.getElementById("result");
+  const sourcepos = document.getElementById("sourcepos").checked;
 
   if (mode == "astjson") {
     result.innerText = JSON.stringify(ast, null, 2);
@@ -126,9 +126,11 @@ function render() {
     }
     result.innerText = "[" + events.join("\n,") + "]";
   } else if (mode == "html") {
-    result.innerText = djot.renderHTML(ast);
+    result.innerText = djot.renderHTML(ast, { sourcePositions: sourcepos });
   } else if (mode == "preview") {
-    inject(iframe, djot.renderHTML(ast));  // TODO use sourcepos for scrollSync
+    let rendered = djot.renderHTML(ast, { sourcePositions: true });
+    alert(rendered.length);
+    inject(iframe, rendered);
   }
   iframe.style.display = mode == "preview" ? "block" : "none";
   result.style.display = mode == "preview" ? "none" : "block";

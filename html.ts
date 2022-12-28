@@ -22,6 +22,7 @@ const defaultWarnings = function(message: string, pos: number) {
 
 class HTMLRenderer {
   warn: (message: string, pos: number) => void;
+  options : ParseOptions;
   buffer: string[];
   tight: boolean;
   footnoteIndex: Record<string, any>; // TODO
@@ -29,8 +30,9 @@ class HTMLRenderer {
   references: Record<string, Reference>;
   footnotes: Record<string, Footnote>;
 
-  constructor(warn?: (message: string, pos: number) => void) {
-    this.warn = warn || defaultWarnings;
+  constructor(options : ParseOptions) {
+    this.warn = options.warn || defaultWarnings;
+    this.options = options || {};
     this.buffer = [];
     this.tight = false;
     this.footnoteIndex = {};
@@ -82,7 +84,7 @@ class HTMLRenderer {
         }
       }
     }
-    if (node.pos) {
+    if (this.options.sourcePositions && node.pos) {
       let sp = node.pos.start;
       let ep = node.pos.end;
       this.literal(` data-startpos="${sp.line}:${sp.col}:${sp.offset}" data-endpos="${ep.line}:${ep.col}:${ep.offset}"`);
@@ -93,7 +95,7 @@ class HTMLRenderer {
     : void {
     this.literal("<");
     this.literal(tag);
-    if ("attributes" in node || extraAttrs) {
+    if ("attributes" in node || extraAttrs || node.pos) {
       this.renderAttributes(node, extraAttrs);
     }
     this.literal(">");
@@ -501,7 +503,7 @@ class HTMLRenderer {
 
 const renderHTML = function(ast: Doc, options ?: ParseOptions): string {
   options = options || {};
-  let renderer = new HTMLRenderer(options.warn);
+  let renderer = new HTMLRenderer(options);
   return renderer.render(ast);
 }
 

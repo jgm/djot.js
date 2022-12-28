@@ -110,7 +110,7 @@ try {
     startTime = performance.now();
     switch (output) {
       case "html":
-        process.stdout.write(renderHTML(ast));
+        process.stdout.write(renderHTML(ast, options));
         break;
       case "json":
         process.stdout.write(JSON.stringify(ast, null, 2));
