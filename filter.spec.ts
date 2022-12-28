@@ -11,6 +11,21 @@ const capitalizeFilter : Filter = () => {
   };
 };
 
+const arrayFilter : Filter = () => {
+  return [
+    { str: (e) => {
+        e.text = e.text.toUpperCase();
+      }
+    },
+    { str: (e) => {
+        if (e.text === "THERE") {
+          e.attributes = { class: "location" };
+        }
+      }
+    }
+  ];
+}
+
 const fancyFilter : Filter = () => {
   let capitalize = 0;
   return {
@@ -50,6 +65,21 @@ describe("applyFilter", () => {
     verbatim text="code"
 `);
   });
+
+  it("sequences filters", () => {
+    let ast = parse("Hello *there* `code`", { warn: ignoreWarnings });
+    applyFilter(ast, arrayFilter);
+    expect(renderAST(ast)).toEqual(
+`doc
+  para
+    str text="HELLO "
+    strong
+      str text="THERE" class="location"
+    str text=" "
+    verbatim text="code"
+`);
+  });
+
 
   it("capitalizes text within emphasis only", () => {
     let ast = parse("Hello _*there*_ `code`[^1]\n\n[^1]: _emph_", { warn: ignoreWarnings });
