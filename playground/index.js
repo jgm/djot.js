@@ -88,17 +88,22 @@ const ignoreWarnings = () => {
 
 function parse_and_render() {
   const text = document.getElementById("input").value;
-  const filter = null // TODO: document.getElementById("filter").value;
+  const filter = document.getElementById("filter").value;
   try {
     var startTime = new Date().getTime();
     ast = djot.parse(text, { sourcePositions: true, warn: ignoreWarnings });
     if (filter) {
-      djot.applyFilter(filter);
-      document.getElementById("filter-error").innerText = err;
-      /* open filter so they can edit some more and see error message */
-      document.getElementById("filter-modal").style.display = "block";
-      filter.style.display = "block";
-      document.getElementById("filter-error").innerText = "";
+      try {
+        let filterprog = `"use strict"; return ( function() { ${filter} } );`;
+        console.log(filterprog);
+        let compiledFilter = Function(filterprog)();
+        djot.applyFilter(ast, compiledFilter);
+        document.getElementById("filter-error").innerText = "";
+      } catch(err) {
+        document.getElementById("filter-error").innerText = err;
+        /* open filter so they can edit some more and see error message */
+        document.getElementById("filter-modal").style.display = "block";
+      }
     }
     render();
     var endTime = new Date().getTime();
