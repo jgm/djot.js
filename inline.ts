@@ -623,7 +623,7 @@ class InlineParser {
       this.reparseAttributes();
     }
     for (let i = this.firstpos; i <= this.lastpos; i++) {
-      if (i in this.matches) {
+      if (this.matches[i]) {
         const { startpos: sp, endpos: ep, annot: annot } = this.matches[i];
         const lastsorted = sorted[sorted.length - 1];
         if (annot == "str" && lastsorted && lastsorted.annot === "str" &&
