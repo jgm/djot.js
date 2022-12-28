@@ -5,17 +5,6 @@ import {
   from "./ast";
 const emoji = require("node-emoji");
 
-const blockTag: Record<string, boolean> = {
-  para: true,
-  blockquote: true,
-  thematic_break: true,
-  list_item: true,
-  list: true,
-  code_block: true,
-  heading: true,
-  table: true
-}
-
 const defaultWarnings = function(message: string, pos: number) {
   console.log(message + (pos ? " at " + pos : "") + "\n");
 }
@@ -25,8 +14,8 @@ class HTMLRenderer {
   options : ParseOptions;
   buffer: string[];
   tight: boolean;
-  footnoteIndex: Record<string, any>; // TODO
-  nextFootnoteIndex: number; // TODO?
+  footnoteIndex: Record<string, number>;
+  nextFootnoteIndex: number;
   references: Record<string, Reference>;
   footnotes: Record<string, Footnote>;
 
@@ -220,7 +209,7 @@ class HTMLRenderer {
         this.inTags(`h${node.level}`, node, 1);
         break;
 
-      case "footnote_reference":
+      case "footnote_reference": {
         const label = node.text;
         let index = this.footnoteIndex[label];
         if (!index) {
@@ -237,6 +226,7 @@ class HTMLRenderer {
         this.out(index.toString());
         this.literal("</sup></a>");
         break;
+      }
 
       case "table":
         this.inTags("table", node, 2);
@@ -250,13 +240,14 @@ class HTMLRenderer {
         this.inTags("tr", node, 2);
         break;
 
-      case "cell":
+      case "cell": {
         const cellAttr: Record<string, string> = {};
         if (node.align !== "default") {
           cellAttr.style = `text-align: ${node.align};`;
         }
         this.inTags(node.head ? "th" : "td", node, 1, cellAttr);
         break;
+      }
 
       case "thematic_break":
         this.renderTag("hr", node);
@@ -332,7 +323,7 @@ class HTMLRenderer {
         this.literal("&ndash;");
         break;
 
-      case "emoji":
+      case "emoji": {
         const ch = emoji.get(node.alias);
         if (ch) {
           this.out(ch);
@@ -340,6 +331,7 @@ class HTMLRenderer {
           this.out(`:${node.alias}:`);
         }
         break;
+      }
 
       case "math":
         this.renderTag("span", node,
@@ -383,7 +375,7 @@ class HTMLRenderer {
         break;
 
       case "link":
-      case "image":
+      case "image": {
         extraAttr = {};
         let dest: string | undefined = node.destination;
         if (node.reference) {
@@ -427,6 +419,7 @@ class HTMLRenderer {
           this.inTags("a", node, 0, extraAttr);
         }
         break;
+      }
 
       case "url":
       case "email":
