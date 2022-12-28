@@ -285,3 +285,14 @@ doc
     para
       str text="a"
 ```
+
+``` a
+> {key="bar
+>    bim"}
+> ou
+.
+doc
+  blockquote
+    para key="bar bim"
+      str text="ou"
+```
