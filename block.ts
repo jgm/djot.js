@@ -402,12 +402,10 @@ class EventParser {
           let sp = m.startpos;
           let ep = m.endpos;
           let marker = this.subject.substring(sp, ep);
-          let checkbox = null;
 
           let mtask = this.find(pattTaskListMarker);
           if (mtask !== null) {
             marker = this.subject.substring(mtask.startpos, mtask.startpos + 5);
-            checkbox = this.subject.substring(mtask.startpos + 3, mtask.startpos + 6);
           }
 
           // some items have ambiguous style
