@@ -1,6 +1,4 @@
-import { parse, renderAST, ParseOptions, Doc } from "./ast";
-
-const ignoreWarnings = () => { /* do nothing */ };
+import { parse, renderAST } from "./ast";
 
 describe("Parser", () => {
   it("parses paragraphs", () => {

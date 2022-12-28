@@ -1,6 +1,5 @@
-import { parse, ParseOptions, renderAST } from "./ast";
+import { parse, renderAST } from "./ast";
 import { renderHTML } from "./html";
-const fs = require('fs');
 
 const ignoreWarnings = () => { /* do nothing */ };
 

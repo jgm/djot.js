@@ -895,14 +895,15 @@ class EventParser {
         this.addMatch(cell.startpos, cell.startpos, "+cell");
         const cellMatches = cell.matches;
         cellMatches.forEach((match, i) => {
-          let { startpos: s, endpos: e, annot: ann } = match;
-          if (i === cellMatches.length - 1 && ann === "str") {
+          const s = match.startpos;
+          let e = match.endpos;
+          if (i === cellMatches.length - 1 && match.annot === "str") {
             // strip trailing space
             while (this.subject.codePointAt(e) === 32 && e >= s) {
               e = e - 1;
             }
           }
-          this.addMatch(s, e, ann);
+          this.addMatch(s, e, match.annot);
         });
         this.addMatch(cell.endpos, cell.endpos, "-cell");
       } else {

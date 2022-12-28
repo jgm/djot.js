@@ -1,4 +1,4 @@
-import { parse, renderAST, Str } from "./ast";
+import { parse, renderAST } from "./ast";
 import { Filter, applyFilter } from "./filter";
 
 const ignoreWarnings = () => { /* do nothing */ };
