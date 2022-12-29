@@ -210,10 +210,9 @@ class PandocRenderer {
 
       case "single_quoted":
       case "double_quoted": {
-        let quoteType = node.tag === "single_quoted" ? "SingleQuote"
-                                                     : "DoubleQuote";
-        elts.push({ t: "Quoted", c: [{t: quoteType},
-                                      this.toPandocAttr(node)]});
+        let quoteType = {t: node.tag === "single_quoted" ? "SingleQuote"
+                                                        : "DoubleQuote"};
+        elts.push({ t: "Quoted", c: [quoteType, this.toPandocChildren(node)]});
         break;
       }
 
