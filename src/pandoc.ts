@@ -24,9 +24,11 @@ const paraToPlain = function(elt : PandocElt) : PandocElt {
 
 class PandocRenderer {
   doc : Doc;
+  warn : (msg : string) => void;
 
-  constructor(doc : Doc) {
+  constructor(doc : Doc, warn ?: (msg : string) => void) {
     this.doc = doc;
+    this.warn = warn || (() => {});
   }
 
   toPandocChildren = function(this : PandocRenderer, node : AstNode) : PandocElt[] {
@@ -102,7 +104,7 @@ class PandocRenderer {
         } else if (node.style === "X") {
           elts.push({ t: "BulletList", c: items } );
         } else if (node.style === ":") {
-          process.stderr.write("Skipping unhandled definition list\n");
+          this.warn("Skipping unhandled definition list");
         } else {
           const number = node.style.replace(/[().]/g,"");
           let style : string;
@@ -216,29 +218,42 @@ class PandocRenderer {
         break;
       }
 
+      case "image":
       case "link": {
         // TODO resolve reference links, inc. attributes
-        let attrs = this.toPandocAttr(node);
-        let url = node.destination || "";
+        let destination = node.destination || "";
+        let linkAttrs : Record<string,any> = {};
+        if (node.reference) {
+          let ref = this.doc.references[node.reference];
+          if (ref) {
+            destination = ref.destination || "";
+            if (ref.attributes) {
+              for (let k in ref.attributes) {
+                linkAttrs[k] = ref.attributes[k];
+              }
+            }
+          } else {
+            this.warn("Reference " + node.reference + " not found.");
+          }
+        }
+        if (node.attributes) {
+          for (let k in node.attributes) {
+            if (linkAttrs[k] && k === "class") {
+              linkAttrs[k] += " " + node.attributes[k];
+            } else if (!linkAttrs[k]) {
+              linkAttrs[k] = node.attributes[k];
+            }
+          }
+        }
+       let attrs = this.toPandocAttr({tag: "link", attributes: linkAttrs,
+                                      children: []});
+        let url = destination || "";
         let title = (node.attributes && node.attributes.title) || "";
         if (title) {
           attrs[2] = attrs[2].filter(([k,v]) => k !== "title");
         }
-        elts.push({ t: "Link", c: [attrs, this.toPandocChildren(node),
-                                    [url, title]] });
-        break;
-      }
-
-      case "image": {
-        // TODO resolve reference links, inc. attributes
-        let attrs = this.toPandocAttr(node);
-        let url = node.destination || "";
-        let title = (node.attributes && node.attributes.title) || "";
-        if (title) {
-          attrs[2] = attrs[2].filter(([k,v]) => k !== "title");
-        }
-        elts.push({ t: "Image", c: [attrs, this.toPandocChildren(node),
-                                    [url, title]] });
+        elts.push({ t: node.tag === "link" ? "Link" : "Image",
+                     c: [attrs, this.toPandocChildren(node), [url, title]] });
         break;
       }
 
@@ -273,7 +288,7 @@ class PandocRenderer {
       }
 
       default:
-        process.stderr.write("Skipping unhandled node " + node.tag + "\n");
+        this.warn("Skipping unhandled node " + node.tag);
     }
   }
 

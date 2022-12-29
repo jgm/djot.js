@@ -130,7 +130,7 @@ try {
         process.stdout.write(renderAST(ast));
         break;
       case "pandoc":
-        process.stdout.write(JSON.stringify(new PandocRenderer(ast).toPandoc(),
+        process.stdout.write(JSON.stringify(new PandocRenderer(ast, warn).toPandoc(),
                 null, compact ? 0 : 2));
         process.stdout.write("\n");
         break;
