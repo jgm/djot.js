@@ -1,6 +1,6 @@
-import { EventParser } from "./dist/block.js";
-import { parse, renderAST } from "./dist/ast.js";
-import { renderHTML } from "./dist/html.js";
+import { EventParser } from "./lib/block.js";
+import { parse, renderAST } from "./lib/ast.js";
+import { renderHTML } from "./lib/html.js";
 import fs from "fs";
 import { performance } from "perf_hooks";
 
