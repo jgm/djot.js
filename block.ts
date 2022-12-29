@@ -663,10 +663,7 @@ class EventParser {
         type: ContentType.Block,
         content: ContentType.Text,
         continue: (container) => {
-          const m = this.find(
-            pattern("(" + container.extra.border +
-                          container.extra.border.substring(0,1) +
-                          "*)[ \\t]*[\\r\\n]"));
+          const m = this.find(container.extra.closePattern);
           if (m) {
             container.extra.endFenceStartpos = m.startpos;
             container.extra.endFenceEndpos = m.startpos + m.captures[0].length - 1;
@@ -682,9 +679,12 @@ class EventParser {
           if (m) {
             const [border, ws, lang] = m.captures;
             const isRaw = lang.charAt(0) === "=" && true || false;
-            const cont = this.addContainer(new Container(spec, { border: border }));
+            const closePattern = pattern("(" + border +
+                          border.substring(0,1) + "*)[ \\t]*[\\r\\n]");
+            const cont = this.addContainer(new Container(spec,
+                                            { closePattern: closePattern }));
             cont.indent = this.indent;
-            this.addMatch(m.startpos, m.startpos + border.length - 1,
+             this.addMatch(m.startpos, m.startpos + border.length - 1,
               "+code_block");
             if (lang.length > 0) {
               const langstart = m.startpos + border.length + ws.length;
