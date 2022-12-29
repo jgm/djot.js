@@ -18,6 +18,7 @@ Road map:
 - [X] pathological tests
 - [X] filter API
 - [X] replace current wasm in djot sandbox
+- [ ] make definition_list a proper node type? instead of style=":"
 - [ ] experiment with resolving style, start, type for lists in
       block.ts and putting the information on the -list
       annotation. this would simplify ast.

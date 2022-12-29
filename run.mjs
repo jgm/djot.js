@@ -1,7 +1,7 @@
 import { EventParser } from "./lib/block.js";
 import { parse, renderAST } from "./lib/ast.js";
 import { renderHTML } from "./lib/html.js";
-import { toPandoc } from "./lib/pandoc.js";
+import { PandocRenderer } from "./lib/pandoc.js";
 import fs from "fs";
 import { performance } from "perf_hooks";
 
@@ -130,7 +130,8 @@ try {
         process.stdout.write(renderAST(ast));
         break;
       case "pandoc":
-        process.stdout.write(JSON.stringify(toPandoc(ast), null, compact ? 0 : 2));
+        process.stdout.write(JSON.stringify(new PandocRenderer(ast).toPandoc(),
+                null, compact ? 0 : 2));
         process.stdout.write("\n");
         break;
       default:
