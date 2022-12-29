@@ -2,7 +2,7 @@ const path = require('path');
 
 module.exports = {
   mode: 'production',
-  entry: './index.ts',
+  entry: './src/index.ts',
   module: {
     rules: [
       {
@@ -16,7 +16,7 @@ module.exports = {
     extensions: ['.tsx', '.ts', '.js'],
   },
   output: {
-    filename: 'bundle.js',
+    filename: 'djot.js',
     path: path.resolve(__dirname, 'dist'),
     globalObject: 'this',
     library: {

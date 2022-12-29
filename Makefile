@@ -6,10 +6,10 @@ build:
 	tsc
 .PHONY: build
 
-dist/bundle.js: index.ts block.ts inline.ts find.ts attributes.ts ast.ts html.ts
+dist/djot.js:
 	npm run build
 
-playground/djot.js: dist/bundle.js
+playground/djot.js: dist/djot.js
 	cp $< playground/djot.js
 
 update-playground: playground/djot.js

@@ -1,15 +1,22 @@
 {
   "name": "djot",
   "sideEffects": false,
-  "version": "0.0",
+  "version": "0.1.0",
   "description": "",
   "license": "MIT",
   "author": "John MacFarlane",
-  "keywords": [],
+  "keywords": ["markup"],
+  "main": "./dist/djot.js",
+  "types": "./types/index.d.ts",
   "scripts": {
     "test": "jest",
     "build": "webpack"
   },
+  "files": [
+    "./dist/djot.js",
+    "./lib/*.js",
+    "./types/*.d.ts"
+  ],
   "dependencies": {
   },
   "devDependencies": {

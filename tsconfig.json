@@ -8,17 +8,19 @@
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true,
-    "outDir": "dist"
+    "outDir": "lib",
+    "declaration": true,
+    "declarationDir": "types"
   },
   "include": [
-    "attributes.ts",
-    "find.ts",
-    "inline.ts",
-    "block.ts",
-    "event.ts",
-    "ast.ts",
-    "html.ts",
-    "filter.ts",
-    "index.ts"
+    "src/attributes.ts",
+    "src/find.ts",
+    "src/inline.ts",
+    "src/block.ts",
+    "src/event.ts",
+    "src/ast.ts",
+    "src/html.ts",
+    "src/filter.ts",
+    "src/index.ts"
   ]
 }
