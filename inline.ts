@@ -698,10 +698,8 @@ class InlineParser {
     // convert matches between startpos and endpos to str
     for (let i = startpos; i <= endpos; i++) {
       const m = this.matches[i];
-      if (m) {
-        if (m.annot !== "str" && m.annot !== "escape") {
-          m.annot = "str";
-        }
+      if (m && m.annot !== "escape" && m.annot !== "str") {
+        m.annot = "str";
       }
     }
   }
