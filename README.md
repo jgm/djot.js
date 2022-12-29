@@ -18,6 +18,9 @@ Road map:
 - [X] pathological tests
 - [X] filter API
 - [X] replace current wasm in djot sandbox
+- [ ] option to generate pandoc JSON output
+- [ ] djot writer
+- [ ] option to convert from pandoc JSON
 - [ ] full-featured cli
 - [ ] benchmarks
 - [ ] node module
