@@ -1,0 +1,25 @@
+name: CI tests
+
+on: [push, pull_request]
+
+jobs:
+  linux:
+
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+    - uses: actions/checkout@v1
+    - name: Build and test
+      run: |
+          npm run test && npm run build
+
+  windows:
+
+    runs-on: windows-2019
+    strategy:
+      fail-fast: false
+    steps:
+    - name: Build and test
+      run: |
+          npm run test && npm run build
