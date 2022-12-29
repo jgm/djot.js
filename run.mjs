@@ -144,9 +144,9 @@ try {
     }
   }
 } catch(err) {
-    console.log(err + "\n");
+    process.stderr.write(err.toString() + "\n");
     if (err.stack) {
-      console.log(err.stack.split("\n"));
+      process.stderr.write(err.stack);
     }
     process.exit(1);
 }
