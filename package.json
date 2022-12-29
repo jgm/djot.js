@@ -2,6 +2,9 @@
   "name": "djot",
   "sideEffects": false,
   "version": "0.1.0",
+  "engines": {
+   "node": ">=17.0.0"
+  },
   "description": "",
   "license": "MIT",
   "author": "John MacFarlane",
