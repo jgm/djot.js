@@ -1511,6 +1511,10 @@ const omitFields: Record<string, boolean> =
   footnotes: true
 };
 
+const stringify = function(x : any) : string {
+  return JSON.stringify(x).replace("\n","n");
+}
+
 const renderAstNode = function(node: Record<string, any>, buff: string[], indent: number): void {
   buff.push(" ".repeat(indent));
   if (indent > 128) {
@@ -1526,13 +1530,13 @@ const renderAstNode = function(node: Record<string, any>, buff: string[], indent
     if (!omitFields[k]) {
       const v: AstNode = node[k];
       if (v !== undefined && v !== null) {
-        buff.push(` ${k}=${JSON.stringify(v)}`);
+        buff.push(` ${k}=${stringify(v)}`);
       }
     }
   }
   if (node.attributes) {
     for (const k in node.attributes) {
-      buff.push(` ${k}=${JSON.stringify(node.attributes[k])}`);
+      buff.push(` ${k}=${stringify(node.attributes[k])}`);
     }
   }
   buff.push("\n");
@@ -1551,14 +1555,14 @@ const renderAST = function(doc: Doc): string {
   if (Object.keys(doc.references).length > 0) {
     buff.push("references\n");
     for (const k in doc.references) {
-      buff.push(`  [${JSON.stringify(k)}] =\n`);
+      buff.push(`  [${stringify(k)}] =\n`);
       renderAstNode(doc.references[k], buff, 4);
     }
   }
   if (Object.keys(doc.footnotes).length > 0) {
     buff.push("footnotes\n")
     for (const k in doc.footnotes) {
-      buff.push(`  [${JSON.stringify(k)}] =\n`);
+      buff.push(`  [${stringify(k)}] =\n`);
       renderAstNode(doc.footnotes[k], buff, 4)
     }
   }
