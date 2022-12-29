@@ -10,6 +10,9 @@ jobs:
       fail-fast: false
     steps:
     - uses: actions/checkout@v1
+    - name: Install dependencies
+      run: |
+          npm install
     - name: Build and test
       run: |
           npm run test && npm run build
@@ -20,6 +23,9 @@ jobs:
     strategy:
       fail-fast: false
     steps:
+    - name: Install dependencies
+      run: |
+          npm install
     - name: Build and test
       run: |
           npm run test && npm run build
