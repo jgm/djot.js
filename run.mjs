@@ -148,8 +148,8 @@ try {
     if (err.stack) {
       process.stderr.write(err.stack);
     }
-    process.exit(1);
+    process.exitcode = 1;
 }
 
 
-process.exit(0);
+process.exitcode = 0;
