@@ -208,6 +208,15 @@ class PandocRenderer {
                     [{t: "Str", c: ":" + node.alias + ":"}]]});
         break;
 
+      case "single_quoted":
+      case "double_quoted": {
+        let quoteType = node.tag === "single_quoted" ? "SingleQuote"
+                                                     : "DoubleQuote";
+        elts.push({ t: "Quoted", c: [{t: quoteType},
+                                      this.toPandocAttr(node)]});
+        break;
+      }
+
       case "link": {
         // TODO resolve reference links, inc. attributes
         let attrs = this.toPandocAttr(node);
