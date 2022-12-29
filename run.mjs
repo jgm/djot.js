@@ -13,6 +13,7 @@ let timing = false;
 let events = false;
 let options = {sourcePositions: false, warn: warn};
 let output = 'html';
+let compact = false;
 let usage = `djot [OPTIONS] FILE*
 Options:
   --sourcepos,-p       Include source positions
@@ -23,6 +24,7 @@ Options:
   --json,-j            Print AST in JSON format
   --ast,-a             Print AST in human-readable format
   --html               Print HTML (default)
+  --compact            Use compact (rather than pretty) JSON
   --help,-h            This usage message
 `;
 let files = [];
@@ -60,6 +62,9 @@ for (let i=2; i < args.length; i++) {
       break;
     case "--html":
       output = 'html';
+      break;
+    case "--compact":
+      compact = true;
       break;
     case "--help":
     case "-h":
@@ -118,14 +123,14 @@ try {
         process.stdout.write(renderHTML(ast, options));
         break;
       case "json":
-        process.stdout.write(JSON.stringify(ast, null, 2));
+        process.stdout.write(JSON.stringify(ast, null, compact ? 0 : 2));
         process.stdout.write("\n");
         break;
       case "ast":
         process.stdout.write(renderAST(ast));
         break;
       case "pandoc":
-        process.stdout.write(JSON.stringify(toPandoc(ast), null, 2));
+        process.stdout.write(JSON.stringify(toPandoc(ast), null, compact ? 0 : 2));
         process.stdout.write("\n");
         break;
       default:
