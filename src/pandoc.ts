@@ -51,7 +51,7 @@ const paraToPlain = function(elt : PandocElt) : PandocElt {
   return elt;
 }
 
-const toPandocListItem = function(tight : boolean) :
+const toPandocListItem = function(list : AstNode) :
         ((item : AstNode) => PandocElt[]) {
   return function(item : AstNode) : PandocElt[] {
     let elts = toPandocChildren(item);
@@ -62,7 +62,7 @@ const toPandocListItem = function(tight : boolean) :
         elts[0].c.unshift({t: "Str", c: "☐"}, {t: "Space"});
       }
     }
-    if (tight) {
+    if ("tight" in list && list.tight) {
       elts = elts.map(paraToPlain);
     }
     return elts;
@@ -87,14 +87,41 @@ const addToPandocElts = function(elts : PandocElt[], node : any, ) : void {
 
     case "list": { // TODO list styles etc.
       let items : PandocElt[][];
-      items = node.children.map(toPandocListItem(node.tight));
+      items = node.children.map(toPandocListItem(node));
       if (node.style &&
           node.style === "-" || node.style === "+" || node.style === "*") {
         elts.push({ t: "BulletList", c: items } );
       } else if (node.style === "X") {
         elts.push({ t: "BulletList", c: items } );
-      } else { // TODO other styles
-        process.stderr.write("Skipping unhandled list style " + node.style + "\n");
+      } else if (node.style === ":") {
+        process.stderr.write("Skipping unhandled definition list\n");
+      } else {
+        const number = node.style.replace(/[().]/g,"");
+        let style : string;
+        if (number === "1") {
+          style = "Decimal";
+        } else if (number === "a") {
+          style = "LowerAlpha";
+        } else if (number === "A") {
+          style = "UpperAlpha";
+        } else if (number === "i") {
+          style = "LowerRoman";
+        } else if (number === "I") {
+          style = "UpperRoman";
+        } else {
+          style = "DefaultStyle";
+        }
+        let delim : string;
+        const hasLeftParen = /^[(]/.test(node.style);
+        const hasRightParen = /[)]$/.test(node.style);
+        if (hasRightParen) {
+          delim = hasLeftParen ? "TwoParens" : "OneParen";
+        } else {
+          delim = "Period";
+        }
+        let start : number = node.start || 1;
+        elts.push({ t: "OrderedList", c: [[start, {t: style}, {t: delim}],
+                                          items] } );
       }
       break;
     }
