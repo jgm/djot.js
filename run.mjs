@@ -1,6 +1,7 @@
 import { EventParser } from "./lib/block.js";
 import { parse, renderAST } from "./lib/ast.js";
 import { renderHTML } from "./lib/html.js";
+import { toPandoc } from "./lib/pandoc.js";
 import fs from "fs";
 import { performance } from "perf_hooks";
 
@@ -18,6 +19,7 @@ Options:
   --quiet,-q           Suppress warnings
   --time,-t            Print parse time to stderr
   --events,-e          Print events in JSON format
+  --pandoc             Convert to pandoc AST in JSON format
   --json,-j            Print AST in JSON format
   --ast,-a             Print AST in human-readable format
   --html               Print HTML (default)
@@ -48,6 +50,9 @@ for (let i=2; i < args.length; i++) {
     case "--json":
     case "-j":
       output = 'json';
+      break;
+    case "--pandoc":
+      output = 'pandoc';
       break;
     case "--ast":
     case "-a":
@@ -118,6 +123,10 @@ try {
         break;
       case "ast":
         process.stdout.write(renderAST(ast));
+        break;
+      case "pandoc":
+        process.stdout.write(JSON.stringify(toPandoc(ast), null, 2));
+        process.stdout.write("\n");
         break;
       default:
     }

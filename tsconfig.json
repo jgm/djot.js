@@ -21,6 +21,7 @@
     "src/ast.ts",
     "src/html.ts",
     "src/filter.ts",
+    "src/pandoc.ts",
     "src/index.ts"
   ]
 }
