@@ -44,11 +44,29 @@ const toPandocAttr = function(node : AstNode) : PandocAttr {
   }
 }
 
-const fixTight = function(elt : PandocElt) : PandocElt {
+const paraToPlain = function(elt : PandocElt) : PandocElt {
   if (elt.t === "Para") {
     elt.t = "Plain"
   }
   return elt;
+}
+
+const toPandocListItem = function(tight : boolean) :
+        ((item : AstNode) => PandocElt[]) {
+  return function(item : AstNode) : PandocElt[] {
+    let elts = toPandocChildren(item);
+    if ("checkbox" in item && item.checkbox && elts[0].t === "Para") {
+      if (item.checkbox === "checked") {
+        elts[0].c.unshift({t: "Str", c: "☒"}, {t: "Space"});
+      } else {
+        elts[0].c.unshift({t: "Str", c: "☐"}, {t: "Space"});
+      }
+    }
+    if (tight) {
+      elts = elts.map(paraToPlain);
+    }
+    return elts;
+  };
 }
 
 const addToPandocElts = function(elts : PandocElt[], node : any, ) : void {
@@ -69,15 +87,11 @@ const addToPandocElts = function(elts : PandocElt[], node : any, ) : void {
 
     case "list": { // TODO list styles etc.
       let items : PandocElt[][];
-      if (node.tight) {
-        items = node.children.map((item : AstNode) => {
-                            return toPandocChildren(item).map(fixTight)
-        });
-      } else {
-        items = node.children.map(toPandocChildren);
-      }
+      items = node.children.map(toPandocListItem(node.tight));
       if (node.style &&
           node.style === "-" || node.style === "+" || node.style === "*") {
+        elts.push({ t: "BulletList", c: items } );
+      } else if (node.style === "X") {
         elts.push({ t: "BulletList", c: items } );
       } else { // TODO other styles
         process.stderr.write("Skipping unhandled list style " + node.style + "\n");
