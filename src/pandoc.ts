@@ -1,4 +1,4 @@
-import { AstNode, Doc, Reference, Footnote } from "./ast";
+import { AstNode, Doc, Term, Definition, Reference, Footnote } from "./ast";
 
 interface Pandoc {
   ["pandoc-api-version"]: number[],
@@ -60,6 +60,34 @@ class PandocRenderer {
     }
   }
 
+  toPandocDefinitionListItem = function(this : PandocRenderer, list : AstNode) : ((item : AstNode) => any[]) {
+    let self = this;
+    return function(item : AstNode) : any[] {
+      if (!("children" in item)) {
+        return [];
+      }
+      let [x, y] = item.children;
+      let term : Term = { tag: "term", children: [] };
+      let definition : Definition = { tag: "definition", children: [] };;
+      if (x.tag === "term") {
+        term = x;
+        if (y.tag === "definition") {
+          definition = y;
+        }
+      } else if (x.tag === "definition") {
+        definition = x;
+      }
+      let result = [];
+      if (term) {
+        result.push(self.toPandocChildren(term));
+      }
+      if (definition) {
+        result.push([self.toPandocChildren(definition)]);
+      }
+      return result;
+    };
+  }
+
   toPandocListItem = function(this : PandocRenderer, list : AstNode) :
           ((item : AstNode) => PandocElt[]) {
       let self = this;
@@ -97,15 +125,16 @@ class PandocRenderer {
 
       case "list": { // TODO list styles etc.
         let items : PandocElt[][];
-        items = node.children.map(this.toPandocListItem(node));
         if (node.style &&
-            node.style === "-" || node.style === "+" || node.style === "*") {
-          elts.push({ t: "BulletList", c: items } );
-        } else if (node.style === "X") {
+            node.style === "-" || node.style === "+" || node.style === "*" ||
+            node.style === "X") {
+          items = node.children.map(this.toPandocListItem(node));
           elts.push({ t: "BulletList", c: items } );
         } else if (node.style === ":") {
-          this.warn("Skipping unhandled definition list");
+          items = node.children.map(this.toPandocDefinitionListItem(node));
+          elts.push({ t: "DefinitionList", c: items } );
         } else {
+          items = node.children.map(this.toPandocListItem(node));
           const number = node.style.replace(/[().]/g,"");
           let style : string;
           if (number === "1") {
