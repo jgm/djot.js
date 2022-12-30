@@ -1,4 +1,4 @@
-import { AstNode, Doc, Block, Inline, Attributes, CodeBlock,
+import { AstNode, Doc, Block, ListItem, Inline, Attributes, CodeBlock,
          Term, Definition, Footnote } from "./ast";
 
 interface Pandoc {
@@ -635,10 +635,62 @@ class PandocParser {
         return res;
       }
       case "DefinitionList": // TODO
-      case "OrderedList": // TODO
-      case "BulletList": // TODO
+        throw("Unimplemented DefinitionList");
+      case "OrderedList":
+      case "BulletList": {
+        let items : ListItem[] = [];
+        let tight = false;
+        let rawitems;
+        if (block.t === "BulletList") {
+          rawitems = block.c;
+        } else {
+          rawitems = block.c[1];
+        }
+        for (let i=0; i<block.c.length; i++) {
+          items.push({tag: "list_item",
+                      children: rawitems[i].map((b : PandocElt) => {
+                                   if (b.t === "Plain") {
+                                     tight = true;
+                                   } else if (b.t === "Para") {
+                                     tight = false;
+                                   }
+                                   return this.fromPandocBlock(b);
+                                })});
+        }
+        if (block.t === "BulletList") {
+          return {tag: "list", style: "-", tight: tight, children: items};
+        } else if (block.t === "OrderedList") {
+          let start = block.c[0][0];
+          let style : string;
+          switch (block.c[0][1].t) {
+            case "Decimal": style = "1"; break;
+            case "LowerAlpha": style = "a"; break;
+            case "UpperAlpha": style = "A"; break;
+            case "LowerRoman": style = "i"; break;
+            case "UpperRoman": style = "I"; break;
+            default: style = "1";
+          }
+          switch (block.c[0][2].t) {
+            case "Period": style = style + "."; break;
+            case "OneParen": style = style + ")"; break;
+            case "TwoParens": style = "(" + style + ")"; break;
+            default: style = style + ".";
+          }
+          return {tag: "list", style: style, tight: tight, children: items};
+        }
+      }
       case "Table": // TODO
-      case "LineBlock": // TODO
+        throw("Unimplemented Table");
+      case "LineBlock": {
+        let ils : Inline[] = [];
+        for (let i=0; i<block.c.length; i++) {
+          if (i > 0) {
+            ils.push({tag: "hardbreak"});
+          }
+          ils.push(...this.fromPandocInlines(block.c[i]));
+        }
+        return {tag: "para", children: ils};
+      }
       case "Null": // better options?
         return {tag: "raw_block", format: "none", text: ""};
       default:
