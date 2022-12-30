@@ -220,7 +220,6 @@ class PandocRenderer {
 
       case "image":
       case "link": {
-        // TODO resolve reference links, inc. attributes
         let destination = node.destination || "";
         let linkAttrs : Record<string,any> = {};
         if (node.reference) {
@@ -275,6 +274,14 @@ class PandocRenderer {
 
       case "mark":
         elts.push({ t: "Span", c: [["",["mark"],[]], this.toPandocChildren(node)] });
+        break;
+
+      case "insert":
+        elts.push({ t: "Underline", c: this.toPandocChildren(node) });
+        break;
+
+      case "delete":
+        elts.push({ t: "Strikeout", c: this.toPandocChildren(node) });
         break;
 
       case "footnote_reference": {
