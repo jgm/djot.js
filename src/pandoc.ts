@@ -1,4 +1,4 @@
-import { AstNode, Doc, Block, Inline, Attributes,
+import { AstNode, Doc, Block, Inline, Attributes, CodeBlock,
          Term, Definition, Footnote } from "./ast";
 
 interface Pandoc {
@@ -512,13 +512,21 @@ const fromPandocInlines = function(elts : PandocElt[]) : Inline[] {
                         children: fromPandocInlines(elt.c)});
           break;
         case "Math":
-          // TODO
+          inlines.push({tag: "math", display: elt.c[0].t === "DisplayMath",
+                        text: elt.c[1]});
           break;
         case "Quoted":
-          // TODO
+          if (elt.c[0].t === "SingleQuoted") {
+            inlines.push({tag: "single_quoted",
+                          children: fromPandocInlines(elt.c[1])});
+          } else {
+            inlines.push({tag: "double_quoted",
+                          children: fromPandocInlines(elt.c[1])});
+          }
           break;
         case "RawInline":
-          // TODO
+          inlines.push({tag: "raw_inline", format: elt.c[0], text: elt.c[1]});
+          break;
           break;
         case "Code":
           // TODO
@@ -527,6 +535,9 @@ const fromPandocInlines = function(elts : PandocElt[]) : Inline[] {
         case "Image":
           // TODO
          break;
+        case "Cite":
+          // TODO
+          break;
         case "Note":
           // TODO; console.log(elt.c.map(fromPandocBlock));
           break;
@@ -543,6 +554,7 @@ const fromPandocInlines = function(elts : PandocElt[]) : Inline[] {
 
 const fromPandocBlock = function(block : PandocElt) : Block {
   switch (block.t) {
+    case "Plain":
     case "Para":
       return {tag: "para", children: fromPandocInlines(block.c)};
     case "BlockQuote":
@@ -561,17 +573,39 @@ const fromPandocBlock = function(block : PandocElt) : Block {
         return {tag: "div", attributes: attr, children: blocks};
       }
     }
-    case "Plain": // TODO
-    case "Header": // TODO
-    case "HorizontalRule": // TODO
-    case "CodeBlock": // TODO
-    case "RawBlock": // TODO
+    case "Header":
+      return {tag: "heading",
+              attributes: fromPandocAttr(block.c[1]),
+              level: block.c[0],
+              children: fromPandocInlines(block.c[2])};
+    case "HorizontalRule":
+      return {tag: "thematic_break"};
+    case "RawBlock":
+      return {tag: "raw_block", format: block.c[0], text: block.c[1]};
+    case "CodeBlock": {
+      let attr = fromPandocAttr(block.c[0]);
+      let lang;
+      if (attr.class) {
+        lang = attr.class.replace(/ *.*$/,"");
+        attr.class = attr.class.replace(/^[^ ]* */,"");
+      }
+      let res : CodeBlock =
+                {tag: "code_block",
+                 attributes: attr,
+                 lang: lang,
+                 text: block.c[1]};
+      if (!lang) {
+        delete res.lang;
+      }
+      return res;
+    }
     case "DefinitionList": // TODO
     case "OrderedList": // TODO
     case "BulletList": // TODO
     case "Table": // TODO
-    case "Null": // TODO
     case "LineBlock": // TODO
+    case "Null": // better options?
+      return {tag: "raw_block", format: "none", text: ""};
     default:
   }
   return {tag: "raw_block", format: "error",
