@@ -59,7 +59,7 @@ class PandocRenderer {
     this.warn = warn || (() => {});
   }
 
-  toPandocChildren = function(this : PandocRenderer, node : AstNode) : PandocElt[] {
+  toPandocChildren (node : AstNode) : PandocElt[] {
     if ("children" in node) {
         let children : PandocElt[] = [];
         node.children.forEach((child : AstNode) => {
@@ -71,7 +71,7 @@ class PandocRenderer {
     }
   }
 
-  toPandocDefinitionListItem = function(this : PandocRenderer, list : AstNode) : ((item : AstNode) => any[]) {
+  toPandocDefinitionListItem (list : AstNode) : ((item : AstNode) => any[]) {
     let self = this;
     return function(item : AstNode) : any[] {
       if (!("children" in item)) {
@@ -99,7 +99,7 @@ class PandocRenderer {
     };
   }
 
-  toPandocListItem = function(this : PandocRenderer, list : AstNode) :
+  toPandocListItem (list : AstNode) :
           ((item : AstNode) => PandocElt[]) {
       let self = this;
     return function(item : AstNode) : PandocElt[] {
@@ -118,7 +118,7 @@ class PandocRenderer {
     };
   }
 
-  addToPandocElts = function(this : PandocRenderer, elts : PandocElt[], node : any, ) : void {
+  addToPandocElts (elts : PandocElt[], node : any, ) : void {
     switch (node.tag) {
       case "section":
       case "div": {
