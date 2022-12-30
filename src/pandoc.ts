@@ -460,188 +460,213 @@ const fromPandocAttr = function(pattr : any[]) : Attributes {
   return attr;
 }
 
-const fromPandocInlines = function(elts : PandocElt[]) : Inline[] {
-  let accum : string[] = [];
-  let inlines : Inline[] = [];
-  for (let i=0; i < elts.length; i++) {
-    let elt = elts[i];
-    if (elt.t === "Str") {
-      accum.push(elt.c);
-    } else if (elt.t === "Space") {
-      accum.push(" ");
-    } else {
-      if (accum.length > 0) {
-        inlines.push({tag: "str", text: accum.join("")});
-        accum = [];
-      }
-      switch (elt.t) {
-        case "SoftBreak":
-          inlines.push({tag: "softbreak"});
-          break;
-        case "LineBreak":
-          inlines.push({tag: "hardbreak"});
-          break;
-        case "Emph":
-          inlines.push({tag: "emph", children: fromPandocInlines(elt.c)});
-          break;
-        case "Strong":
-          inlines.push({tag: "strong", children: fromPandocInlines(elt.c)});
-          break;
-        case "Superscript":
-          inlines.push({tag: "superscript", children: fromPandocInlines(elt.c)});
-          break;
-        case "Subscript":
-          inlines.push({tag: "subscript", children: fromPandocInlines(elt.c)});
-          break;
-        case "Strikeout":
-          inlines.push({tag: "delete", children: fromPandocInlines(elt.c)});
-          break;
-        case "Span":
-          inlines.push({tag: "span",
-                        attributes: fromPandocAttr(elt.c[0]),
-                        children: fromPandocInlines(elt.c[1])});
-          break;
-        case "Underline":
-          inlines.push({tag: "span",
-                        attributes: {class: "underline"},
-                        children: fromPandocInlines(elt.c)});
-          break;
-        case "SmallCaps":
-          inlines.push({tag: "span",
-                        attributes: {class: "smallcaps"},
-                        children: fromPandocInlines(elt.c)});
-          break;
-        case "Math":
-          inlines.push({tag: "math", display: elt.c[0].t === "DisplayMath",
-                        text: elt.c[1]});
-          break;
-        case "Quoted":
-          if (elt.c[0].t === "SingleQuoted") {
-            inlines.push({tag: "single_quoted",
-                          children: fromPandocInlines(elt.c[1])});
-          } else {
-            inlines.push({tag: "double_quoted",
-                          children: fromPandocInlines(elt.c[1])});
-          }
-          break;
-        case "RawInline":
-          inlines.push({tag: "raw_inline", format: elt.c[0], text: elt.c[1]});
-          break;
-          break;
-        case "Code":
-          inlines.push({tag: "verbatim",
-                        attributes: fromPandocAttr(elt.c[0]),
-                        text: elt.c[1]});
-          break;
-        case "Image":
-        case "Link": {
-          let attr = fromPandocAttr(elt.c[0]);
-          attr.title = elt.c[2][1];
-          let dest = elt.c[2][0];
-          let children = elt.c[1];
-          if (elt.t === "Image") {
-            inlines.push({tag: "image", attributes: attr, destination: dest,
-                          children: children });
-          } else {
-            inlines.push({tag: "link", attributes: attr, destination: dest,
-                          children: children });
-          }
-          break;
-        }
-        case "Cite":
-          inlines.push({tag: "span",
-                        attributes: {class: "cite"},
-                        children: fromPandocInlines(elt.c[1])});
+class PandocParser {
 
-          break;
-        case "Note":
-          // TODO; console.log(elt.c.map(fromPandocBlock));
-          break;
+  footnotes : Record<string, Footnote> = {};
+  footnoteIndex : number = 0;
 
-        default:
-      }
-    }
-  }
-  if (accum.length > 0) {
-    inlines.push({tag: "str", text: accum.join("")});
-  }
-  return inlines;
-}
-
-const fromPandocBlock = function(block : PandocElt) : Block {
-  switch (block.t) {
-    case "Plain":
-    case "Para":
-      return {tag: "para", children: fromPandocInlines(block.c)};
-    case "BlockQuote":
-      return {tag: "blockquote", children: block.c.map(fromPandocBlock)};
-    case "Div": {
-      let attr : Attributes = fromPandocAttr(block.c[0]);
-      let tag = attr.class.includes("section") ? "section" : "div";
-      let blocks = block.c[1].map(fromPandocBlock);
-      if (tag === "section") {
-        attr.class = attr.class.replace(/section */, "");
-        if (!attr.class) {
-          delete attr.class;
-        }
-        return {tag: "section", attributes: attr, children: blocks};
+  fromPandocInlines (elts : PandocElt[]) : Inline[] {
+    let accum : string[] = [];
+    let inlines : Inline[] = [];
+    for (let i=0; i < elts.length; i++) {
+      let elt = elts[i];
+      if (elt.t === "Str") {
+        accum.push(elt.c);
+      } else if (elt.t === "Space") {
+        accum.push(" ");
       } else {
-        return {tag: "div", attributes: attr, children: blocks};
+        if (accum.length > 0) {
+          inlines.push({tag: "str", text: accum.join("")});
+          accum = [];
+        }
+        switch (elt.t) {
+          case "SoftBreak":
+            inlines.push({tag: "softbreak"});
+            break;
+          case "LineBreak":
+            inlines.push({tag: "hardbreak"});
+            break;
+          case "Emph":
+            inlines.push({tag: "emph", children: this.fromPandocInlines(elt.c)});
+            break;
+          case "Strong":
+            inlines.push({tag: "strong", children: this.fromPandocInlines(elt.c)});
+            break;
+          case "Superscript":
+            inlines.push({tag: "superscript", children: this.fromPandocInlines(elt.c)});
+            break;
+          case "Subscript":
+            inlines.push({tag: "subscript", children: this.fromPandocInlines(elt.c)});
+            break;
+          case "Strikeout":
+            inlines.push({tag: "delete", children: this.fromPandocInlines(elt.c)});
+            break;
+          case "Span":
+            inlines.push({tag: "span",
+                          attributes: fromPandocAttr(elt.c[0]),
+                          children: this.fromPandocInlines(elt.c[1])});
+            break;
+          case "Underline":
+            inlines.push({tag: "span",
+                          attributes: {class: "underline"},
+                          children: this.fromPandocInlines(elt.c)});
+            break;
+          case "SmallCaps":
+            inlines.push({tag: "span",
+                          attributes: {class: "smallcaps"},
+                          children: this.fromPandocInlines(elt.c)});
+            break;
+          case "Math":
+            inlines.push({tag: "math", display: elt.c[0].t === "DisplayMath",
+                          text: elt.c[1]});
+            break;
+          case "Quoted":
+            if (elt.c[0].t === "SingleQuoted") {
+              inlines.push({tag: "single_quoted",
+                            children: this.fromPandocInlines(elt.c[1])});
+            } else {
+              inlines.push({tag: "double_quoted",
+                            children: this.fromPandocInlines(elt.c[1])});
+            }
+            break;
+          case "RawInline":
+            inlines.push({tag: "raw_inline", format: elt.c[0], text: elt.c[1]});
+            break;
+            break;
+          case "Code":
+            inlines.push({tag: "verbatim",
+                          attributes: fromPandocAttr(elt.c[0]),
+                          text: elt.c[1]});
+            break;
+          case "Image":
+          case "Link": {
+            let attr = fromPandocAttr(elt.c[0]);
+            attr.title = elt.c[2][1];
+            let dest = elt.c[2][0];
+            let children = elt.c[1];
+            if (elt.t === "Image") {
+              inlines.push({tag: "image", attributes: attr, destination: dest,
+                            children: children });
+            } else {
+              inlines.push({tag: "link", attributes: attr, destination: dest,
+                            children: children });
+            }
+            break;
+          }
+          case "Cite":
+            inlines.push({tag: "span",
+                          attributes: {class: "cite"},
+                          children: this.fromPandocInlines(elt.c[1])});
+
+            break;
+          case "Note": {
+            this.footnoteIndex++;
+            let label = this.footnoteIndex.toString();
+            let note = elt.c.map((b : PandocElt) => {
+              return this.fromPandocBlock(b);
+            });
+            this.footnotes[this.footnoteIndex.toString()] =
+                     {tag: "footnote", label: label, children: note};
+            inlines.push({tag: "footnote_reference",
+                          text: label});
+            break;
+          }
+
+          default:
+        }
       }
     }
-    case "Header":
-      return {tag: "heading",
-              attributes: fromPandocAttr(block.c[1]),
-              level: block.c[0],
-              children: fromPandocInlines(block.c[2])};
-    case "HorizontalRule":
-      return {tag: "thematic_break"};
-    case "RawBlock":
-      return {tag: "raw_block", format: block.c[0], text: block.c[1]};
-    case "CodeBlock": {
-      let attr = fromPandocAttr(block.c[0]);
-      let lang;
-      if (attr.class) {
-        lang = attr.class.replace(/ *.*$/,"");
-        attr.class = attr.class.replace(/^[^ ]* */,"");
-      }
-      let res : CodeBlock =
-                {tag: "code_block",
-                 attributes: attr,
-                 lang: lang,
-                 text: block.c[1]};
-      if (!lang) {
-        delete res.lang;
-      }
-      return res;
+    if (accum.length > 0) {
+      inlines.push({tag: "str", text: accum.join("")});
     }
-    case "DefinitionList": // TODO
-    case "OrderedList": // TODO
-    case "BulletList": // TODO
-    case "Table": // TODO
-    case "LineBlock": // TODO
-    case "Null": // better options?
-      return {tag: "raw_block", format: "none", text: ""};
-    default:
+    return inlines;
   }
-  return {tag: "raw_block", format: "error",
-          text: "Could not convert " + block.t};
+
+  fromPandocBlock (block : PandocElt) : Block {
+    switch (block.t) {
+      case "Plain":
+      case "Para":
+        return {tag: "para", children: this.fromPandocInlines(block.c)};
+      case "BlockQuote":
+        return {tag: "blockquote",
+                children: block.c.map((b : PandocElt) => {
+                  return this.fromPandocBlock(b)
+                })};
+      case "Div": {
+        let attr : Attributes = fromPandocAttr(block.c[0]);
+        let tag = attr.class.includes("section") ? "section" : "div";
+        let blocks = block.c[1].map((b : PandocElt) => {
+                      return this.fromPandocBlock(b);
+                    });
+        if (tag === "section") {
+          attr.class = attr.class.replace(/section */, "");
+          if (!attr.class) {
+            delete attr.class;
+          }
+          return {tag: "section", attributes: attr, children: blocks};
+        } else {
+          return {tag: "div", attributes: attr, children: blocks};
+        }
+      }
+      case "Header":
+        return {tag: "heading",
+                attributes: fromPandocAttr(block.c[1]),
+                level: block.c[0],
+                children: this.fromPandocInlines(block.c[2])};
+      case "HorizontalRule":
+        return {tag: "thematic_break"};
+      case "RawBlock":
+        return {tag: "raw_block", format: block.c[0], text: block.c[1]};
+      case "CodeBlock": {
+        let attr = fromPandocAttr(block.c[0]);
+        let lang;
+        if (attr.class) {
+          lang = attr.class.replace(/ *.*$/,"");
+          attr.class = attr.class.replace(/^[^ ]* */,"");
+        }
+        let res : CodeBlock =
+                  {tag: "code_block",
+                  attributes: attr,
+                  lang: lang,
+                  text: block.c[1]};
+        if (!lang) {
+          delete res.lang;
+        }
+        return res;
+      }
+      case "DefinitionList": // TODO
+      case "OrderedList": // TODO
+      case "BulletList": // TODO
+      case "Table": // TODO
+      case "LineBlock": // TODO
+      case "Null": // better options?
+        return {tag: "raw_block", format: "none", text: ""};
+      default:
+    }
+    return {tag: "raw_block", format: "error",
+            text: "Could not convert " + block.t};
+  }
+
+  fromPandocAST (pandoc : Pandoc) : Doc | null {
+    if (!pandoc) {
+      return null;
+    }
+    let blocks = pandoc.blocks;
+    let docblocks : Block[] = blocks.map((b : PandocElt) => {
+      return this.fromPandocBlock(b)
+    });
+
+    return { tag: "doc",
+            children: docblocks,
+            footnotes: this.footnotes,
+            references: {} };
+  }
+
+  parseJSON (json : string) : Doc | null {
+    let pandoc = JSON.parse(json);
+    return this.fromPandocAST(pandoc);
+  }
 }
 
-const parsePandocJSON = function(json : string) : Doc | null {
-  const footnotes : Record<string, Footnote> = {};
-  let pandoc = JSON.parse(json);
-  if (!pandoc) {
-    return null;
-  }
-  let blocks = pandoc.blocks;
-  let docblocks : Block[] = blocks.map(fromPandocBlock);
-
-  return { tag: "doc",
-           children: docblocks,
-           footnotes: footnotes,
-           references: {} };
-}
-
-export { PandocRenderer, parsePandocJSON };
+export { PandocRenderer, PandocParser };
 

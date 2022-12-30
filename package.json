@@ -3,12 +3,14 @@
   "sideEffects": false,
   "version": "0.1.0",
   "engines": {
-   "node": ">=17.0.0"
+    "node": ">=17.0.0"
   },
   "description": "",
   "license": "MIT",
   "author": "John MacFarlane",
-  "keywords": ["markup"],
+  "keywords": [
+    "markup"
+  ],
   "main": "./dist/djot.js",
   "types": "./types/index.d.ts",
   "scripts": {
@@ -21,6 +23,7 @@
     "./types/*.d.ts"
   ],
   "dependencies": {
+    "typescript-language-server": "^3.0.1"
   },
   "devDependencies": {
     "@types/jest": "^29.2.4",

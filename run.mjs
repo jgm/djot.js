@@ -1,7 +1,7 @@
 import { EventParser } from "./lib/block.js";
 import { parse, renderAST } from "./lib/ast.js";
 import { renderHTML } from "./lib/html.js";
-import { PandocRenderer, parsePandocJSON } from "./lib/pandoc.js";
+import { PandocRenderer, PandocParser } from "./lib/pandoc.js";
 import fs from "fs";
 import { performance } from "perf_hooks";
 
@@ -122,7 +122,7 @@ try {
     if (from === "djot") {
       ast = parse(input, options);
     } else if (from === "pandoc") {
-      ast = parsePandocJSON(input);
+      ast = new PandocParser().parseJSON(input);
     }
     let endTime = performance.now();
     let parseTime = (endTime - startTime).toFixed(1);
