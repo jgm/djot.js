@@ -1,4 +1,5 @@
-import { AstNode, Doc, Term, Definition, Reference, Footnote } from "./ast";
+import { AstNode, Doc, Block, Inline,
+         Term, Definition, Footnote } from "./ast";
 
 interface Pandoc {
   ["pandoc-api-version"]: number[],
@@ -419,7 +420,7 @@ class PandocRenderer {
         break;
 
       case "footnote_reference": {
-        let note = this.doc.footnotes[node.text]; // TODO make an object
+        let note = this.doc.footnotes[node.text];
         if (note) {
           elts.push({ t: "Note", c: this.toPandocChildren(note) });
         } else {
@@ -440,5 +441,67 @@ class PandocRenderer {
   }
 }
 
-export { PandocRenderer, Pandoc, PandocMeta, PandocElt };
+const fromPandocInlines = function(elts : PandocElt[]) : Inline[] {
+  let accum : string[] = [];
+  let inlines : Inline[] = [];
+  for (let i=0; i < elts.length; i++) {
+    let elt = elts[i];
+    if (elt.t === "Str") {
+      accum.push(elt.c);
+    } else if (elt.t === "Space") {
+      accum.push(" ");
+    } else {
+      if (accum.length > 0) {
+        inlines.push({tag: "str", text: accum.join("")});
+        accum = [];
+      }
+      switch (elt.t) {
+        case "SoftBreak":
+          inlines.push({tag: "softbreak"});
+          break;
+        case "LineBreak":
+          inlines.push({tag: "hardbreak"});
+          break;
+
+        case "Note":
+          // TODO; console.log(elt.c.map(fromPandocBlock));
+          break;
+
+        default:
+      }
+    }
+  }
+  if (accum.length > 0) {
+    inlines.push({tag: "str", text: accum.join("")});
+  }
+  return inlines;
+}
+
+const fromPandocBlock = function(block : PandocElt) : Block {
+  switch (block.t) {
+    case "Para":
+      return {tag: "para", children: fromPandocInlines(block.c)};
+
+    default:
+  }
+  return {tag: "raw_block", format: "error",
+          text: "Could not convert " + block.t};
+}
+
+const parsePandocJSON = function(json : string) : Doc | null {
+  const footnotes : Record<string, Footnote> = {};
+  let pandoc = JSON.parse(json);
+  if (!pandoc) {
+    return null;
+  }
+  let blocks = pandoc.blocks;
+  let docblocks : Block[] = blocks.map(fromPandocBlock);
+
+  return { tag: "doc",
+           children: docblocks,
+           footnotes: footnotes,
+           references: {} };
+}
+
+export { PandocRenderer, parsePandocJSON };
 

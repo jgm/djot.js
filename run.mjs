@@ -1,7 +1,7 @@
 import { EventParser } from "./lib/block.js";
 import { parse, renderAST } from "./lib/ast.js";
 import { renderHTML } from "./lib/html.js";
-import { PandocRenderer } from "./lib/pandoc.js";
+import { PandocRenderer, parsePandocJSON } from "./lib/pandoc.js";
 import fs from "fs";
 import { performance } from "perf_hooks";
 
@@ -13,6 +13,7 @@ let timing = false;
 let events = false;
 let options = {sourcePositions: false, warn: warn};
 let output = 'html';
+let from = 'djot';
 let compact = false;
 let usage = `djot [OPTIONS] FILE*
 Options:
@@ -21,6 +22,7 @@ Options:
   --time,-t            Print parse time to stderr
   --events,-e          Print events in JSON format
   --pandoc             Convert to pandoc AST in JSON format
+  --from-pandoc        Read pandoc AST in JSON format instead of djot
   --json,-j            Print AST in JSON format
   --ast,-a             Print AST in human-readable format
   --html               Print HTML (default)
@@ -55,6 +57,9 @@ for (let i=2; i < args.length; i++) {
       break;
     case "--pandoc":
       output = 'pandoc';
+      break;
+    case "--from-pandoc":
+      from = 'pandoc';
       break;
     case "--ast":
     case "-a":
@@ -113,7 +118,12 @@ try {
     console.log("]");
   } else {
     let startTime = performance.now();
-    let ast = parse(input, options);
+    let ast;
+    if (from === "djot") {
+      ast = parse(input, options);
+    } else if (from === "pandoc") {
+      ast = parsePandocJSON(input);
+    }
     let endTime = performance.now();
     let parseTime = (endTime - startTime).toFixed(1);
 
