@@ -22,6 +22,23 @@ const paraToPlain = function(elt : PandocElt) : PandocElt {
   return elt;
 }
 
+const toPandocAttr = function(node : AstNode) : PandocAttr {
+  if ("attributes" in node && node.attributes) {
+    let id = node.attributes.id || "";
+    let classes =
+         (node.attributes.class && node.attributes.class.split(" ")) || [];
+    let kvs = [];
+    for (let k in node.attributes) {
+      if (k !== id && k !== "class") {
+       kvs.push([k, node.attributes[k]]);
+      }
+    }
+    return [id, classes, kvs];
+  } else {
+    return ["",[],[]];
+  }
+}
+
 class PandocRenderer {
   doc : Doc;
   warn : (msg : string) => void;
@@ -40,23 +57,6 @@ class PandocRenderer {
         return children;
     } else {
       return [];
-    }
-  }
-
-  toPandocAttr = function(node : AstNode) : PandocAttr {
-    if ("attributes" in node && node.attributes) {
-      let id = node.attributes.id || "";
-      let classes =
-           (node.attributes.class && node.attributes.class.split(" ")) || [];
-      let kvs = [];
-      for (let k in node.attributes) {
-        if (k !== id && k !== "class") {
-         kvs.push([k, node.attributes[k]]);
-        }
-      }
-      return [id, classes, kvs];
-    } else {
-      return ["",[],[]];
     }
   }
 
@@ -111,7 +111,7 @@ class PandocRenderer {
     switch (node.tag) {
       case "section":
       case "div": {
-        let attrs = this.toPandocAttr(node);
+        let attrs = toPandocAttr(node);
         if (node.tag === "section") {
           attrs[1].unshift("section");
         }
@@ -173,12 +173,12 @@ class PandocRenderer {
         break;
 
       case "heading":
-        elts.push({ t: "Header", c: [node.level, this.toPandocAttr(node),
+        elts.push({ t: "Header", c: [node.level, toPandocAttr(node),
                                      this.toPandocChildren(node)] });
         break;
 
       case "code_block": {
-        let attrs = this.toPandocAttr(node);
+        let attrs = toPandocAttr(node);
         if (node.lang) {
           attrs[1].unshift(node.lang);
         }
@@ -189,6 +189,82 @@ class PandocRenderer {
       case "thematic_break":
         elts.push({ t: "HorizontalRule" });
         break;
+
+      case "table": {
+        let attrs = toPandocAttr(node);
+        let nullattr = ["",[],[]];
+        let caption : PandocElt[] = [];
+        let colspecs : any = [];
+        let theadrows : any = [];
+        let tbodies : any = [];
+        let tfoot = [nullattr, []];
+        let curheads : any = [];
+        let currows : any = [];
+        let alignMap : Record<string, string> =
+                       { left: "AlignLeft",
+                         right: "AlignRight",
+                         center: "AlignCenter",
+                         default: "AlignDefault" };
+        let toColSpec = function(cell : AstNode) {
+          if ("align" in cell) {
+            return [{t: alignMap[cell.align] || "AlignDefault"},
+                    {t: "ColWidthDefault"}];
+          }
+        }
+        let self = this;
+        let toPandocCell = function(cell : AstNode) {
+          if ("children" in cell) {
+            return [ toPandocAttr(cell),
+                     {t: ("align" in cell && alignMap[cell.align]) ||
+                          "AlignDefault"},
+                     1,
+                     1,
+                     [{t: "Plain", c: self.toPandocChildren(cell)}] ]
+          }
+        }
+        let toPandocRow = function(row : AstNode) {
+          if ("children" in row) {
+            return [toPandocAttr(row), row.children.map(toPandocCell)];
+          }
+        }
+        for (let i=0; i<node.children.length; i++) {
+          let row = node.children[i];
+          if (!("children" in row)) {
+            break;
+          }
+          if (colspecs.length === 0) {
+            colspecs = row.children.map(toColSpec);
+          }
+          if (row.tag === "caption") {
+            caption = this.toPandocChildren(row);
+          } else if (row.head) {
+            if (currows.length === 0) {
+              curheads.push(toPandocRow(row));
+            } else {
+              tbodies.push([nullattr, 0, curheads, currows]);
+              currows = [];
+              curheads = [toPandocRow(row)];
+            }
+          } else {
+            if (tbodies.length === 0 && currows.length === 0) {
+                theadrows = curheads;
+                curheads = [];
+            }
+            currows.push(toPandocRow(row));
+          }
+        }
+        if (curheads.length > 0 || currows.length > 0) {
+          tbodies.push([nullattr, 0, curheads, currows]);
+        }
+
+        elts.push({ t: "Table", c: [attrs,
+                                    [null, caption],
+                                    colspecs,
+                                    [nullattr, theadrows],
+                                    tbodies,
+                                    tfoot] });
+        break;
+      }
 
       case "softbreak":
         elts.push({ t: "SoftBreak" });
@@ -209,7 +285,7 @@ class PandocRenderer {
         break;
 
       case "verbatim":
-        elts.push({ t: "Code", c: [this.toPandocAttr(node), node.text] });
+        elts.push({ t: "Code", c: [toPandocAttr(node), node.text] });
         break;
 
       case "math":
@@ -273,7 +349,7 @@ class PandocRenderer {
             }
           }
         }
-       let attrs = this.toPandocAttr({tag: "link", attributes: linkAttrs,
+       let attrs = toPandocAttr({tag: "link", attributes: linkAttrs,
                                       children: []});
         let url = destination || "";
         let title = (node.attributes && node.attributes.title) || "";
