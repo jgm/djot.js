@@ -42,6 +42,16 @@ const toPandocAttr = function(node : AstNode) : PandocAttr {
 class PandocRenderer {
   doc : Doc;
   warn : (msg : string) => void;
+  symbols : Record<string, string> =
+    { nbsp: " ",
+      ellipses: "⋯",
+      em_dash: "-",
+      en_dash: "-",
+      left_single_quote: "‘",
+      right_single_quote: "’",
+      left_double_quote: "“",
+      right_double_quote: "”" };
+
 
   constructor(doc : Doc, warn ?: (msg : string) => void) {
     this.doc = doc;
@@ -123,7 +133,7 @@ class PandocRenderer {
         elts.push({ t: "BlockQuote", c: this.toPandocChildren(node) });
         break;
 
-      case "list": { // TODO list styles etc.
+      case "list": {
         let items : PandocElt[][];
         if (node.style &&
             node.style === "-" || node.style === "+" || node.style === "*" ||
@@ -185,6 +195,10 @@ class PandocRenderer {
         elts.push({ t: "CodeBlock", c: [attrs, node.text] });
         break;
       }
+
+      case "raw_block":
+        elts.push({ t: "RawBlock", c: [node.format, node.text] });
+        break;
 
       case "thematic_break":
         elts.push({ t: "HorizontalRule" });
@@ -266,6 +280,10 @@ class PandocRenderer {
         break;
       }
 
+      case "raw_inline":
+        elts.push({ t: "RawInline", c: [node.format, node.text] });
+        break;
+
       case "softbreak":
         elts.push({ t: "SoftBreak" });
         break;
@@ -290,24 +308,19 @@ class PandocRenderer {
 
       case "math":
         elts.push({ t: "Math",
-                    c: [{t: node.display ? "DisplayMath" : "InlineMath"}, 
+                    c: [{t: node.display ? "DisplayMath" : "InlineMath"},
                          node.text] });
         break;
 
+      case "nbsp":
+      case "ellipses":
+      case "em_dash":
+      case "en_dash":
       case "left_single_quote":
-        elts.push({ t: "Str", c: "‘" });
-        break;
-
       case "right_single_quote":
-        elts.push({ t: "Str", c: "’" });
-        break;
-
       case "left_double_quote":
-        elts.push({ t: "Str", c: "“" });
-        break;
-
       case "right_double_quote":
-        elts.push({ t: "Str", c: "”" });
+        elts.push({ t: "Str", c: this.symbols[node.tag] || "" });
         break;
 
       case "symbol":
@@ -320,6 +333,22 @@ class PandocRenderer {
         let quoteType = {t: node.tag === "single_quoted" ? "SingleQuote"
                                                         : "DoubleQuote"};
         elts.push({ t: "Quoted", c: [quoteType, this.toPandocChildren(node)]});
+        break;
+      }
+
+      case "email":
+      case "url": {
+        let url = node.text;
+        if (node.tag === "email") {
+          url = "mailto:" + url;
+        }
+        let attr = toPandocAttr(node);
+        attr[1].unshift(node.tag === "email" ? "email" : "uri");
+        elts.push({ t: "Link",
+                     c: [attr,
+                         [{t: "Str", c: node.text}],
+                         [url, ""]] });
+
         break;
       }
 
