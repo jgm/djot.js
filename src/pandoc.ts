@@ -529,14 +529,30 @@ const fromPandocInlines = function(elts : PandocElt[]) : Inline[] {
           break;
           break;
         case "Code":
-          // TODO
+          inlines.push({tag: "verbatim",
+                        attributes: fromPandocAttr(elt.c[0]),
+                        text: elt.c[1]});
           break;
-        case "Link":
         case "Image":
-          // TODO
-         break;
+        case "Link": {
+          let attr = fromPandocAttr(elt.c[0]);
+          attr.title = elt.c[2][1];
+          let dest = elt.c[2][0];
+          let children = elt.c[1];
+          if (elt.t === "Image") {
+            inlines.push({tag: "image", attributes: attr, destination: dest,
+                          children: children });
+          } else {
+            inlines.push({tag: "link", attributes: attr, destination: dest,
+                          children: children });
+          }
+          break;
+        }
         case "Cite":
-          // TODO
+          inlines.push({tag: "span",
+                        attributes: {class: "cite"},
+                        children: fromPandocInlines(elt.c[1])});
+
           break;
         case "Note":
           // TODO; console.log(elt.c.map(fromPandocBlock));
