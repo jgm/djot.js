@@ -80,7 +80,7 @@ interface RawBlock extends HasAttributes {
 
 interface List extends HasAttributes {
   tag: "list";
-  children: ListItem[];
+  children: (ListItem | DefinitionListItem)[];
   style: string;
   tight: boolean;
   start?: number;

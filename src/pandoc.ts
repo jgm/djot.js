@@ -1,5 +1,6 @@
-import { AstNode, Doc, Block, ListItem, Inline, Attributes, CodeBlock,
-         Term, Definition, Footnote } from "./ast";
+import { AstNode, Doc, Block, TablePart, Row, Cell, Alignment,
+         ListItem, Inline, Attributes, CodeBlock,
+         DefinitionListItem, Term, Definition, Footnote } from "./ast";
 
 interface Pandoc {
   ["pandoc-api-version"]: number[],
@@ -460,10 +461,19 @@ const fromPandocAttr = function(pattr : any[]) : Attributes {
   return attr;
 }
 
+const isPlainOrPara = function(x : PandocElt) : boolean {
+  return (x.t === "Plain" || x.t === "Para");
+}
+
 class PandocParser {
 
   footnotes : Record<string, Footnote> = {};
   footnoteIndex : number = 0;
+  warn : (msg : string) => void;
+
+  constructor(warn ?: (msg : string) => void) {
+    this.warn = warn || (() => {});
+  }
 
   fromPandocInlines (elts : PandocElt[]) : Inline[] {
     let accum : string[] = [];
@@ -483,61 +493,74 @@ class PandocParser {
           case "SoftBreak":
             inlines.push({tag: "softbreak"});
             break;
+
           case "LineBreak":
             inlines.push({tag: "hardbreak"});
             break;
+
           case "Emph":
             inlines.push({tag: "emph", children: this.fromPandocInlines(elt.c)});
             break;
+
           case "Strong":
             inlines.push({tag: "strong", children: this.fromPandocInlines(elt.c)});
             break;
+
           case "Superscript":
             inlines.push({tag: "superscript", children: this.fromPandocInlines(elt.c)});
             break;
+
           case "Subscript":
             inlines.push({tag: "subscript", children: this.fromPandocInlines(elt.c)});
             break;
+
           case "Strikeout":
             inlines.push({tag: "delete", children: this.fromPandocInlines(elt.c)});
             break;
+
           case "Span":
             inlines.push({tag: "span",
                           attributes: fromPandocAttr(elt.c[0]),
                           children: this.fromPandocInlines(elt.c[1])});
             break;
+
           case "Underline":
             inlines.push({tag: "span",
                           attributes: {class: "underline"},
                           children: this.fromPandocInlines(elt.c)});
             break;
+
           case "SmallCaps":
             inlines.push({tag: "span",
                           attributes: {class: "smallcaps"},
                           children: this.fromPandocInlines(elt.c)});
             break;
+
           case "Math":
             inlines.push({tag: "math", display: elt.c[0].t === "DisplayMath",
                           text: elt.c[1]});
             break;
+
           case "Quoted":
             if (elt.c[0].t === "SingleQuoted") {
               inlines.push({tag: "single_quoted",
                             children: this.fromPandocInlines(elt.c[1])});
             } else {
-              inlines.push({tag: "double_quoted",
+               inlines.push({tag: "double_quoted",
                             children: this.fromPandocInlines(elt.c[1])});
             }
             break;
+
           case "RawInline":
             inlines.push({tag: "raw_inline", format: elt.c[0], text: elt.c[1]});
             break;
-            break;
+
           case "Code":
             inlines.push({tag: "verbatim",
                           attributes: fromPandocAttr(elt.c[0]),
                           text: elt.c[1]});
             break;
+
           case "Image":
           case "Link": {
             let attr = fromPandocAttr(elt.c[0]);
@@ -553,12 +576,14 @@ class PandocParser {
             }
             break;
           }
+
           case "Cite":
             inlines.push({tag: "span",
                           attributes: {class: "cite"},
                           children: this.fromPandocInlines(elt.c[1])});
 
             break;
+
           case "Note": {
             this.footnoteIndex++;
             let label = this.footnoteIndex.toString();
@@ -587,14 +612,16 @@ class PandocParser {
       case "Plain":
       case "Para":
         return {tag: "para", children: this.fromPandocInlines(block.c)};
+
       case "BlockQuote":
         return {tag: "blockquote",
                 children: block.c.map((b : PandocElt) => {
                   return this.fromPandocBlock(b)
                 })};
+
       case "Div": {
         let attr : Attributes = fromPandocAttr(block.c[0]);
-        let tag = attr.class.includes("section") ? "section" : "div";
+        let tag = /\bsection\b/.test(attr.class) ? "section" : "div";
         let blocks = block.c[1].map((b : PandocElt) => {
                       return this.fromPandocBlock(b);
                     });
@@ -608,15 +635,19 @@ class PandocParser {
           return {tag: "div", attributes: attr, children: blocks};
         }
       }
+
       case "Header":
         return {tag: "heading",
                 attributes: fromPandocAttr(block.c[1]),
                 level: block.c[0],
                 children: this.fromPandocInlines(block.c[2])};
+
       case "HorizontalRule":
         return {tag: "thematic_break"};
+
       case "RawBlock":
         return {tag: "raw_block", format: block.c[0], text: block.c[1]};
+
       case "CodeBlock": {
         let attr = fromPandocAttr(block.c[0]);
         let lang;
@@ -634,8 +665,33 @@ class PandocParser {
         }
         return res;
       }
-      case "DefinitionList": // TODO
-        throw("Unimplemented DefinitionList");
+
+      case "DefinitionList": {
+        let items : DefinitionListItem[] = [];
+        let tight = false;
+        for (let i=0; i<block.c.length; i++) {
+          let rawterm = block.c[i][0];
+          let rawdefs = block.c[i][1];
+          let term : Inline[] = this.fromPandocInlines(rawterm);
+          let def : Block[] = [];
+          for (let j=0; j<rawdefs.length; j++) {
+            rawdefs[j].map((b : PandocElt) => {
+              if (b.t === "Plain") {
+                tight = true;
+              } else if (b.t === "Para") {
+                tight = false;
+              }
+              def.push(this.fromPandocBlock(b));
+            });
+          }
+          items.push({tag: "definition_list_item",
+                      children: [{tag: "term", children: term},
+                                 {tag: "definition", children: def}]});
+        }
+
+        return {tag: "list", style: ":", tight: tight, children: items};
+      }
+
       case "OrderedList":
       case "BulletList": {
         let items : ListItem[] = [];
@@ -646,7 +702,7 @@ class PandocParser {
         } else {
           rawitems = block.c[1];
         }
-        for (let i=0; i<block.c.length; i++) {
+        for (let i=0; i<rawitems.length; i++) {
           items.push({tag: "list_item",
                       children: rawitems[i].map((b : PandocElt) => {
                                    if (b.t === "Plain") {
@@ -679,8 +735,57 @@ class PandocParser {
           return {tag: "list", style: style, tight: tight, children: items};
         }
       }
-      case "Table": // TODO
-        throw("Unimplemented Table");
+
+      case "Table": {
+        let attr = fromPandocAttr(block.c[0]);
+        let rawcaption = block.c[1][1];
+        let caption : Inline[] = [];
+        if (rawcaption.length > 1 ||
+            (rawcaption.length === 1 && !isPlainOrPara(rawcaption[0]))) {
+          this.warn("Skipping block-level content in table caption.");
+        } else if (rawcaption[0] && "c" in rawcaption[0]) {
+          caption = this.fromPandocInlines(rawcaption[0].c);
+        }
+
+        let rawcolspecs = block.c[2];
+        let aligns : Alignment[] = [];
+        for (let i in rawcolspecs) {
+          aligns.push(rawcolspecs[i][0].t.slice(5).toLowerCase());
+        }
+
+        let rows : Row[] = [];
+        let rawtheadrows = block.c[3][1];
+        for (let i in rawtheadrows) {
+          rows.push(this.fromPandocRow(rawtheadrows[i], true, 0, aligns));
+        }
+
+        let tbodies = block.c[4];
+        for (let i in tbodies) {
+          let rowheadcolumns : number = tbodies[i][1];
+          let rawsubheadrows = tbodies[i][2];
+          for (let i in rawsubheadrows) {
+            rows.push(this.fromPandocRow(rawsubheadrows[i], true,
+                                          rowheadcolumns, aligns));
+          }
+          let rawbodyrows = tbodies[i][3];
+          for (let i in rawbodyrows) {
+            rows.push(this.fromPandocRow(rawbodyrows[i], false,
+                                          rowheadcolumns, aligns));
+          }
+        }
+
+        let rawfootrows = block.c[5][1];
+        for (let i in rawfootrows) {
+          rows.push(this.fromPandocRow(rawfootrows[i], false, 0, aligns));
+        }
+
+        let children : TablePart[] = rows;
+        if (caption.length > 0) {
+          children.unshift({tag: "caption", children: caption});
+        }
+        return {tag: "table", attributes: attr, children: children};
+      }
+
       case "LineBlock": {
         let ils : Inline[] = [];
         for (let i=0; i<block.c.length; i++) {
@@ -691,12 +796,44 @@ class PandocParser {
         }
         return {tag: "para", children: ils};
       }
+
       case "Null": // better options?
         return {tag: "raw_block", format: "none", text: ""};
+
       default:
     }
     return {tag: "raw_block", format: "error",
             text: "Could not convert " + block.t};
+  }
+
+  fromPandocRow(rawrow : any, head : boolean,
+                 rowheadcols : number, aligns : Alignment[]) : Row {
+    let attr : Attributes = fromPandocAttr(rawrow[0]);
+    let rawcells = rawrow[1];
+    let cells : Cell[] = [];
+    for (let i=0; i < rawcells.length; i++) {
+      cells.push(this.fromPandocCell(rawcells[i],
+                          head || i < rowheadcols, aligns[i]));
+    }
+    return {tag: "row", attributes: attr, head: head, children: cells};
+  }
+
+  fromPandocCell(rawcell : any, head : boolean, defaultAlign : Alignment) : Cell {
+    let cs : Inline[] = [];
+    let attr : Attributes = fromPandocAttr(rawcell[0]);
+    let align = rawcell[1].t.slice(5).toLowerCase();
+    if (align === "default") {
+      align = defaultAlign;
+    }
+    let rawblocks = rawcell[4];
+    if (rawblocks.length > 1 || (rawblocks.length === 1 &&
+          !isPlainOrPara(rawblocks[0]))) {
+      this.warn("Skipping table cell with block-level content.");
+    } else if (rawblocks[0]) {
+      cs = this.fromPandocInlines(rawblocks[0].c);
+    }
+    return {tag: "cell", attributes: attr, head: head, align: align,
+            children: cs};
   }
 
   fromPandocAST (pandoc : Pandoc) : Doc | null {

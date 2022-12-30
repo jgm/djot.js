@@ -122,7 +122,7 @@ try {
     if (from === "djot") {
       ast = parse(input, options);
     } else if (from === "pandoc") {
-      ast = new PandocParser().parseJSON(input);
+      ast = new PandocParser(options.warn).parseJSON(input);
     }
     let endTime = performance.now();
     let parseTime = (endTime - startTime).toFixed(1);
