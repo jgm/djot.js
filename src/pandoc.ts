@@ -1,4 +1,4 @@
-import { AstNode, Doc, Block, Inline,
+import { AstNode, Doc, Block, Inline, Attributes,
          Term, Definition, Footnote } from "./ast";
 
 interface Pandoc {
@@ -407,6 +407,11 @@ class PandocRenderer {
         elts.push({ t: "Subscript", c: this.toPandocChildren(node) });
         break;
 
+      case "span":
+        elts.push({ t: "Span", c: [toPandocAttr(node),
+                                   this.toPandocChildren(node)] });
+        break;
+
       case "mark":
         elts.push({ t: "Span", c: [["",["mark"],[]], this.toPandocChildren(node)] });
         break;
@@ -441,6 +446,20 @@ class PandocRenderer {
   }
 }
 
+const fromPandocAttr = function(pattr : any[]) : Attributes {
+  let attr : Attributes = {};
+  if (pattr[0]) {
+    attr.id = pattr[0];
+  }
+  if (pattr[1].length > 0) {
+    attr.class = pattr[1].join(" ");
+  }
+  for (let i=0; i<pattr[2].length; i++) {
+    attr[pattr[2][i][0].toString()] = pattr[2][i][1];
+  }
+  return attr;
+}
+
 const fromPandocInlines = function(elts : PandocElt[]) : Inline[] {
   let accum : string[] = [];
   let inlines : Inline[] = [];
@@ -462,7 +481,52 @@ const fromPandocInlines = function(elts : PandocElt[]) : Inline[] {
         case "LineBreak":
           inlines.push({tag: "hardbreak"});
           break;
-
+        case "Emph":
+          inlines.push({tag: "emph", children: fromPandocInlines(elt.c)});
+          break;
+        case "Strong":
+          inlines.push({tag: "strong", children: fromPandocInlines(elt.c)});
+          break;
+        case "Superscript":
+          inlines.push({tag: "superscript", children: fromPandocInlines(elt.c)});
+          break;
+        case "Subscript":
+          inlines.push({tag: "subscript", children: fromPandocInlines(elt.c)});
+          break;
+        case "Strikeout":
+          inlines.push({tag: "delete", children: fromPandocInlines(elt.c)});
+          break;
+        case "Span":
+          inlines.push({tag: "span",
+                        attributes: fromPandocAttr(elt.c[0]),
+                        children: fromPandocInlines(elt.c[1])});
+          break;
+        case "Underline":
+          inlines.push({tag: "span",
+                        attributes: {class: "underline"},
+                        children: fromPandocInlines(elt.c)});
+          break;
+        case "SmallCaps":
+          inlines.push({tag: "span",
+                        attributes: {class: "smallcaps"},
+                        children: fromPandocInlines(elt.c)});
+          break;
+        case "Math":
+          // TODO
+          break;
+        case "Quoted":
+          // TODO
+          break;
+        case "RawInline":
+          // TODO
+          break;
+        case "Code":
+          // TODO
+          break;
+        case "Link":
+        case "Image":
+          // TODO
+         break;
         case "Note":
           // TODO; console.log(elt.c.map(fromPandocBlock));
           break;
@@ -481,7 +545,33 @@ const fromPandocBlock = function(block : PandocElt) : Block {
   switch (block.t) {
     case "Para":
       return {tag: "para", children: fromPandocInlines(block.c)};
-
+    case "BlockQuote":
+      return {tag: "blockquote", children: block.c.map(fromPandocBlock)};
+    case "Div": {
+      let attr : Attributes = fromPandocAttr(block.c[0]);
+      let tag = attr.class.includes("section") ? "section" : "div";
+      let blocks = block.c[1].map(fromPandocBlock);
+      if (tag === "section") {
+        attr.class = attr.class.replace(/section */, "");
+        if (!attr.class) {
+          delete attr.class;
+        }
+        return {tag: "section", attributes: attr, children: blocks};
+      } else {
+        return {tag: "div", attributes: attr, children: blocks};
+      }
+    }
+    case "Plain": // TODO
+    case "Header": // TODO
+    case "HorizontalRule": // TODO
+    case "CodeBlock": // TODO
+    case "RawBlock": // TODO
+    case "DefinitionList": // TODO
+    case "OrderedList": // TODO
+    case "BulletList": // TODO
+    case "Table": // TODO
+    case "Null": // TODO
+    case "LineBlock": // TODO
     default:
   }
   return {tag: "raw_block", format: "error",
