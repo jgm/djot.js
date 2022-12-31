@@ -56,10 +56,27 @@ ab illo inventore veritatis.
 > inventore veritatis.
 
 Thus Cicero.
-`
-    );
+`);
   });
 
+  it("handles block quotes properly", () => {
+    let cicero3 : Doc = mkdoc([
+        { tag: "para",
+          children: [ { tag: "str", text: "Test." }] },
+        { tag: "heading", level: 3,
+          children: [ { tag: "str", text: cicero.substring(1,50) } ] },
+        { tag: "para",
+          children: [ { tag: "str", text: "etc." }] }
+        ]);
+    expect(new DjotRenderer(cicero3, 30).render()).toStrictEqual(
+`Test.
+
+### ed ut perspiciatis unde
+### omnis iste natus error si
+
+etc.
+`);
+   });
 
 });
 

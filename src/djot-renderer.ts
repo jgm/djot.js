@@ -103,8 +103,11 @@ class DjotRenderer {
       this.blankline();
     },
     heading: (node : Heading) => {
-      this.lit("#".repeat(node.level) + " ");
+      let hashes = "#".repeat(node.level);
+      this.lit(hashes + " ");
+      this.prefixes.push(hashes + " ");
       this.renderChildren(node);
+      this.prefixes.pop();
       this.blankline();
     },
     blockquote: (node: BlockQuote) => {
