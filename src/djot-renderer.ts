@@ -9,8 +9,7 @@ class DjotRenderer {
   buffer : string[] = [];
   startOfLine : boolean = true;
   endOfPrefix : number = 0;
-  column : number = 1;
-  needsSpace : boolean = false;
+  column : number = 0;
   needsBlankLine : boolean = false;
 
   constructor(doc : Doc, wrapWidth ?: number) {
@@ -35,21 +34,9 @@ class DjotRenderer {
   }
 
   lit (s : string) : void {
-    if (this.wrapWidth && !this.startOfLine &&
-        this.column + s.length > this.wrapWidth) {
-      this.newline();
-      this.startOfLine = true;
-      this.needsSpace = false;
-      this.column = 1;
-    }
-    if (this.needsSpace && !this.startOfLine) {
-      this.buffer.push(" ");
-      this.column += 1;
-    }
     this.buffer.push(s);
     this.column += s.length;
     this.startOfLine = false;
-    this.needsSpace = false;
   }
 
   blankline () : void {
@@ -63,7 +50,7 @@ class DjotRenderer {
        this.buffer[this.buffer.length - 1].replace(/  *$/,"");
     }
     this.endOfPrefix = 0;
-    this.column = 1;
+    this.column = 0;
     this.buffer.push("\n");
     if (this.prefixes.length > 0) {
       for (let i=0, len = this.prefixes.length; i < len; i++) {
@@ -73,7 +60,6 @@ class DjotRenderer {
       this.endOfPrefix = this.column;
     }
     this.startOfLine = true;
-    this.needsSpace = false;
   }
 
   cr () : void {
@@ -83,7 +69,36 @@ class DjotRenderer {
   }
 
   space () : void {
-    this.needsSpace = true;
+    let excessOnLine : string[] = [];
+    if (this.wrapWidth && !this.startOfLine && this.buffer.length > 0 &&
+           this.column > this.wrapWidth) {
+      // backup to last space:
+      let lastbuff;
+      while (this.buffer.length > 0) {
+        lastbuff = this.buffer[this.buffer.length - 1];
+        if (lastbuff === " ") {
+          this.buffer.pop(); // remove space at end of line
+          break;
+        } else if (lastbuff === "\n") {
+          break;
+        }
+        excessOnLine.push(lastbuff);
+        this.buffer.pop();
+      }
+    }
+
+    if (excessOnLine.length > 0) {
+      // put the content on next line:
+      this.newline();
+      this.column = 0;
+      this.startOfLine = true;
+      for (let i in excessOnLine) {
+        this.buffer.push(excessOnLine[i]);
+        this.column += excessOnLine[i].length;
+        this.startOfLine = false;
+      }
+    }
+    this.lit(" ");
   }
 
   softbreak () : void {
