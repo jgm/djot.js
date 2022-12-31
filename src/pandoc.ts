@@ -1,5 +1,6 @@
 import { AstNode, Doc, Block, TablePart, Row, Cell, Alignment,
-         ListItem, Inline, Attributes, CodeBlock,
+         ListItem, Inline, Span, Verbatim, Image, Link,
+         Attributes, CodeBlock, Heading, Div, Table,
          DefinitionListItem, Term, Definition, Footnote } from "./ast";
 
 interface Pandoc {
@@ -448,7 +449,7 @@ class PandocRenderer {
   }
 }
 
-const fromPandocAttr = function(pattr : any[]) : Attributes {
+const fromPandocAttr = function(pattr : any[]) : Attributes | null {
   let attr : Attributes = {};
   if (pattr[0]) {
     attr.id = pattr[0];
@@ -459,7 +460,11 @@ const fromPandocAttr = function(pattr : any[]) : Attributes {
   for (let i=0; i<pattr[2].length; i++) {
     attr[pattr[2][i][0].toString()] = pattr[2][i][1];
   }
-  return attr;
+  if (Object.keys(attr).length === 0) {
+    return null;
+  } else {
+    return attr;
+  }
 }
 
 const isPlainOrPara = function(x : PandocElt) : boolean {
@@ -519,11 +524,17 @@ class PandocParser {
             inlines.push({tag: "delete", children: this.fromPandocInlines(elt.c)});
             break;
 
-          case "Span":
-            inlines.push({tag: "span",
-                          attributes: fromPandocAttr(elt.c[0]),
-                          children: this.fromPandocInlines(elt.c[1])});
+          case "Span": {
+            let span : Span =
+                       {tag: "span",
+                        children: this.fromPandocInlines(elt.c[1])};
+            let attr = fromPandocAttr(elt.c[0]);
+            if (attr) {
+              span.attributes = attr;
+            }
+            inlines.push(span);
             break;
+          }
 
           case "Underline":
             inlines.push({tag: "span",
@@ -556,26 +567,45 @@ class PandocParser {
             inlines.push({tag: "raw_inline", format: elt.c[0], text: elt.c[1]});
             break;
 
-          case "Code":
-            inlines.push({tag: "verbatim",
-                          attributes: fromPandocAttr(elt.c[0]),
+          case "Code": {
+            let attr = fromPandocAttr(elt.c[0]);
+            let code : Verbatim =
+                        ({tag: "verbatim",
                           text: elt.c[1]});
+            if (attr) {
+              code.attributes = attr;
+            }
+            inlines.push(code);
             break;
+          }
 
           case "Image":
           case "Link": {
             let attr = fromPandocAttr(elt.c[0]);
             if (elt.c[2][1]) {
+              attr = attr || {};
               attr.title = elt.c[2][1];
             }
             let dest = elt.c[2][0];
             let children = this.fromPandocInlines(elt.c[1]);
             if (elt.t === "Image") {
-              inlines.push({tag: "image", attributes: attr, destination: dest,
-                            children: children });
+              let img : Image =
+                    {tag: "image",
+                     destination: dest,
+                     children: children };
+              if (attr) {
+                img.attributes = attr;
+              }
+              inlines.push(img);
             } else {
-              inlines.push({tag: "link", attributes: attr, destination: dest,
-                            children: children });
+              let link : Link =
+                    {tag: "link",
+                     destination: dest,
+                     children: children };
+              if (attr) {
+                link.attributes = attr;
+              }
+              inlines.push(link);
             }
             break;
           }
@@ -623,27 +653,39 @@ class PandocParser {
                 })};
 
       case "Div": {
-        let attr : Attributes = fromPandocAttr(block.c[0]);
-        let tag = /\bsection\b/.test(attr.class) ? "section" : "div";
+        let attr = fromPandocAttr(block.c[0]);
+        let tag = /\bsection\b/.test((attr && attr.class) || "")
+                    ? "section" : "div";
         let blocks = block.c[1].map((b : PandocElt) => {
                       return this.fromPandocBlock(b);
                     });
         if (tag === "section") {
+          attr = attr || {};
           attr.class = attr.class.replace(/section */, "");
           if (!attr.class) {
             delete attr.class;
           }
           return {tag: "section", attributes: attr, children: blocks};
         } else {
-          return {tag: "div", attributes: attr, children: blocks};
+          let div : Div = {tag: "div", children: blocks};
+          if (attr) {
+            div.attributes = attr;
+          }
+          return div;
         }
       }
 
-      case "Header":
-        return {tag: "heading",
-                attributes: fromPandocAttr(block.c[1]),
+      case "Header": {
+        let attr = fromPandocAttr(block.c[1]);
+        let heading : Heading =
+               {tag: "heading",
                 level: block.c[0],
                 children: this.fromPandocInlines(block.c[2])};
+        if (attr) {
+          heading.attributes = attr;
+        }
+        return heading;
+      }
 
       case "HorizontalRule":
         return {tag: "thematic_break"};
@@ -654,7 +696,7 @@ class PandocParser {
       case "CodeBlock": {
         let attr = fromPandocAttr(block.c[0]);
         let lang;
-        if (attr.class) {
+        if (attr && attr.class) {
           let classes = attr.class.split(/  */);
           lang = classes[0];
           classes.shift();
@@ -666,9 +708,11 @@ class PandocParser {
         }
         let res : CodeBlock =
                   {tag: "code_block",
-                  attributes: attr,
                   lang: lang,
                   text: block.c[1]};
+        if (attr) {
+          res.attributes = attr;
+        }
         if (!lang) {
           delete res.lang;
         }
@@ -792,7 +836,11 @@ class PandocParser {
         if (caption.length > 0) {
           children.unshift({tag: "caption", children: caption});
         }
-        return {tag: "table", attributes: attr, children: children};
+        let table : Table = {tag: "table", children: children};
+        if (attr) {
+          table.attributes = attr;
+        }
+        return table;
       }
 
       case "LineBlock": {
@@ -817,19 +865,23 @@ class PandocParser {
 
   fromPandocRow(rawrow : any, head : boolean,
                  rowheadcols : number, aligns : Alignment[]) : Row {
-    let attr : Attributes = fromPandocAttr(rawrow[0]);
+    let attr = fromPandocAttr(rawrow[0]);
     let rawcells = rawrow[1];
     let cells : Cell[] = [];
     for (let i=0; i < rawcells.length; i++) {
       cells.push(this.fromPandocCell(rawcells[i],
                           head || i < rowheadcols, aligns[i]));
     }
-    return {tag: "row", attributes: attr, head: head, children: cells};
+    let row : Row = {tag: "row", head: head, children: cells};
+    if (attr) {
+      row.attributes = attr;
+    }
+    return row;
   }
 
   fromPandocCell(rawcell : any, head : boolean, defaultAlign : Alignment) : Cell {
     let cs : Inline[] = [];
-    let attr : Attributes = fromPandocAttr(rawcell[0]);
+    let attr = fromPandocAttr(rawcell[0]);
     let align = rawcell[1].t.slice(5).toLowerCase();
     if (align === "default") {
       align = defaultAlign;
@@ -841,8 +893,11 @@ class PandocParser {
     } else if (rawblocks[0]) {
       cs = this.fromPandocInlines(rawblocks[0].c);
     }
-    return {tag: "cell", attributes: attr, head: head, align: align,
-            children: cs};
+    let cell : Cell = {tag: "cell", head: head, align: align, children: cs};
+    if (attr) {
+      cell.attributes = attr;
+    }
+    return cell;
   }
 
   fromPandocAST (pandoc : Pandoc) : Doc | null {
