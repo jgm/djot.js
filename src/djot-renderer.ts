@@ -1,4 +1,4 @@
-import { Doc, AstNode, HasChildren, Block, Inline, Str, Para, Heading,
+import { Doc, AstNode, HasChildren, Block, Inline, Str, Para, Heading, Div,
          isBlock, isInline, HasAttributes, BlockQuote, Section } from "./ast";
 
 class DjotRenderer {
@@ -102,6 +102,19 @@ class DjotRenderer {
       this.renderChildren<Inline>(node.children);
       this.blankline();
     },
+    thematic_break: () => {
+      this.lit("* * * * *");
+      this.blankline();
+    },
+    div: (node : Div) => {
+      this.renderAttributes<Block>(node);
+      this.lit(":::");
+      this.cr();
+      this.renderChildren<Block>(node.children);
+      this.cr();
+      this.lit(":::");
+      this.blankline();
+    },
     heading: (node : Heading) => {
       let hashes = "#".repeat(node.level);
       this.lit(hashes + " ");
@@ -117,18 +130,7 @@ class DjotRenderer {
       this.prefixes.pop();
     },
     section: (node : Section) => {
-      for (let i=0, len = node.children.length; i < len; i++) {
-        let child = node.children[i];
-        if (i === 0 && child.tag === "heading") {
-          let newchild = structuredClone(child);
-          if (node.attributes && node.attributes.id) {
-            newchild.attributes = newchild.attributes || {};
-            newchild.attributes.id = node.attributes.id;
-          }
-          child = newchild;
-        }
-        this.renderNode<Block>(child);
-      }
+      this.renderChildren<Block>(node.children);
     },
     str: (node : Str) => {
       node.text.split(/  */).forEach((s : string, i : number) => {
@@ -169,7 +171,43 @@ class DjotRenderer {
   }
 
   renderAttributes<A extends AstNode & HasAttributes>(node : A) : void {
-
+    if (!node.attributes || Object.keys(node.attributes).length === 0) {
+      return;
+    }
+    let attr = node.attributes;
+    this.lit("{");
+    let isfirst = true;
+    if (isBlock(node)) {
+      this.prefixes.push(" ");
+    }
+    for (let k in attr) {
+      if (!isfirst) {
+        this.space();
+      }
+      if (k === "id") {
+        this.lit("#");
+        this.out(attr[k]);
+      } else if (k === "class") {
+        let classes = attr[k].split(/  */);
+        for (let i=0; i < classes.length; i++) {
+          if (i > 0) {
+            this.space();
+          }
+          this.lit(".");
+          this.out(classes[i]);
+        }
+      } else {
+        this.lit(k);
+        this.lit("=\"");
+        this.out(attr[k]);
+        this.lit("\"");
+      }
+      isfirst = false;
+    }
+    if (isBlock(node)) {
+      this.prefixes.pop();
+    }
+    this.lit("}");
   }
 
   render() : string {
