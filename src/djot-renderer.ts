@@ -1,4 +1,4 @@
-import { Doc, AstNode, HasChildren, Str, Para, Heading,
+import { Doc, AstNode, HasChildren, Block, Inline, Str, Para, Heading,
          BlockQuote, Section } from "./ast";
 
 class DjotRenderer {
@@ -96,24 +96,24 @@ class DjotRenderer {
 
   handlers : Record<string, (node : any) => void> = {
     doc: (node : Doc) => {
-      this.renderChildren(node);
+      this.renderChildren<Block>(node.children);
     },
     para: (node: Para) => {
-      this.renderChildren(node);
+      this.renderChildren<Inline>(node.children);
       this.blankline();
     },
     heading: (node : Heading) => {
       let hashes = "#".repeat(node.level);
       this.lit(hashes + " ");
       this.prefixes.push(hashes + " ");
-      this.renderChildren(node);
+      this.renderChildren<Inline>(node.children);
       this.prefixes.pop();
       this.blankline();
     },
     blockquote: (node: BlockQuote) => {
       this.prefixes.push("> ");
       this.lit("> ");
-      this.renderChildren(node);
+      this.renderChildren<Block>(node.children);
       this.prefixes.pop();
     },
     section: (node : Section) => {
@@ -127,8 +127,7 @@ class DjotRenderer {
           }
           child = newchild;
         }
-        this.doBlankLines();
-        this.renderNode(child);
+        this.renderNode<Block>(child);
       }
     },
     str: (node : Str) => {
@@ -147,15 +146,16 @@ class DjotRenderer {
     }
   }
 
-  renderChildren(node : HasChildren) : void {
-    for (let i=0, len = node.children.length; i < len; i++) {
-      this.doBlankLines();
-      this.renderNode(node.children[i]);
+
+  renderChildren<A extends AstNode>(children : A[]) : void {
+    for (let i=0, len = children.length; i < len; i++) {
+      this.renderNode(children[i]);
     }
   }
 
-  renderNode(node : AstNode) : void {
-  let handler = this.handlers[node.tag];
+  renderNode<A extends AstNode>(node : A) : void {
+    this.doBlankLines();
+    let handler = this.handlers[node.tag];
     if (handler) {
       handler(node);
     }
