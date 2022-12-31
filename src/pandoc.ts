@@ -948,7 +948,7 @@ class PandocParser {
 
   parseJSON (json : string) : Doc | null {
     let pandoc = JSON.parse(json);
-    return this.fromPandocAST(pandoc);
+    return this.fromPandoc(pandoc);
   }
 }
 
