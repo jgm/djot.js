@@ -1,6 +1,6 @@
 import { AstNode, Doc, Block, TablePart, Row, Cell, Alignment,
          ListItem, Inline, Span, Verbatim, Image, Link,
-         Attributes, CodeBlock, Heading, Div, Table,
+         Attributes, CodeBlock, Heading, Div, Table, CheckboxStatus,
          DefinitionListItem, Term, Definition, Footnote } from "./ast";
 
 interface Pandoc {
@@ -471,6 +471,31 @@ const isPlainOrPara = function(x : PandocElt) : boolean {
   return (x.t === "Plain" || x.t === "Para");
 }
 
+const hasCheckbox = function(elt : PandocElt[]) : CheckboxStatus | null {
+  if (!elt[0]) {
+    return null;
+  }
+  let x = elt[0];
+  if (!isPlainOrPara(x)) {
+    return null;
+  }
+  if (x.c.length >= 2 && x.c[0].t === "Str" && x.c[1].t === "Space") {
+    if (x.c[0].c === "☒") {
+      x.c.shift(); // remove the checkbox
+      x.c.shift();
+      return "checked";
+    } else if (x.c[0].c === "☐") {
+      x.c.shift(); // remove the checkbox
+      x.c.shift();
+      return "unchecked";
+    } else {
+      return null;
+    }
+  } else {
+    return null;
+  }
+}
+
 class PandocParser {
 
   footnotes : Record<string, Footnote> = {};
@@ -756,15 +781,21 @@ class PandocParser {
           rawitems = block.c[1];
         }
         for (let i=0; i<rawitems.length; i++) {
-          items.push({tag: "list_item",
-                      children: rawitems[i].map((b : PandocElt) => {
+          let checkbox = hasCheckbox(rawitems[i]);
+          let listItem : ListItem =
+                  {tag: "list_item",
+                   children: rawitems[i].map((b : PandocElt) => {
                                    if (b.t === "Plain") {
                                      tight = true;
                                    } else if (b.t === "Para") {
                                      tight = false;
                                    }
                                    return this.fromPandocBlock(b);
-                                })});
+                              })};
+          if (checkbox !== null) {
+            listItem.checkbox = checkbox;
+          }
+          items.push(listItem);
         }
         if (block.t === "BulletList") {
           return {tag: "list", style: "-", tight: tight, children: items};
