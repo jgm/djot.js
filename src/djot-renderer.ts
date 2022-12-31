@@ -8,7 +8,7 @@ class DjotRenderer {
   prefixes : string[] = [];
   buffer : string[] = [];
   startOfLine : boolean = true;
-  column : number = 0;
+  column : number = 1;
   needsSpace : boolean = false;
   needsBlankLine : boolean = false;
 
@@ -39,7 +39,7 @@ class DjotRenderer {
       this.newline();
       this.startOfLine = true;
       this.needsSpace = false;
-      this.column = 0;
+      this.column = 1;
     }
     if (this.needsSpace && !this.startOfLine) {
       this.buffer.push(" ");
@@ -63,7 +63,7 @@ class DjotRenderer {
       }
     }
     this.startOfLine = true;
-    this.column = 0;
+    this.column = 1;
     this.needsSpace = false;
   }
 
