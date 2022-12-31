@@ -22,6 +22,7 @@
     "src/html.ts",
     "src/filter.ts",
     "src/pandoc.ts",
+    "src/djot-renderer.ts",
     "src/index.ts"
   ]
 }
