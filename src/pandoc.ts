@@ -655,8 +655,14 @@ class PandocParser {
         let attr = fromPandocAttr(block.c[0]);
         let lang;
         if (attr.class) {
-          lang = attr.class.replace(/ *.*$/,"");
-          attr.class = attr.class.replace(/^[^ ]* */,"");
+          let classes = attr.class.split(/  */);
+          lang = classes[0];
+          classes.shift();
+          if (classes.length > 0) {
+            attr.class = classes.join(" ");
+          } else {
+            delete attr.class;
+          }
         }
         let res : CodeBlock =
                   {tag: "code_block",
