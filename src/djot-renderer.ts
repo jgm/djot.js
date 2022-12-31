@@ -5,7 +5,7 @@ class DjotRenderer {
 
   doc : Doc;
   wrapWidth ?: number;
-  prefixes : (() => void)[] = [];
+  prefixes : string[] = [];
   buffer : string[] = [];
   startOfLine : boolean = true;
   column : number = 0;
@@ -38,12 +38,7 @@ class DjotRenderer {
       this.needsSpace = false;
       this.column = 0;
     }
-    if (this.startOfLine && this.prefixes.length > 0) {
-      for (let i=0, len = this.prefixes.length; i < len; i++) {
-        this.startOfLine = true;
-        this.prefixes[i]();
-      }
-    } else if (this.needsSpace && !this.startOfLine) {
+    if (this.needsSpace && !this.startOfLine) {
       this.buffer.push(" ");
       this.column += 1;
     }
@@ -58,7 +53,12 @@ class DjotRenderer {
   }
 
   newline () : void {
-    this.lit("\n");
+    this.buffer.push("\n");
+    if (this.prefixes.length > 0) {
+      for (let i=0, len = this.prefixes.length; i < len; i++) {
+        this.buffer.push(this.prefixes[i]);
+      }
+    }
     this.startOfLine = true;
     this.column = 0;
     this.needsSpace = false;
@@ -87,10 +87,8 @@ class DjotRenderer {
       this.renderChildren(node);
     },
     para: (node: Para) => {
-      this.cr();
-      this.renderChildren(node);
-      this.cr();
       this.blankline();
+      this.renderChildren(node);
     },
     heading: (node : Heading) => {
       this.cr();
@@ -99,10 +97,7 @@ class DjotRenderer {
       this.blankline();
     },
     blockquote: (node: BlockQuote) => {
-      this.prefixes.push(() => {
-        this.buffer.push("> ");
-        this.column += 2;
-      });
+      this.prefixes.push("> ");
       this.renderChildren(node);
       this.prefixes.pop();
     },
@@ -151,6 +146,8 @@ class DjotRenderer {
 
   render() : string {
     this.renderNode(this.doc);
+    this.prefixes = [];
+    this.cr();
     return this.buffer.join("");
   }
 
