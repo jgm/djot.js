@@ -127,6 +127,7 @@ class DjotRenderer {
           }
           child = newchild;
         }
+        this.doBlankLines();
         this.renderNode(child);
       }
     },
