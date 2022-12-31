@@ -565,9 +565,11 @@ class PandocParser {
           case "Image":
           case "Link": {
             let attr = fromPandocAttr(elt.c[0]);
-            attr.title = elt.c[2][1];
+            if (elt.c[2][1]) {
+              attr.title = elt.c[2][1];
+            }
             let dest = elt.c[2][0];
-            let children = elt.c[1];
+            let children = this.fromPandocInlines(elt.c[1]);
             if (elt.t === "Image") {
               inlines.push({tag: "image", attributes: attr, destination: dest,
                             children: children });
