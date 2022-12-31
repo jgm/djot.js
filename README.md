@@ -22,8 +22,9 @@ Road map:
       block.ts and putting the information on the -list
       annotation. this would simplify ast.
 - [X] option to generate pandoc JSON output
+- [X] option to convert from pandoc JSON
+- [ ] tests for pandoc JSON conversion (both directions)
 - [ ] djot writer
-- [ ] option to convert from pandoc JSON
 - [ ] full-featured cli
 - [ ] benchmarks
 - [ ] node module
