@@ -2,6 +2,7 @@ import { EventParser } from "./lib/block.js";
 import { parse, renderAST } from "./lib/ast.js";
 import { renderHTML } from "./lib/html.js";
 import { PandocRenderer, PandocParser } from "./lib/pandoc.js";
+import { DjotRenderer } from "./lib/djot-renderer.js";
 import fs from "fs";
 import { performance } from "perf_hooks";
 
@@ -26,6 +27,7 @@ Options:
   --json,-j            Print AST in JSON format
   --ast,-a             Print AST in human-readable format
   --html               Print HTML (default)
+  --djot               Print djot
   --compact            Use compact (rather than pretty) JSON
   --help,-h            This usage message
 `;
@@ -67,6 +69,9 @@ for (let i=2; i < args.length; i++) {
       break;
     case "--html":
       output = 'html';
+      break;
+    case "--djot":
+      output = 'djot';
       break;
     case "--compact":
       compact = true;
@@ -131,6 +136,9 @@ try {
     switch (output) {
       case "html":
         process.stdout.write(renderHTML(ast, options));
+        break;
+      case "djot":
+        process.stdout.write((new DjotRenderer(ast, 76).render()));
         break;
       case "json":
         process.stdout.write(JSON.stringify(ast, null, compact ? 0 : 2));
