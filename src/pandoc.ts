@@ -931,7 +931,7 @@ class PandocParser {
     return cell;
   }
 
-  fromPandocAST (pandoc : Pandoc) : Doc | null {
+  fromPandoc (pandoc : Pandoc) : Doc | null {
     if (!pandoc) {
       return null;
     }
