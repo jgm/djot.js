@@ -8,6 +8,7 @@ class DjotRenderer {
   prefixes : string[] = [];
   buffer : string[] = [];
   startOfLine : boolean = true;
+  endOfPrefix : number = 0;
   column : number = 1;
   needsSpace : boolean = false;
   needsBlankLine : boolean = false;
@@ -56,14 +57,22 @@ class DjotRenderer {
   }
 
   newline () : void {
+    if (this.endOfPrefix === this.column) {
+      // remove spaces after prefix
+     this.buffer[this.buffer.length - 1] =
+       this.buffer[this.buffer.length - 1].replace(/  *$/,"");
+    }
+    this.endOfPrefix = 0;
+    this.column = 1;
     this.buffer.push("\n");
     if (this.prefixes.length > 0) {
       for (let i=0, len = this.prefixes.length; i < len; i++) {
         this.buffer.push(this.prefixes[i]);
+        this.column += this.prefixes[i].length;
       }
+      this.endOfPrefix = this.column;
     }
     this.startOfLine = true;
-    this.column = 1;
     this.needsSpace = false;
   }
 
