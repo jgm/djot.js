@@ -543,7 +543,7 @@ class PandocParser {
             break;
 
           case "Quoted":
-            if (elt.c[0].t === "SingleQuoted") {
+            if (elt.c[0].t === "SingleQuote") {
               inlines.push({tag: "single_quoted",
                             children: this.fromPandocInlines(elt.c[1])});
             } else {
