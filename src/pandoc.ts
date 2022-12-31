@@ -295,10 +295,11 @@ class PandocRenderer {
         break;
 
       case "str":
-        node.text.split(/\b/).forEach( (s : string) => {
-          if (s.codePointAt(0) === 32) {
+        node.text.split(/ +/).forEach( (s : string, i : number) => {
+          if (i > 0) {
             elts.push({ t: "Space" });
-          } else {
+          }
+          if (s.length > 0) {
             elts.push({ t: "Str", c: s });
           }
         });
