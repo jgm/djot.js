@@ -1,5 +1,5 @@
 import { Doc, AstNode, HasChildren, Block, Inline, Str, Para, Heading,
-         BlockQuote, Section } from "./ast";
+         isBlock, isInline, HasAttributes, BlockQuote, Section } from "./ast";
 
 class DjotRenderer {
 
@@ -157,8 +157,19 @@ class DjotRenderer {
     this.doBlankLines();
     let handler = this.handlers[node.tag];
     if (handler) {
+      if ("attributes" in node && isBlock(node)) {
+        this.renderAttributes<Block>(node);
+        this.cr();
+      }
       handler(node);
+      if ("attributes" in node && isInline(node)) {
+        this.renderAttributes<Inline>(node);
+      }
     }
+  }
+
+  renderAttributes<A extends AstNode & HasAttributes>(node : A) : void {
+
   }
 
   render() : string {
