@@ -11,10 +11,6 @@ type Pos = { start: SourceLoc, end: SourceLoc }
 
 interface HasAttributes {
   attributes?: Attributes;
-}
-
-interface HasAttributes {
-  attributes?: Attributes;
   pos?: Pos;
 }
 
