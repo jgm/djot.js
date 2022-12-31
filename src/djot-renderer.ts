@@ -25,15 +25,18 @@ class DjotRenderer {
     this.lit(this.escape(s));
   }
 
-  lit (s : string) : void {
+  doBlankLines() : void {
     if (this.needsBlankLine) {
       this.cr();
       this.newline();
       this.needsBlankLine = false;
     }
+  }
+
+  lit (s : string) : void {
     if (this.wrapWidth && !this.startOfLine &&
         this.column + s.length > this.wrapWidth) {
-      this.buffer.push("\n");
+      this.newline();
       this.startOfLine = true;
       this.needsSpace = false;
       this.column = 0;
@@ -87,17 +90,17 @@ class DjotRenderer {
       this.renderChildren(node);
     },
     para: (node: Para) => {
-      this.blankline();
       this.renderChildren(node);
+      this.blankline();
     },
     heading: (node : Heading) => {
-      this.cr();
       this.lit("#".repeat(node.level) + " ");
       this.renderChildren(node);
       this.blankline();
     },
     blockquote: (node: BlockQuote) => {
       this.prefixes.push("> ");
+      this.lit("> ");
       this.renderChildren(node);
       this.prefixes.pop();
     },
@@ -133,6 +136,7 @@ class DjotRenderer {
 
   renderChildren(node : HasChildren) : void {
     for (let i=0, len = node.children.length; i < len; i++) {
+      this.doBlankLines();
       this.renderNode(node.children[i]);
     }
   }
