@@ -106,7 +106,11 @@ class DjotRenderer {
   }
 
   escape (s : string) : string {
-    return s.replace(/([!~`'"#${}[\]^<>\\*_]|-(?=-)|\.(?=\.))/g, "\\$1");
+    s = s.replace(/([~`'"${}[\]^<>\\*_]|-(?=-)|!(=\[)|\.(?=\.))/g, "\\$1");
+    if (this.column === 0 || this.column === this.endOfPrefix) {
+      s = s.replace(/^#/, "\\#");
+    }
+    return s;
   }
 
   out (s : string) : void {
