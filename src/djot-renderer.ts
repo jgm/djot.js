@@ -387,7 +387,7 @@ class DjotRenderer {
       }
       if (k === "id") {
         this.lit("#");
-        this.out(attr[k]);
+        this.lit(attr[k]);
       } else if (k === "class") {
         let classes = attr[k].split(/  */);
         for (let i=0; i < classes.length; i++) {
@@ -395,7 +395,7 @@ class DjotRenderer {
             this.space();
           }
           this.lit(".");
-          this.out(classes[i]);
+          this.lit(classes[i]);
         }
       } else {
         this.lit(k);
