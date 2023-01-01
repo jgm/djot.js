@@ -125,7 +125,7 @@ class DjotRenderer {
       this.newline();
       this.column = 0;
       this.startOfLine = true;
-      for (let i in excessOnLine) {
+      for (let i=excessOnLine.length - 1; i >= 0; i--) {
         this.buffer.push(excessOnLine[i]);
         this.column += excessOnLine[i].length;
         this.startOfLine = false;
