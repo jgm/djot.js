@@ -106,11 +106,17 @@ interface Caption extends HasAttributes {
   children: Inline[];
 }
 
-type TablePart = Row | Caption;
+function isRow(node : Row | Caption) : node is Row {
+  return ("head" in node);
+}
+
+function isCaption(node : Row | Caption) : node is Caption {
+  return (!("head" in node));
+}
 
 interface Table extends HasAttributes {
   tag: "table";
-  children: TablePart[];
+  children: (Row | Caption)[];
 }
 
 type Inline = Str
@@ -1616,6 +1622,8 @@ export {
   renderAST,
   getStringContent,
   isBlock,
+  isRow,
+  isCaption,
   isInline,
   Attributes,
   SourceLoc,
@@ -1637,7 +1645,6 @@ export {
   List,
   Table,
   Caption,
-  TablePart,
   Row,
   Inline,
   Str,

@@ -1,4 +1,4 @@
-import { AstNode, Doc, Block, TablePart, Row, Cell, Alignment,
+import { AstNode, Doc, Block, Caption, Row, Cell, Alignment,
          ListItem, Inline, Span, Verbatim, Image, Link,
          Attributes, CodeBlock, Heading, Div, Table, CheckboxStatus,
          DefinitionListItem, Term, Definition, Footnote } from "./ast";
@@ -863,7 +863,7 @@ class PandocParser {
           rows.push(this.fromPandocRow(rawfootrows[i], false, 0, aligns));
         }
 
-        let children : TablePart[] = rows;
+        let children : (Row | Caption)[] = rows;
         if (caption.length > 0) {
           children.unshift({tag: "caption", children: caption});
         }
