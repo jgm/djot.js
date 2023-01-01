@@ -298,6 +298,7 @@ class DjotRenderer {
       this.prefixes.push("  ");
       this.space();
       this.lit(node.destination);
+      this.wrap();
       this.prefixes.pop();
       this.blankline();
     },
