@@ -89,7 +89,10 @@ const formatNumber = function(num : number, style : string) : string {
 class DjotRenderer {
 
   doc : Doc;
-  wrapWidth ?: number;
+  wrapWidth : number;
+  // wrapWidth == 0 means no wrap but softbreaks are breaks
+  //             -1 means no wrap and softbreaks are spaces
+  //             >0 means wrap to width, with softbreaks as spaces
   prefixes : string[] = [];
   buffer : string[] = [];
   startOfLine : boolean = true;
@@ -99,7 +102,7 @@ class DjotRenderer {
 
   constructor(doc : Doc, wrapWidth ?: number) {
     this.doc = doc;
-    this.wrapWidth = wrapWidth;
+    this.wrapWidth = wrapWidth || 0;
   }
 
   escape (s : string) : string {
@@ -155,7 +158,7 @@ class DjotRenderer {
 
   space () : void {
     let excessOnLine : string[] = [];
-    if (this.wrapWidth && !this.startOfLine && this.buffer.length > 0 &&
+    if (this.wrapWidth > 0 && !this.startOfLine && this.buffer.length > 0 &&
            this.column > this.wrapWidth) {
       // backup to last space:
       let lastbuff;
@@ -187,10 +190,10 @@ class DjotRenderer {
   }
 
   softbreak () : void {
-    if (this.wrapWidth) {
-      this.space();
-    } else {
+    if (this.wrapWidth === 0) {
       this.newline();
+    } else {
+      this.space();
     }
   }
 
@@ -203,7 +206,7 @@ class DjotRenderer {
 
   noWrap (action : () => void) : void {
     let oldWrapWidth = this.wrapWidth;
-    this.wrapWidth = 0; // no wrap
+    this.wrapWidth = -1; // no wrap + soft breaks are spaces
     action();
     this.wrapWidth = oldWrapWidth;
   }
@@ -382,7 +385,7 @@ class DjotRenderer {
     },
     term: (node : Term) => {
       this.renderChildren<Inline>(node.children);
-      this.cr();
+      this.blankline();
     },
     definition: (node : Definition) => {
       this.renderChildren<Block>(node.children);
@@ -394,7 +397,8 @@ class DjotRenderer {
       for (let i=0; i < rows.length; i++) {
         let row = rows[i];
         // if last row was head and this is not, add separator line
-        if ("head" in row && !row.head && i > 0) {
+        if ("head" in row && !row.head && i > 0 &&
+            rows[i-1].head) {
           let lastRow : Row = rows[i-1];
           for (let j=0; j < lastRow.children.length; j++) {
             if (j === 0) { this.lit("|"); }

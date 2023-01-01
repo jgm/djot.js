@@ -921,6 +921,7 @@ class PandocParser {
     if (rawblocks.length > 1 || (rawblocks.length === 1 &&
           !isPlainOrPara(rawblocks[0]))) {
       this.warn("Skipping table cell with block-level content.");
+      cs = [{tag: "str", text: "((content omitted))"}];
     } else if (rawblocks[0]) {
       cs = this.fromPandocInlines(rawblocks[0].c);
     }
