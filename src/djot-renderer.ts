@@ -1,8 +1,9 @@
 import { Doc, AstNode, HasChildren, HasInlineChildren, HasBlockChildren,
          HasAttributes, Block, Para, Heading, Div,
          BlockQuote, Section, CodeBlock, isBlock,
+         Link, Image,
          isInline, Inline, Str, DoubleQuoted, SingleQuoted, Emph, Strong,
-         Verbatim } from "./ast";
+         Verbatim, getStringContent } from "./ast";
 
 const isWhitespace = function(node : Inline) : boolean {
   let tag : string = node.tag;
@@ -208,6 +209,42 @@ class DjotRenderer {
     mark: this.inlineContainer("=", true),
     delete: this.inlineContainer("-", true),
     insert: this.inlineContainer("+", true),
+    link: (node : Link) => {
+      this.lit("[");
+      this.renderChildren<Inline>(node.children);
+      this.lit("]");
+      if (node.reference) {
+        this.lit("[");
+        if (node.reference !== getStringContent(node)) {
+          this.lit(node.reference);
+        }
+        this.lit("]");
+      } else if (node.destination) {
+        this.lit("(");
+        this.lit(node.destination);
+        this.lit(")");
+      } else { // should not happen
+        this.lit("()");
+      }
+    },
+    image: (node : Image) => {
+      this.lit("![");
+      this.renderChildren<Inline>(node.children);
+      this.lit("]");
+      if (node.reference) {
+        this.lit("[");
+        if (node.reference !== getStringContent(node)) {
+          this.lit(node.reference);
+        }
+        this.lit("]");
+      } else if (node.destination) {
+        this.lit("(");
+        this.lit(node.destination);
+        this.lit(")");
+      } else { // should not happen
+        this.lit("()");
+      }
+    },
     verbatim: (node : Verbatim) => {
       let backtickGroups = node.text.match(/(`+)/g);
       let backtickGroupLens : Record<number,boolean> = {};
