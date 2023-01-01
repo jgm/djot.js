@@ -157,29 +157,31 @@ class DjotRenderer {
   }
 
   wrap () : void {
-    let excessOnLine : string[] = [];
+    let idx = this.buffer.length - 1;
     if (this.wrapWidth > 0 && !this.startOfLine && this.buffer.length > 0 &&
            this.column > this.wrapWidth) {
       // backup to last space:
       let lastbuff;
-      while (this.buffer.length > 0) {
-        lastbuff = this.buffer[this.buffer.length - 1];
+      while (idx >= 0) {
+        lastbuff = this.buffer[idx];
         if (lastbuff === " ") {
-          this.buffer.pop(); // remove space at end of line
           break;
-        } else if (lastbuff === "\n") {
-          break;
+        } else if (/^[ \r\n]+$/.test(lastbuff)) { // e.g. indentation
+          return; // can't wrap
         }
-        excessOnLine.push(lastbuff);
-        this.buffer.pop();
+        idx--;
       }
     }
 
-    if (excessOnLine.length > 0) {
+    if (idx < this.buffer.length - 1) {
+      let excessOnLine : string[] = this.buffer.splice(idx + 1);
+      if (this.buffer[this.buffer.length - 1] === " ") {
+        this.buffer.pop();  // pop space at end of line
+      }
       // put the content on next line:
       this.newline();
       this.startOfLine = true;
-      for (let i=excessOnLine.length - 1; i >= 0; i--) {
+      for (let i=0; i < excessOnLine.length; i++) {
         this.buffer.push(excessOnLine[i]);
         this.column += excessOnLine[i].length;
         this.startOfLine = false;
