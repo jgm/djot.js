@@ -51,7 +51,8 @@ const blockTags : Record<string, boolean> = {
   raw_block: true,
   list: true,
   table: true,
-  reference: true
+  reference: true,
+  footnote: true
 };
 
 function isBlock(node : AstNode) : node is Block {
@@ -357,6 +358,7 @@ type AstNode = Doc | Block | Inline | ListItem
 
 interface Reference extends HasAttributes {
   tag: "reference";
+  label: string;
   destination: string;
 }
 
@@ -661,6 +663,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
         const node = popContainer(pos);
         const r: Reference = {
           tag: "reference",
+          label: node.data.key,
           destination: node.data.value || "",
           attributes: node.attributes
         };
@@ -1093,6 +1096,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
         if (!references[headingStr]) {
           references[headingStr] = {
             tag: "reference",
+            label: headingStr,
             destination: "#" + node.attributes.id
           };
         }
