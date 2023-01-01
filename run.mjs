@@ -16,6 +16,7 @@ let options = {sourcePositions: false, warn: warn};
 let output = 'html';
 let from = 'djot';
 let compact = false;
+let width = 72;
 let usage = `djot [OPTIONS] FILE*
 Options:
   --sourcepos,-p       Include source positions
@@ -29,12 +30,14 @@ Options:
   --html               Print HTML (default)
   --djot               Print djot
   --compact            Use compact (rather than pretty) JSON
+  --width,-w NUMBER    Wrap width for djot output (-1 = compact, 0 = no wrap)
   --help,-h            This usage message
 `;
 let files = [];
 
 let args = process.argv;
-for (let i=2; i < args.length; i++) {
+let i = 2;
+while (args[i]) {
   let arg = args[i];
   switch (arg) {
     case "--sourcepos":
@@ -76,6 +79,11 @@ for (let i=2; i < args.length; i++) {
     case "--compact":
       compact = true;
       break;
+    case "--width":
+    case "-w":
+      i++;
+      width = parseInt(args[i]);
+      break;
     case "--help":
     case "-h":
       process.stdout.write(usage);
@@ -86,6 +94,10 @@ for (let i=2; i < args.length; i++) {
         for (let i=1; i < arg.length; i++) {
           args.push("-" + arg.substring(i,i+1));
         }
+      } else if (/=/.test(arg)) { // --width=10
+        arg.split(/=/).forEach(arg => {
+          args.push(arg);
+        });
       } else if (/^-/.test(arg)) {
         process.stderr.write("Unknown option " + arg + "\n");
         process.exit(1);
@@ -93,6 +105,7 @@ for (let i=2; i < args.length; i++) {
         files.push(arg);
       }
   }
+  i++;
 }
 
 let input = "";
@@ -138,7 +151,7 @@ try {
         process.stdout.write(renderHTML(ast, options));
         break;
       case "djot":
-        process.stdout.write((new DjotRenderer(ast, 72).render()));
+        process.stdout.write((new DjotRenderer(ast, width).render()));
         break;
       case "json":
         process.stdout.write(JSON.stringify(ast, null, compact ? 0 : 2));
