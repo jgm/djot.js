@@ -2,7 +2,7 @@ import { Doc, AstNode, HasInlineChildren,
          HasAttributes, isBlock, Block, Para, Heading, Div, List,
          Table, Caption, Row, Cell, isCaption, isRow,
          BlockQuote, Section, CodeBlock, RawBlock,
-         ListItem, DefinitionListItem, Term, Definition,
+         Term, Definition, Footnote, Reference,
          Link, Image, HasText, RawInline,
          isInline, Inline, Str, Math,
          Verbatim, getStringContent } from "./ast";
@@ -256,30 +256,32 @@ class DjotRenderer {
         this.newline();
       }
       for (let k in node.references) {
-        this.cr();
-        this.renderAttributes(node.references[k]);
-        this.lit("[");
-        this.lit(k);
-        this.lit("]:");
-        this.prefixes.push("  ");
-        this.space();
-        this.lit(node.references[k].destination);
-        this.prefixes.pop();
-        this.cr();
+        this.renderNode(node.references[k]);
       }
       let hasFootnotes = Object.keys(node.footnotes).length > 0;
       for (let k in node.footnotes) {
-        this.cr();
-        this.newline();
-        this.renderAttributes(node.footnotes[k]);
-        this.lit("[^" + k + "]:");
-        this.space();
-        this.needsBlankLine = false;
-        this.prefixes.push("  ");
-        this.renderChildren<Block>(node.footnotes[k].children);
-        this.prefixes.pop();
-        this.cr();
+        this.renderNode(node.footnotes[k]);
       }
+      this.cr();
+    },
+    footnote: (node : Footnote) => {
+      this.lit("[^" + node.label + "]:");
+      this.space();
+      this.needsBlankLine = false;
+      this.prefixes.push("  ");
+      this.renderChildren<Block>(node.children);
+      this.prefixes.pop();
+      this.blankline();
+    },
+    reference: (node : Reference) => {
+      this.lit("[");
+      this.lit(node.label);
+      this.lit("]:");
+      this.prefixes.push("  ");
+      this.space();
+      this.lit(node.destination);
+      this.prefixes.pop();
+      this.blankline();
     },
     para: (node: Para) => {
       this.renderChildren<Inline>(node.children);
@@ -290,7 +292,6 @@ class DjotRenderer {
       this.blankline();
     },
     div: (node : Div) => {
-      this.renderAttributes<Block>(node);
       this.lit(":::");
       this.cr();
       this.renderChildren<Block>(node.children);
@@ -378,6 +379,14 @@ class DjotRenderer {
       if (tight) { // otherwise we already have a blankline
         this.blankline();
       }
+    },
+    term: (node : Term) => {
+      this.renderChildren<Inline>(node.children);
+      this.cr();
+    },
+    definition: (node : Definition) => {
+      this.renderChildren<Block>(node.children);
+      this.cr();
     },
     table: (node : Table) => {
       let captions : Caption[] = node.children.filter(isCaption);
