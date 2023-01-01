@@ -1,8 +1,8 @@
-import { Doc, AstNode, HasChildren, HasInlineChildren, HasBlockChildren,
-         HasAttributes, Block, Para, Heading, Div,
-         BlockQuote, Section, CodeBlock, isBlock,
-         Link, Image,
-         isInline, Inline, Str, DoubleQuoted, SingleQuoted, Emph, Strong,
+import { Doc, AstNode, HasInlineChildren,
+         HasAttributes, Block, Para, Heading, Div, List, Table,
+         BlockQuote, Section, CodeBlock, isBlock, RawBlock,
+         Link, Image, HasText, RawInline,
+         isInline, Inline, Str, Math,
          Verbatim, getStringContent } from "./ast";
 
 const isWhitespace = function(node : Inline) : boolean {
@@ -17,6 +17,21 @@ const beginsWithWhitespace = function(node : HasInlineChildren) : boolean {
 const endsWithWhitespace = function(node : HasInlineChildren) : boolean {
   return (node.children[0] &&
           isWhitespace(node.children[node.children.length - 1]));
+}
+
+const verbatimDelim = function(node : HasText, minticks : number) : string {
+  let backtickGroups = node.text.match(/(`+)/g);
+  let backtickGroupLens : Record<number,boolean> = {};
+  if (backtickGroups) {
+    for (let i in backtickGroups) {
+      backtickGroupLens[backtickGroups[i].length] = true;
+    }
+  }
+  let numticks = minticks;
+  while (backtickGroupLens[numticks]) {
+    numticks++;
+  }
+  return "`".repeat(numticks);
 }
 
 class DjotRenderer {
@@ -147,9 +162,49 @@ class DjotRenderer {
     }
   }
 
+  litlines (s : string) : void {
+    let lns = s.split(/\r?\n/);
+    if (lns[lns.length - 1] === "") {
+      lns.pop();
+    }
+    lns.forEach((ln : string) => {
+      this.lit(ln);
+      this.cr();
+    });
+  }
+
+  verbatimNode (node : HasText) : void {
+    let ticks = verbatimDelim(node, 1);
+    this.lit(ticks);
+    if (/^`/.test(node.text)) {
+      this.lit(" ");
+    }
+    this.lit(node.text);
+    if (/`$/.test(node.text)) {
+      this.lit(" ");
+    }
+    this.lit(ticks);
+  }
+
   handlers : Record<string, (node : any) => void> = {
     doc: (node : Doc) => {
       this.renderChildren<Block>(node.children);
+      this.prefixes = [];
+      this.cr();
+      let hasReferences = Object.keys(node.references).length > 0;
+      if (hasReferences) {
+        this.blankline();
+      }
+      for (let k in node.references) {
+        // TODO
+      }
+      let hasFootnotes = Object.keys(node.footnotes).length > 0;
+      if (hasFootnotes) {
+        this.blankline();
+      }
+      for (let k in node.footnotes) {
+        // TODO
+      }
     },
     para: (node: Para) => {
       this.renderChildren<Inline>(node.children);
@@ -181,9 +236,38 @@ class DjotRenderer {
       this.lit("> ");
       this.renderChildren<Block>(node.children);
       this.prefixes.pop();
+      this.blankline();
     },
     section: (node : Section) => {
       this.renderChildren<Block>(node.children);
+    },
+    code_block: (node : CodeBlock) => {
+      let ticks = verbatimDelim(node, 3);
+      this.lit(ticks);
+      if (node.lang) {
+        this.lit(" " + node.lang);
+      }
+      this.cr();
+      this.litlines(node.text);
+      this.cr();
+      this.lit(ticks);
+      this.blankline();
+    },
+    raw_block: (node : RawBlock) => {
+      let ticks = verbatimDelim(node, 3);
+      this.lit(ticks);
+      this.lit(" =" + node.format);
+      this.cr();
+      this.litlines(node.text);
+      this.cr();
+      this.lit(ticks);
+      this.blankline();
+    },
+    list: (node : List)  => {
+      // TODO
+    },
+    table: (node : Table) => {
+      // TODO
     },
     str: (node : Str) => {
       node.text.split(/  */).forEach((s : string, i : number) => {
@@ -199,6 +283,9 @@ class DjotRenderer {
     left_single_quote: () => { this.lit("'"); },
     right_double_quote: () => { this.lit("\""); },
     left_double_quote: () => { this.lit("\""); },
+    ellipses: () => { this.lit("..."); },
+    em_dash: () => { this.lit("---"); },
+    en_dash: () => { this.lit("--"); },
     nbsp: () => { this.lit("\\ "); },
     single_quoted: this.inlineContainer("'"),
     double_quoted: this.inlineContainer("\""),
@@ -245,28 +332,20 @@ class DjotRenderer {
         this.lit("()");
       }
     },
+    raw_inline: (node : RawInline) => {
+      this.verbatimNode(node);
+      this.lit("{=" + node.format + "}");
+    },
     verbatim: (node : Verbatim) => {
-      let backtickGroups = node.text.match(/(`+)/g);
-      let backtickGroupLens : Record<number,boolean> = {};
-      if (backtickGroups) {
-        for (let i in backtickGroups) {
-          backtickGroupLens[backtickGroups[i].length] = true;
-        }
+      this.verbatimNode(node);
+    },
+    math:  (node : Math) => {
+      if (node.display) {
+        this.lit("$$");
+      } else {
+        this.lit("$");
       }
-      let numticks = 1;
-      while (backtickGroupLens[numticks]) {
-        numticks++;
-      }
-      let ticks = "`".repeat(numticks);
-      this.lit(ticks);
-      if (/^`/.test(node.text)) {
-        this.lit(" ");
-      }
-      this.lit(node.text);
-      if (/`$/.test(node.text)) {
-        this.lit(" ");
-      }
-      this.lit(ticks);
+      this.verbatimNode(node);
     }
   }
 
@@ -334,8 +413,6 @@ class DjotRenderer {
 
   render() : string {
     this.renderNode(this.doc);
-    this.prefixes = [];
-    this.cr();
     return this.buffer.join("");
   }
 

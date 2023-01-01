@@ -26,6 +26,10 @@ interface HasBlockChildren {
   children: Block[];
 }
 
+interface HasText {
+  text: string;
+}
+
 type Block = Para
   | Heading
   | ThematicBreak
@@ -78,16 +82,14 @@ interface BlockQuote extends HasAttributes, HasBlockChildren {
   tag: "blockquote";
 }
 
-interface CodeBlock extends HasAttributes {
+interface CodeBlock extends HasAttributes, HasText {
   tag: "code_block";
   lang?: string;
-  text: string;
 }
 
-interface RawBlock extends HasAttributes {
+interface RawBlock extends HasAttributes, HasText {
   tag: "raw_block";
   format: string;
-  text: string;
 }
 
 interface List extends HasAttributes {
@@ -180,49 +182,40 @@ function isInline(node : AstNode) : node is Inline {
 }
 
 
-interface Str extends HasAttributes {
+interface Str extends HasAttributes, HasText {
   tag: "str";
-  text: string;
 }
 
-interface FootnoteReference extends HasAttributes {
+interface FootnoteReference extends HasAttributes, HasText {
   tag: "footnote_reference";
-  text: string;
 }
 
-interface LeftSingleQuote extends HasAttributes {
+interface LeftSingleQuote extends HasAttributes, HasText {
   tag: "left_single_quote";
-  text: string;
 }
 
-interface RightSingleQuote extends HasAttributes {
+interface RightSingleQuote extends HasAttributes, HasText {
   tag: "right_single_quote";
-  text: string;
 }
 
-interface LeftDoubleQuote extends HasAttributes {
+interface LeftDoubleQuote extends HasAttributes, HasText {
   tag: "left_double_quote";
-  text: string;
 }
 
-interface RightDoubleQuote extends HasAttributes {
+interface RightDoubleQuote extends HasAttributes, HasText {
   tag: "right_double_quote";
-  text: string;
 }
 
-interface Ellipses extends HasAttributes {
+interface Ellipses extends HasAttributes, HasText {
   tag: "ellipses";
-  text: string;
 }
 
-interface EmDash extends HasAttributes {
+interface EmDash extends HasAttributes, HasText {
   tag: "em_dash";
-  text: string;
 }
 
-interface EnDash extends HasAttributes {
+interface EnDash extends HasAttributes, HasText {
   tag: "en_dash";
-  text: string;
 }
 
 interface SoftBreak extends HasAttributes {
@@ -242,31 +235,26 @@ interface Symb extends HasAttributes {
   alias: string;
 }
 
-interface Verbatim extends HasAttributes {
+interface Verbatim extends HasAttributes, HasText {
   tag: "verbatim";
-  text: string;
 }
 
-interface RawInline extends HasAttributes {
+interface RawInline extends HasAttributes, HasText {
   tag: "raw_inline";
   format: string;
-  text: string;
 }
 
-interface Math extends HasAttributes {
+interface Math extends HasAttributes, HasText {
   tag: "math";
   display: boolean;
-  text: string;
 }
 
-interface Url extends HasAttributes {
+interface Url extends HasAttributes, HasText {
   tag: "url";
-  text: string;
 }
 
-interface Email extends HasAttributes {
+interface Email extends HasAttributes, HasText {
   tag: "email";
-  text: string;
 }
 
 interface Link extends HasAttributes, HasInlineChildren {
@@ -1633,6 +1621,7 @@ export {
   Pos,
   HasAttributes,
   HasChildren,
+  HasText,
   HasInlineChildren,
   HasBlockChildren,
   Block,
