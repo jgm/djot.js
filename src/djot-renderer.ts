@@ -133,6 +133,19 @@ class DjotRenderer {
               /\w$/.test(this.buffer[this.buffer.length - 1])) );
   }
 
+  inlineContainer (delim : string, needsBraces ?: boolean)
+      : ((node : HasInlineChildren) => void) {
+    let self = this;
+    return function(node : HasInlineChildren) : void {
+      needsBraces = needsBraces || self.needsBraces(node);
+      if (needsBraces) self.lit("{");
+      self.lit(delim);
+      self.renderChildren<Inline>(node.children);
+      self.lit(delim);
+      if (needsBraces) self.lit("}");
+    }
+  }
+
   handlers : Record<string, (node : any) => void> = {
     doc: (node : Doc) => {
       this.renderChildren<Block>(node.children);
@@ -210,19 +223,8 @@ class DjotRenderer {
       this.renderChildren<Inline>(node.children);
       this.lit("\"");
     },
-    emph: (node : Emph) => {
-      let needsBraces = this.needsBraces(node);
-      if (needsBraces) this.lit("{");
-      this.lit("_"); // TODO use {_ when helpful.
-      this.renderChildren<Inline>(node.children);
-      this.lit("_");
-      if (needsBraces) this.lit("}");
-    },
-    strong: (node : Strong) => {
-      this.lit("*"); // TODO use {_ when helpful.
-      this.renderChildren<Inline>(node.children);
-      this.lit("*");
-    },
+    emph: this.inlineContainer("_"),
+    strong: this.inlineContainer("*"),
     verbatim: (node : Verbatim) => {
       let backtickGroups = node.text.match(/(`+)/g);
       let backtickGroupLens : Record<number,boolean> = {};
