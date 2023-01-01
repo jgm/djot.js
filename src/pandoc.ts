@@ -754,11 +754,6 @@ class PandocParser {
           let def : Block[] = [];
           for (let j=0; j<rawdefs.length; j++) {
             rawdefs[j].map((b : PandocElt) => {
-              if (b.t === "Plain") {
-                tight = true;
-              } else if (b.t === "Para") {
-                tight = false;
-              }
               def.push(this.fromPandocBlock(b));
             });
           }
@@ -767,7 +762,7 @@ class PandocParser {
                                  {tag: "definition", children: def}]});
         }
 
-        return {tag: "list", style: ":", tight: tight, children: items};
+        return {tag: "list", style: ":", tight: false, children: items};
       }
 
       case "OrderedList":
