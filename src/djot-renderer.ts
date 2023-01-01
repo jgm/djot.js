@@ -1,6 +1,7 @@
 import { Doc, AstNode, HasInlineChildren,
          HasAttributes, Block, Para, Heading, Div, List, Table,
          BlockQuote, Section, CodeBlock, isBlock, RawBlock,
+         ListItem, DefinitionListItem,
          Link, Image, HasText, RawInline,
          isInline, Inline, Str, Math,
          Verbatim, getStringContent } from "./ast";
@@ -264,7 +265,33 @@ class DjotRenderer {
       this.blankline();
     },
     list: (node : List)  => {
-      // TODO
+      let style = node.style;
+      let start = node.start;
+      let items = node.children;
+      let tight = node.tight;
+      for (let i=0; i < items.length; i++) {
+        let item = items[i];
+        if (i > 0) {
+          this.cr();
+          if (!tight) {
+            this.newline();
+          }
+        }
+        this.lit(style);
+        this.needsBlankLine = false;
+        this.space();
+        this.prefixes.push(" ".repeat(style.length + 1));
+        if (item.tag === "definition_list_item") {
+          // TODO
+        } else {
+          this.renderChildren<Block>(item.children);
+        }
+        this.prefixes.pop();
+
+      }
+      if (tight) { // otherwise we already have a blankline
+        this.blankline();
+      }
     },
     table: (node : Table) => {
       // TODO
