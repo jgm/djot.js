@@ -23,8 +23,9 @@ Road map:
       annotation. this would simplify ast.
 - [X] option to generate pandoc JSON output
 - [X] option to convert from pandoc JSON
+- [X] djot writer
 - [ ] tests for pandoc JSON conversion (both directions)
-- [ ] djot writer
+- [ ] better tests for djot reader/writer
 - [ ] full-featured cli
 - [ ] benchmarks
 - [ ] node module
