@@ -533,7 +533,7 @@ const parse = function(input: string, options: ParseOptions): Doc {
   };
   const getUniqueIdentifier = function(s: string): string {
     const base = s.trim()
-      .replace(/[\W\s]+/g, "-")
+      .replace(/[\W\s.]+/g, "-")
       .replace(/-$/, "")
       .replace(/^-/, "");
     let i = 0;
