@@ -134,8 +134,13 @@ class DjotRenderer {
   newline () : void {
     if (this.endOfPrefix === this.column) {
       // remove spaces after prefix
-     this.buffer[this.buffer.length - 1] =
-       this.buffer[this.buffer.length - 1].replace(/  *$/,"");
+      while (/  *$/.test(this.buffer[this.buffer.length - 1])) {
+       this.buffer[this.buffer.length - 1] =
+         this.buffer[this.buffer.length - 1].replace(/  *$/,"");
+       if (this.buffer[this.buffer.length - 1] === "") {
+         this.buffer.pop();
+       }
+      }
     }
     this.endOfPrefix = 0;
     this.column = 0;
