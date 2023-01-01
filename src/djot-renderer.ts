@@ -1,6 +1,7 @@
 import { Doc, AstNode, HasInlineChildren,
-         HasAttributes, Block, Para, Heading, Div, List, Table,
-         BlockQuote, Section, CodeBlock, isBlock, RawBlock,
+         HasAttributes, isBlock, Block, Para, Heading, Div, List,
+         Table, Caption, Row, Cell, isCaption, isRow,
+         BlockQuote, Section, CodeBlock, RawBlock,
          ListItem, DefinitionListItem, Term, Definition,
          Link, Image, HasText, RawInline,
          isInline, Inline, Str, Math,
@@ -200,6 +201,13 @@ class DjotRenderer {
               /\w$/.test(this.buffer[this.buffer.length - 1])) );
   }
 
+  noWrap (action : () => void) : void {
+    let oldWrapWidth = this.wrapWidth;
+    this.wrapWidth = 0; // no wrap
+    action();
+    this.wrapWidth = oldWrapWidth;
+  }
+
   inlineContainer (delim : string, needsBraces ?: boolean)
       : ((node : HasInlineChildren) => void) {
     let self = this;
@@ -372,7 +380,57 @@ class DjotRenderer {
       }
     },
     table: (node : Table) => {
-      // TODO
+      let captions : Caption[] = node.children.filter(isCaption);
+      let rows : Row[] = node.children.filter(isRow);
+      for (let i=0; i < rows.length; i++) {
+        let row = rows[i];
+        // if last row was head and this is not, add separator line
+        if ("head" in row && !row.head && i > 0) {
+          let lastRow : Row = rows[i-1];
+          for (let j=0; j < lastRow.children.length; j++) {
+            if (j === 0) { this.lit("|"); }
+            switch (lastRow && lastRow.children[j].align) {
+              case "left":
+                this.lit(":--");
+                break;
+              case "right":
+                this.lit("--:");
+                break;
+              case "center":
+                this.lit(":-:")
+                break;
+              default:
+                this.lit("---");
+            }
+            this.lit("|");
+          }
+          this.cr();
+        }
+        // now add the proper row
+        for (let j=0; j < row.children.length; j++) {
+          let cell = row.children[j];
+          if (j === 0) { this.lit("|"); }
+          this.noWrap(() => {
+            // this awkward test is needed because a Caption can
+            // be a child of Table; revisit this?
+            if (cell.tag === "cell") {
+              this.renderChildren(cell.children);
+            }
+          });
+          this.lit("|");
+        }
+        this.cr();
+      }
+      if (captions.length > 0) {
+        this.newline();
+        this.lit("^ ");
+        this.needsBlankLine = false;
+        this.prefixes.push("  ");
+        this.renderChildren<Inline>(captions[0].children);
+        this.prefixes.pop();
+        this.blankline();
+      }
+      this.blankline();
     },
     str: (node : Str) => {
       node.text.split(/  */).forEach((s : string, i : number) => {
