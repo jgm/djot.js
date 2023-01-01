@@ -45,8 +45,8 @@ while (args[i]) {
       i++;
       to = args[i];
       if (!toFormats.includes(to)) {
-        process.stdout.write("--to/-t expects an argument: " +
-          toFormats.join("|") + "\n");
+        process.stdout.write("--to/-t expects " +
+          toFormats.join("|") + ", got " + JSON.stringify(to) + "\n");
         process.exit(1);
       }
       break;
@@ -54,9 +54,9 @@ while (args[i]) {
     case "-f":
       i++;
       from = args[i];
-      if (!fromFormats.includes(to)) {
-        process.stdout.write("--from/-f expects an argument: " +
-          fromFormats.join("|") + "\n");
+      if (!fromFormats.includes(from)) {
+        process.stdout.write("--from/-f expects " +
+          fromFormats.join("|") + ", got " + JSON.stringify(from) + "\n");
         process.exit(1);
       }
       break;
