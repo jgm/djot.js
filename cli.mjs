@@ -13,26 +13,24 @@ const warn = function(msg, pos) {
 }
 
 let timing = false;
-let events = false;
 let options = {sourcePositions: false, warn: warn};
-let output = 'html';
+let to = 'html';
 let from = 'djot';
 let compact = false;
 let width = 72;
+let toFormats = ["html","ast","ast-json","events","djot","pandoc-json"];
+let fromFormats = ["djot","pandoc-json"];
+
 let usage = `djot [OPTIONS] FILE*
 Options:
-  --sourcepos,-p       Include source positions
-  --quiet,-q           Suppress warnings
-  --time,-t            Print parse time to stderr
-  --events,-e          Print events in JSON format
-  --pandoc             Convert to pandoc AST in JSON format
-  --from-pandoc        Read pandoc AST in JSON format instead of djot
-  --json,-j            Print AST in JSON format
-  --ast,-a             Print AST in human-readable format
-  --html               Print HTML (default)
-  --djot               Print djot
+  --to,-t FORMAT       Format to convert to
+                       (${toFormats.join("|")})
+  --from,-f FORMAT     Format to convert from (${fromFormats.join("|")})
   --compact            Use compact (rather than pretty) JSON
   --width,-w NUMBER    Wrap width for djot output (-1 = compact, 0 = no wrap)
+  --sourcepos,-p       Include source positions
+  --time,-t            Print parse time to stderr
+  --quiet,-q           Suppress warnings
   --help,-h            This usage message
 `;
 let files = [];
@@ -42,41 +40,25 @@ let i = 2;
 while (args[i]) {
   let arg = args[i];
   switch (arg) {
-    case "--sourcepos":
-    case "-p":
-      options.sourcePositions = true;
-      break;
-    case "--quiet":
-    case "-q":
-      options.warn = (msg, pos) => {};
-      break;
-    case "--time":
+    case "--to":
     case "-t":
-      timing = true;
+      i++;
+      to = args[i];
+      if (!toFormats.includes(to)) {
+        process.stdout.write("--to/-t expects an argument: " +
+          toFormats.join("|") + "\n");
+        process.exit(1);
+      }
       break;
-    case "--events":
-    case "-e":
-      events = true;
-      break;
-    case "--json":
-    case "-j":
-      output = 'json';
-      break;
-    case "--pandoc":
-      output = 'pandoc';
-      break;
-    case "--from-pandoc":
-      from = 'pandoc';
-      break;
-    case "--ast":
-    case "-a":
-      output = 'ast';
-      break;
-    case "--html":
-      output = 'html';
-      break;
-    case "--djot":
-      output = 'djot';
+    case "--from":
+    case "-f":
+      i++;
+      from = args[i];
+      if (!fromFormats.includes(to)) {
+        process.stdout.write("--from/-f expects an argument: " +
+          fromFormats.join("|") + "\n");
+        process.exit(1);
+      }
       break;
     case "--compact":
       compact = true;
@@ -85,6 +67,22 @@ while (args[i]) {
     case "-w":
       i++;
       width = parseInt(args[i]);
+      if (typeof width !== "number") {
+        process.stdout.write("--width/-w expects a numerical argument\n");
+        process.exit(1);
+      }
+      break;
+    case "--sourcepos":
+    case "-p":
+      options.sourcePositions = true;
+      break;
+    case "--time":
+    case "-t":
+      timing = true;
+      break;
+    case "--quiet":
+    case "-q":
+      options.warn = (msg, pos) => {};
       break;
     case "--help":
     case "-h":
@@ -124,7 +122,7 @@ files.forEach(file => {
 });
 
 try {
-  if (events) {
+  if (to === "events") {
     let start = true;
     for (const event of new EventParser(input, warn)) {
       if (start) {
@@ -141,28 +139,28 @@ try {
     let ast;
     if (from === "djot") {
       ast = parse(input, options);
-    } else if (from === "pandoc") {
+    } else if (from === "pandoc-json") {
       ast = new PandocParser(options.warn).parseJSON(input);
     }
     let endTime = performance.now();
     let parseTime = (endTime - startTime).toFixed(1);
 
     startTime = performance.now();
-    switch (output) {
+    switch (to) {
       case "html":
         process.stdout.write(renderHTML(ast, options));
         break;
       case "djot":
         process.stdout.write((new DjotRenderer(ast, width).render()));
         break;
-      case "json":
+      case "ast-json":
         process.stdout.write(JSON.stringify(ast, null, compact ? 0 : 2));
         process.stdout.write("\n");
         break;
       case "ast":
         process.stdout.write(renderAST(ast));
         break;
-      case "pandoc":
+      case "pandoc-json":
         process.stdout.write(JSON.stringify(new PandocRenderer(ast, warn).toPandoc(),
                 null, compact ? 0 : 2));
         process.stdout.write("\n");
