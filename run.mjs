@@ -138,7 +138,7 @@ try {
         process.stdout.write(renderHTML(ast, options));
         break;
       case "djot":
-        process.stdout.write((new DjotRenderer(ast, 76).render()));
+        process.stdout.write((new DjotRenderer(ast, 72).render()));
         break;
       case "json":
         process.stdout.write(JSON.stringify(ast, null, compact ? 0 : 2));

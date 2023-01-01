@@ -156,7 +156,7 @@ class DjotRenderer {
     }
   }
 
-  space () : void {
+  wrap () : void {
     let excessOnLine : string[] = [];
     if (this.wrapWidth > 0 && !this.startOfLine && this.buffer.length > 0 &&
            this.column > this.wrapWidth) {
@@ -185,6 +185,10 @@ class DjotRenderer {
         this.startOfLine = false;
       }
     }
+  }
+
+  space () : void {
+    this.wrap();
     this.lit(" ");
   }
 
@@ -527,6 +531,9 @@ class DjotRenderer {
   renderChildren<A extends AstNode>(children : A[]) : void {
     for (let i=0, len = children.length; i < len; i++) {
       this.renderNode(children[i]);
+    }
+    if (children[0] && !isBlock(children[0])) {
+      this.wrap();
     }
   }
 
