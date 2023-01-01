@@ -192,39 +192,22 @@ class DjotRenderer {
         this.out(s);
       });
     },
-    space: () => {
-      this.space();
-    },
-    softbreak: () => {
-      this.softbreak();
-    },
-    right_single_quote: () => {
-      this.lit("'");
-    },
-    left_single_quote: () => {
-      this.lit("'");
-    },
-    right_double_quote: () => {
-      this.lit("\"");
-    },
-    left_double_quote: () => {
-      this.lit("\"");
-    },
-    nbsp: () => {
-      this.lit("\\ ");
-    },
-    single_quoted: (node : SingleQuoted) => {
-      this.lit("'");
-      this.renderChildren<Inline>(node.children);
-      this.lit("'");
-    },
-    double_quoted: (node : DoubleQuoted) => {
-      this.lit("\"");
-      this.renderChildren<Inline>(node.children);
-      this.lit("\"");
-    },
+    space: () => { this.space(); },
+    softbreak: () => { this.softbreak(); },
+    right_single_quote: () => { this.lit("'"); },
+    left_single_quote: () => { this.lit("'"); },
+    right_double_quote: () => { this.lit("\""); },
+    left_double_quote: () => { this.lit("\""); },
+    nbsp: () => { this.lit("\\ "); },
+    single_quoted: this.inlineContainer("'"),
+    double_quoted: this.inlineContainer("\""),
     emph: this.inlineContainer("_"),
     strong: this.inlineContainer("*"),
+    superscript: this.inlineContainer("^"),
+    subscript: this.inlineContainer("~"),
+    mark: this.inlineContainer("=", true),
+    delete: this.inlineContainer("-", true),
+    insert: this.inlineContainer("+", true),
     verbatim: (node : Verbatim) => {
       let backtickGroups = node.text.match(/(`+)/g);
       let backtickGroupLens : Record<number,boolean> = {};
