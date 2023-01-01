@@ -50,7 +50,8 @@ const blockTags : Record<string, boolean> = {
   code_block: true,
   raw_block: true,
   list: true,
-  table: true
+  table: true,
+  reference: true
 };
 
 function isBlock(node : AstNode) : node is Block {
@@ -346,7 +347,7 @@ type Alignment = "default" | "left" | "right" | "center";
 
 type AstNode = Doc | Block | Inline | ListItem
   | DefinitionListItem | Term | Definition
-  | Row | Cell | Caption | Footnote;
+  | Row | Cell | Caption | Footnote | Reference ;
 
 interface Reference extends HasAttributes {
   tag: "reference";

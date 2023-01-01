@@ -244,17 +244,33 @@ class DjotRenderer {
       this.cr();
       let hasReferences = Object.keys(node.references).length > 0;
       if (hasReferences) {
-        this.blankline();
+        this.cr();
+        this.newline();
       }
       for (let k in node.references) {
-        // TODO
+        this.cr();
+        this.renderAttributes(node.references[k]);
+        this.lit("[");
+        this.lit(k);
+        this.lit("]:");
+        this.prefixes.push("  ");
+        this.space();
+        this.lit(node.references[k].destination);
+        this.prefixes.pop();
+        this.cr();
       }
       let hasFootnotes = Object.keys(node.footnotes).length > 0;
-      if (hasFootnotes) {
-        this.blankline();
-      }
       for (let k in node.footnotes) {
-        // TODO
+        this.cr();
+        this.newline();
+        this.renderAttributes(node.footnotes[k]);
+        this.lit("[^" + k + "]:");
+        this.space();
+        this.needsBlankLine = false;
+        this.prefixes.push("  ");
+        this.renderChildren<Block>(node.footnotes[k].children);
+        this.prefixes.pop();
+        this.cr();
       }
     },
     para: (node: Para) => {
