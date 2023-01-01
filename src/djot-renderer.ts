@@ -178,7 +178,6 @@ class DjotRenderer {
     if (excessOnLine.length > 0) {
       // put the content on next line:
       this.newline();
-      this.column = 0;
       this.startOfLine = true;
       for (let i=excessOnLine.length - 1; i >= 0; i--) {
         this.buffer.push(excessOnLine[i]);
@@ -265,6 +264,7 @@ class DjotRenderer {
       for (let k in node.footnotes) {
         this.renderNode(node.footnotes[k]);
       }
+      this.prefixes = [];
       this.cr();
     },
     footnote: (node : Footnote) => {
@@ -377,8 +377,6 @@ class DjotRenderer {
           this.renderChildren<Block>(item.children);
         }
         this.prefixes.pop();
-        this.cr();
-
       }
       if (tight) { // otherwise we already have a blankline
         this.blankline();
