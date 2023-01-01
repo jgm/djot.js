@@ -1,7 +1,22 @@
-import { Doc, AstNode, HasChildren, HasAttributes, Block, Para, Heading, Div,
+import { Doc, AstNode, HasChildren, HasInlineChildren, HasBlockChildren,
+         HasAttributes, Block, Para, Heading, Div,
          BlockQuote, Section, CodeBlock, isBlock,
          isInline, Inline, Str, DoubleQuoted, SingleQuoted, Emph, Strong,
          Verbatim } from "./ast";
+
+const isWhitespace = function(node : Inline) : boolean {
+  let tag : string = node.tag;
+  return (tag === "space" || tag === "softbreak" || tag === "linebreak");
+}
+
+const beginsWithWhitespace = function(node : HasInlineChildren) : boolean {
+  return (node.children[0] && isWhitespace(node.children[0]));
+}
+
+const endsWithWhitespace = function(node : HasInlineChildren) : boolean {
+  return (node.children[0] &&
+          isWhitespace(node.children[node.children.length - 1]));
+}
 
 class DjotRenderer {
 
@@ -111,6 +126,13 @@ class DjotRenderer {
     }
   }
 
+  needsBraces (node : HasInlineChildren) : boolean {
+    return ( beginsWithWhitespace(node) ||
+             endsWithWhitespace(node) ||
+             (this.buffer.length > 0 &&
+              /\w$/.test(this.buffer[this.buffer.length - 1])) );
+  }
+
   handlers : Record<string, (node : any) => void> = {
     doc: (node : Doc) => {
       this.renderChildren<Block>(node.children);
@@ -189,9 +211,12 @@ class DjotRenderer {
       this.lit("\"");
     },
     emph: (node : Emph) => {
+      let needsBraces = this.needsBraces(node);
+      if (needsBraces) this.lit("{");
       this.lit("_"); // TODO use {_ when helpful.
       this.renderChildren<Inline>(node.children);
       this.lit("_");
+      if (needsBraces) this.lit("}");
     },
     strong: (node : Strong) => {
       this.lit("*"); // TODO use {_ when helpful.
