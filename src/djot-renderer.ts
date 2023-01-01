@@ -3,7 +3,7 @@ import { Doc, AstNode, HasInlineChildren,
          Table, Caption, Row, Cell, isCaption, isRow,
          BlockQuote, Section, CodeBlock, RawBlock,
          Term, Definition, Footnote, Reference,
-         Link, Image, HasText, RawInline,
+         Link, Image, HasText, RawInline, FootnoteReference,
          isInline, Inline, Str, Math,
          Verbatim, getStringContent } from "./ast";
 
@@ -138,7 +138,7 @@ class DjotRenderer {
   newline () : void {
     if (this.endOfPrefix === this.column) {
       // remove spaces after prefix
-      while (/  *$/.test(this.buffer[this.buffer.length - 1])) {
+      while (/  *$|^$/.test(this.buffer[this.buffer.length - 1])) {
        this.buffer[this.buffer.length - 1] =
          this.buffer[this.buffer.length - 1].replace(/  *$/,"");
        if (this.buffer[this.buffer.length - 1] === "") {
@@ -485,6 +485,9 @@ class DjotRenderer {
     mark: this.inlineContainer("=", true),
     delete: this.inlineContainer("-", true),
     insert: this.inlineContainer("+", true),
+    footnote_reference: (node : FootnoteReference) => {
+      this.lit("[^" + node.text + "]");
+    },
     link: (node : Link) => {
       this.lit("[");
       this.renderChildren<Inline>(node.children);
