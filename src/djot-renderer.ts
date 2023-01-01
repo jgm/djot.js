@@ -377,6 +377,7 @@ class DjotRenderer {
           this.renderChildren<Block>(item.children);
         }
         this.prefixes.pop();
+        this.cr();
 
       }
       if (tight) { // otherwise we already have a blankline
@@ -389,7 +390,6 @@ class DjotRenderer {
     },
     definition: (node : Definition) => {
       this.renderChildren<Block>(node.children);
-      this.cr();
     },
     table: (node : Table) => {
       let captions : Caption[] = node.children.filter(isCaption);
