@@ -1,5 +1,7 @@
-import { Doc, AstNode, HasChildren, Block, Inline, Str, Para, Heading, Div,
-         isBlock, isInline, HasAttributes, BlockQuote, Section } from "./ast";
+import { Doc, AstNode, HasChildren, HasAttributes, Block, Para, Heading, Div,
+         BlockQuote, Section, CodeBlock, isBlock,
+         isInline, Inline, Str, DoubleQuoted, SingleQuoted, Emph, Strong,
+         Verbatim } from "./ast";
 
 class DjotRenderer {
 
@@ -18,7 +20,7 @@ class DjotRenderer {
   }
 
   escape (s : string) : string {
-    return s.replace(/([!~`#${}[\]^<>\\*_]|-(?=-))/g, "\\$1");
+    return s.replace(/([!~`'"#${}[\]^<>\\*_]|-(?=-)|\.(?=\.))/g, "\\$1");
   }
 
   out (s : string) : void {
@@ -160,6 +162,64 @@ class DjotRenderer {
     },
     softbreak: () => {
       this.softbreak();
+    },
+    right_single_quote: () => {
+      this.lit("'");
+    },
+    left_single_quote: () => {
+      this.lit("'");
+    },
+    right_double_quote: () => {
+      this.lit("\"");
+    },
+    left_double_quote: () => {
+      this.lit("\"");
+    },
+    nbsp: () => {
+      this.lit("\\ ");
+    },
+    single_quoted: (node : SingleQuoted) => {
+      this.lit("'");
+      this.renderChildren<Inline>(node.children);
+      this.lit("'");
+    },
+    double_quoted: (node : DoubleQuoted) => {
+      this.lit("\"");
+      this.renderChildren<Inline>(node.children);
+      this.lit("\"");
+    },
+    emph: (node : Emph) => {
+      this.lit("_"); // TODO use {_ when helpful.
+      this.renderChildren<Inline>(node.children);
+      this.lit("_");
+    },
+    strong: (node : Strong) => {
+      this.lit("*"); // TODO use {_ when helpful.
+      this.renderChildren<Inline>(node.children);
+      this.lit("*");
+    },
+    verbatim: (node : Verbatim) => {
+      let backtickGroups = node.text.match(/(`+)/g);
+      let backtickGroupLens : Record<number,boolean> = {};
+      if (backtickGroups) {
+        for (let i in backtickGroups) {
+          backtickGroupLens[backtickGroups[i].length] = true;
+        }
+      }
+      let numticks = 1;
+      while (backtickGroupLens[numticks]) {
+        numticks++;
+      }
+      let ticks = "`".repeat(numticks);
+      this.lit(ticks);
+      if (/^`/.test(node.text)) {
+        this.lit(" ");
+      }
+      this.lit(node.text);
+      if (/`$/.test(node.text)) {
+        this.lit(" ");
+      }
+      this.lit(ticks);
     }
   }
 
