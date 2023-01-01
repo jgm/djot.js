@@ -5,13 +5,24 @@
   "engines": {
     "node": ">=17.0.0"
   },
-  "description": "",
+  "description": "Conversion library for the djot light markup language",
   "license": "MIT",
   "author": "John MacFarlane",
   "keywords": [
-    "markup"
+    "markup",
+    "djot"
   ],
   "main": "./dist/djot.js",
+  "module": "./lib/index.js",
+  "exports": {
+    ".": {
+      "require": "./dist/djot.js",
+      "default": "./lib/index.js"
+    }
+  },
+  "bin": {
+    "djot": "./cli.mjs"
+  },
   "types": "./types/index.d.ts",
   "scripts": {
     "test": "jest",

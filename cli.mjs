@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { EventParser } from "./lib/block.js";
 import { parse, renderAST } from "./lib/ast.js";
 import { renderHTML } from "./lib/html.js";
