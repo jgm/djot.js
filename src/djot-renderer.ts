@@ -1,7 +1,7 @@
 import { Doc, AstNode, HasInlineChildren,
          HasAttributes, Block, Para, Heading, Div, List, Table,
          BlockQuote, Section, CodeBlock, isBlock, RawBlock,
-         ListItem, DefinitionListItem,
+         ListItem, DefinitionListItem, Term, Definition,
          Link, Image, HasText, RawInline,
          isInline, Inline, Str, Math,
          Verbatim, getStringContent } from "./ast";
@@ -33,6 +33,56 @@ const verbatimDelim = function(node : HasText, minticks : number) : string {
     numticks++;
   }
   return "`".repeat(numticks);
+}
+
+const toRoman = function(x : number) : string {
+  if (x < 0 || x >= 4000) {
+    return "?";
+  }
+  let rom : string = "";
+  while (x > 0) {
+    if (x >= 1000) { rom += "M"; x -= 1000 }
+    else if (x >= 900) { rom += "CM"; x-= 900 }
+    else if (x >= 500) { rom += "D"; x -= 500 }
+    else if (x >= 400) { rom += "CD"; x -= 400 }
+    else if (x >= 100) { rom += "C"; x -= 100 }
+    else if (x >= 90)  { rom += "XC"; x -= 90 }
+    else if (x >= 50)  { rom += "L" ; x -= 50 }
+    else if (x >= 40)  { rom += "XL"; x -= 40 }
+    else if (x >= 10)  { rom += "X"; x -= 10 }
+    else if (x == 9)   { rom += "IX"; x -= 9 }
+    else if (x >= 5)   { rom += "V"; x -= 5 }
+    else if (x == 4)   { rom += "IV"; x -= 4 }
+    else if (x >= 1)   { rom += "I"; x -= 1 }
+    else { throw("toRoman encountered x = " + x); }
+  }
+  return rom;
+}
+
+const formatNumber = function(num : number, style : string) : string {
+  let delimPattern = style.replace(/[a-zA-Z0-9]+/g,"$");
+  let numFormat = style.replace(/[.()]/g, "");
+  let numStr : string;
+  switch (numFormat) {
+    case "1":
+      numStr = num.toString();
+      break;
+    case "a":
+      numStr = String.fromCodePoint(96 + (num % 26));
+      break;
+    case "A":
+      numStr = String.fromCodePoint(64 + (num % 26));
+      break;
+    case "i":
+      numStr = toRoman(num).toLowerCase();
+      break;
+    case "I":
+      numStr = toRoman(num);
+      break;
+    default:
+      throw("formatNumber encountered unknown style " + style);
+  }
+  return delimPattern.replace("$", numStr);
 }
 
 class DjotRenderer {
@@ -266,7 +316,7 @@ class DjotRenderer {
     },
     list: (node : List)  => {
       let style = node.style;
-      let start = node.start;
+      let start = node.start || 1;
       let items = node.children;
       let tight = node.tight;
       for (let i=0; i < items.length; i++) {
@@ -277,12 +327,24 @@ class DjotRenderer {
             this.newline();
           }
         }
-        this.lit(style);
+        let marker : string;
+        if (/[().]/.test(style)) {
+          marker = formatNumber(start + i, style);
+        } else if (style === "X") {
+          marker = "-";
+        } else {
+          marker = style;
+        }
+        this.lit(marker);
         this.needsBlankLine = false;
         this.space();
-        this.prefixes.push(" ".repeat(style.length + 1));
+        if ("checkbox" in item && item.checkbox) {
+          this.lit(item.checkbox === "checked" ? "[X]" : "[ ]");
+          this.space();
+        }
+        this.prefixes.push(" ".repeat(marker.length + 1));
         if (item.tag === "definition_list_item") {
-          // TODO
+          this.renderChildren<Term | Definition>(item.children);
         } else {
           this.renderChildren<Block>(item.children);
         }
