@@ -127,7 +127,7 @@ class HTMLRenderer {
     return note;
   }
 
-  renderChildren(node: HasChildren): void {
+  renderChildren(node: HasChildren<AstNode>): void {
     const oldtight = this.tight;
     if ("tight" in node) {
       this.tight = !!node.tight;

@@ -14,16 +14,8 @@ interface HasAttributes {
   pos?: Pos;
 }
 
-interface HasChildren {
-  children: AstNode[];
-}
-
-interface HasInlineChildren {
-  children: Inline[];
-}
-
-interface HasBlockChildren {
-  children: Block[];
+interface HasChildren<A> {
+  children: A[];
 }
 
 interface HasText {
@@ -41,11 +33,11 @@ type Block = Para
   | List
   | Table;
 
-interface Para extends HasAttributes, HasInlineChildren {
+interface Para extends HasAttributes, HasChildren<Inline> {
   tag: "para";
 }
 
-interface Heading extends HasAttributes, HasInlineChildren {
+interface Heading extends HasAttributes, HasChildren<Inline> {
   tag: "heading";
   level: number;
 }
@@ -54,15 +46,15 @@ interface ThematicBreak extends HasAttributes {
   tag: "thematic_break";
 }
 
-interface Section extends HasAttributes, HasBlockChildren {
+interface Section extends HasAttributes, HasChildren<Block> {
   tag: "section";
 }
 
-interface Div extends HasAttributes, HasBlockChildren {
+interface Div extends HasAttributes, HasChildren<Block> {
   tag: "div";
 }
 
-interface BlockQuote extends HasAttributes, HasBlockChildren {
+interface BlockQuote extends HasAttributes, HasChildren<Block> {
   tag: "blockquote";
 }
 
@@ -202,61 +194,61 @@ interface Email extends HasAttributes, HasText {
   tag: "email";
 }
 
-interface Link extends HasAttributes, HasInlineChildren {
+interface Link extends HasAttributes, HasChildren<Inline> {
   tag: "link";
   destination?: string;
   reference?: string;
 }
 
-interface Image extends HasAttributes, HasInlineChildren {
+interface Image extends HasAttributes, HasChildren<Inline> {
   tag: "image";
   destination?: string;
   reference?: string;
 }
 
-interface Emph extends HasAttributes, HasInlineChildren {
+interface Emph extends HasAttributes, HasChildren<Inline> {
   tag: "emph";
 }
 
-interface Strong extends HasAttributes, HasInlineChildren {
+interface Strong extends HasAttributes, HasChildren<Inline> {
   tag: "strong";
 }
 
-interface Span extends HasAttributes, HasInlineChildren {
+interface Span extends HasAttributes, HasChildren<Inline> {
   tag: "span";
 }
 
-interface Mark extends HasAttributes, HasInlineChildren {
+interface Mark extends HasAttributes, HasChildren<Inline> {
   tag: "mark";
 }
 
-interface Superscript extends HasAttributes, HasInlineChildren {
+interface Superscript extends HasAttributes, HasChildren<Inline> {
   tag: "superscript";
 }
 
-interface Subscript extends HasAttributes, HasInlineChildren {
+interface Subscript extends HasAttributes, HasChildren<Inline> {
   tag: "subscript";
 }
 
-interface Delete extends HasAttributes, HasInlineChildren {
+interface Delete extends HasAttributes, HasChildren<Inline> {
   tag: "delete";
 }
 
-interface Insert extends HasAttributes, HasInlineChildren {
+interface Insert extends HasAttributes, HasChildren<Inline> {
   tag: "insert";
 }
 
-interface DoubleQuoted extends HasAttributes, HasInlineChildren {
+interface DoubleQuoted extends HasAttributes, HasChildren<Inline> {
   tag: "double_quoted";
 }
 
-interface SingleQuoted extends HasAttributes, HasInlineChildren {
+interface SingleQuoted extends HasAttributes, HasChildren<Inline> {
   tag: "single_quoted";
 }
 
 type CheckboxStatus = "checked" | "unchecked";
 
-interface ListItem extends HasAttributes, HasBlockChildren {
+interface ListItem extends HasAttributes, HasChildren<Block> {
   tag: "list_item";
   checkbox?: CheckboxStatus;
 }
@@ -266,11 +258,11 @@ interface DefinitionListItem extends HasAttributes {
   children: (Term | Definition)[];
 }
 
-interface Term extends HasAttributes, HasInlineChildren {
+interface Term extends HasAttributes, HasChildren<Inline> {
   tag: "term";
 }
 
-interface Definition extends HasAttributes, HasBlockChildren {
+interface Definition extends HasAttributes, HasChildren<Block> {
   tag: "definition";
 }
 
@@ -280,7 +272,7 @@ interface Row extends HasAttributes {
   head: boolean;
 }
 
-interface Cell extends HasAttributes, HasInlineChildren {
+interface Cell extends HasAttributes, HasChildren<Inline> {
   tag: "cell";
   align: Alignment;
   head: boolean;
@@ -298,12 +290,12 @@ interface Reference extends HasAttributes {
   destination: string;
 }
 
-interface Footnote extends HasAttributes, HasBlockChildren {
+interface Footnote extends HasAttributes, HasChildren<Block> {
   tag: "footnote";
   label: string;
 }
 
-interface Doc extends HasBlockChildren, HasAttributes {
+interface Doc extends HasChildren<Block>, HasAttributes {
   tag: "doc";
   references: Record<string, Reference>;
   footnotes: Record<string, Footnote>;
@@ -1640,8 +1632,6 @@ export {
   HasAttributes,
   HasChildren,
   HasText,
-  HasInlineChildren,
-  HasBlockChildren,
   Block,
   Para,
   Heading,

@@ -1,4 +1,4 @@
-import { Doc, AstNode, HasInlineChildren,
+import { Doc, AstNode, HasChildren,
          HasAttributes, isBlock, Block, Para, Heading, Div, List,
          Table, Caption, Row, Cell, isCaption, isRow,
          BlockQuote, Section, CodeBlock, RawBlock,
@@ -12,11 +12,11 @@ const isWhitespace = function(node : Inline) : boolean {
   return (tag === "space" || tag === "softbreak" || tag === "linebreak");
 }
 
-const beginsWithWhitespace = function(node : HasInlineChildren) : boolean {
+const beginsWithWhitespace = function(node : HasChildren<Inline>) : boolean {
   return (node.children[0] && isWhitespace(node.children[0]));
 }
 
-const endsWithWhitespace = function(node : HasInlineChildren) : boolean {
+const endsWithWhitespace = function(node : HasChildren<Inline>) : boolean {
   return (node.children[0] &&
           isWhitespace(node.children[node.children.length - 1]));
 }
@@ -211,7 +211,7 @@ class DjotRenderer {
     }
   }
 
-  needsBraces (node : HasInlineChildren) : boolean {
+  needsBraces (node : HasChildren<Inline>) : boolean {
     return ( beginsWithWhitespace(node) ||
              endsWithWhitespace(node) ||
              (this.buffer.length > 0 &&
@@ -226,9 +226,9 @@ class DjotRenderer {
   }
 
   inlineContainer (delim : string, needsBraces ?: boolean)
-      : ((node : HasInlineChildren) => void) {
+      : ((node : HasChildren<Inline>) => void) {
     let self = this;
-    return function(node : HasInlineChildren) : void {
+    return function(node : HasChildren<Inline>) : void {
       needsBraces = needsBraces || self.needsBraces(node);
       if (needsBraces) self.lit("{");
       self.lit(delim);
