@@ -2,7 +2,7 @@ import { Doc, AstNode, HasInlineChildren,
          HasAttributes, isBlock, Block, Para, Heading, Div, List,
          Table, Caption, Row, Cell, isCaption, isRow,
          BlockQuote, Section, CodeBlock, RawBlock,
-         Term, Definition, Footnote, Reference,
+         Term, Definition, Footnote, Reference, Symb,
          Link, Image, HasText, RawInline, FootnoteReference,
          isInline, Inline, Str, Math,
          Verbatim, getStringContent } from "./ast";
@@ -488,6 +488,9 @@ class DjotRenderer {
     insert: this.inlineContainer("+", true),
     footnote_reference: (node : FootnoteReference) => {
       this.lit("[^" + node.text + "]");
+    },
+    symbol: (node : Symb) => {
+      this.lit(":" + node.alias + ":");
     },
     link: (node : Link) => {
       this.lit("[");
