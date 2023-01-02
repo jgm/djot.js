@@ -23,6 +23,7 @@
   "bin": {
     "djot": "./cli.mjs"
   },
+  "man": ["./doc/djot.1"],
   "types": "./types/index.d.ts",
   "scripts": {
     "test": "jest",
