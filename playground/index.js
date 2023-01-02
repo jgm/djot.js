@@ -152,7 +152,6 @@ function parse_and_render() {
     if (filter) {
       try {
         let filterprog = `"use strict"; return ( function() { ${filter} } );`;
-        console.log(filterprog);
         let compiledFilter = Function(filterprog)();
         djot.applyFilter(ast, compiledFilter);
         document.getElementById("filter-error").innerText = "";
