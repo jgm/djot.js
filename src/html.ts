@@ -488,11 +488,9 @@ class HTMLRenderer {
   }
 }
 
-const renderHTML = function(ast: Doc, options ?: ParseOptions): string {
-  options = options || {};
+const renderHTML = function (ast: Doc, options: ParseOptions = {}): string {
   const renderer = new HTMLRenderer(options);
   return renderer.render(ast);
 }
 
 export { renderHTML }
-

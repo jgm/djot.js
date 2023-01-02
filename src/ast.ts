@@ -477,7 +477,7 @@ enum Context {
   Literal = 2    // gather str, softbreak, hardbreak in accumulatedText
 }
 
-const parse = function(input: string, options: ParseOptions): Doc {
+const parse = function(input: string, options: ParseOptions = {}): Doc {
 
   const linestarts: number[] = [-1];
 
