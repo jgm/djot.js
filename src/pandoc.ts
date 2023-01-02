@@ -273,7 +273,8 @@ class PandocRenderer {
         }
 
         elts.push({ t: "Table", c: [attrs,
-                                    [null, caption],
+                                    [null, [{t: "Plain",
+                                             c: caption}]],
                                     colspecs,
                                     [nullattr, theadrows],
                                     tbodies,
