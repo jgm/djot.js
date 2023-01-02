@@ -25,9 +25,9 @@ doc/djot.1: doc/djot.md
 	  --variable footer="djot $(VERSION)" \
 	  $< -s -o $@
 
-djot-schema.json:
+djot-schema.json: src/ast.ts
 	# npm install -g typescript-json-schema
-	typescript-json-schema src/ast.ts Doc > $@
+	typescript-json-schema --required --noExtraProps $< Doc -o $@
 
 clean:
 	rm -rf dist
