@@ -467,7 +467,7 @@ const getListStart = function(marker: string, style: string): number | undefined
 
 interface ParseOptions {
   sourcePositions?: boolean;
-  warn?: (message: string, pos: number) => void;
+  warn?: (message: string, pos?: number | null) => void;
 }
 
 // Parsing ocntext:
@@ -523,7 +523,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
   const footnotes: Record<string, Footnote> = {};
   const identifiers: Record<string, boolean> = {}; // identifiers used
   const blockAttributes: Attributes = {}; // accumulated block attributes
-  const defaultWarnings = function(message: string, pos: number) {
+  const defaultWarnings = function(message: string, pos?: number | null) {
     console.log(message + (pos ? " at " + pos : "") + "\n");
   }
   const warn = options.warn || defaultWarnings;

@@ -1,4 +1,4 @@
-import { AstNode } from "./ast";
+import { Doc, AstNode } from "./ast";
 
 // TODO convert code examples to js:
 /* Support filters that walk the AST and transform a
@@ -122,7 +122,7 @@ const traverse = function(node : AstNode, filterpart : FilterPart) : AstNode {
 }
 
 // Apply a filter to a document.
-const applyFilter = function(node : AstNode, filter : Filter) : void {
+const applyFilter = function(node : Doc, filter : Filter) : void {
   const f : FilterPart | FilterPart[] = filter();
   if (Array.isArray(f)) {
     for (let i=0; i<f.length; i++) {

@@ -4,12 +4,12 @@ import {
 }
   from "./ast";
 
-const defaultWarnings = function(message: string, pos: number) {
+const defaultWarnings = function(message: string, pos?: number | null) {
   console.log(message + (pos ? " at " + pos : "") + "\n");
 }
 
 class HTMLRenderer {
-  warn: (message: string, pos: number) => void;
+  warn: (message: string, pos?: number | null) => void;
   options : ParseOptions;
   buffer: string[];
   tight: boolean;

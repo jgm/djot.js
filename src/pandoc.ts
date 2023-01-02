@@ -44,7 +44,7 @@ const toPandocAttr = function(node : AstNode) : PandocAttr {
 
 class PandocRenderer {
   doc : Doc;
-  warn : (msg : string) => void;
+  warn : (msg : string, pos ?: number | null) => void;
   symbols : Record<string, string> =
     { nbsp: " ",
       ellipses: "⋯",
@@ -56,7 +56,7 @@ class PandocRenderer {
       right_double_quote: "”" };
 
 
-  constructor(doc : Doc, warn ?: (msg : string) => void) {
+  constructor(doc : Doc, warn ?: (msg : string, pos ?: number | null) => void) {
     this.doc = doc;
     this.warn = warn || (() => {});
   }
@@ -499,9 +499,9 @@ class PandocParser {
 
   footnotes : Record<string, Footnote> = {};
   footnoteIndex  = 0;
-  warn : (msg : string) => void;
+  warn : (msg : string, pos ?: number) => void;
 
-  constructor(warn ?: (msg : string) => void) {
+  constructor(warn ?: (msg : string, pos ?: number) => void) {
     this.warn = warn || (() => {});
   }
 

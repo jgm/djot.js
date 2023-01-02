@@ -103,7 +103,7 @@ class Container {
 }
 
 class EventParser {
-  warn: (message: string, pos: number) => void;
+  warn: (message: string, pos?: number | null) => void;
   subject: string;
   maxoffset: number;
   indent: number;
@@ -119,7 +119,8 @@ class EventParser {
   specs: BlockSpec[];
   paraSpec: BlockSpec;
 
-  constructor(subject: string, warn: (message: string, pos: number) => void) {
+  constructor(subject: string,
+              warn: (message: string, pos?: number | null) => void) {
     // Ensure the subject ends with a newline character
     if (subject.charAt(subject.length - 1) !== '\n') {
       subject = subject + "\n";

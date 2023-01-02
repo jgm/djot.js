@@ -550,7 +550,7 @@ const matchers = {
 };
 
 class InlineParser {
-  warn: (message: string, pos: number) => void;
+  warn: (message: string, pos?: number | null) => void;
   subject: string;
   matches: Event[];
   openers: OpenerMap; // map from opener type to Opener[] in reverse order
@@ -565,7 +565,8 @@ class InlineParser {
   attributeSlices: null | { startpos: number, endpos: number }[]; // slices we've tried to parse as atttributes
   matchers: { [codepoint: number]: (self: InlineParser, sp: number, ep: number) => null | number }; // functions to handle different code points
 
-  constructor(subject: string, warn: (message: string, pos: number) => void) {
+  constructor(subject: string,
+              warn: (message: string, pos?: number | null) => void) {
     this.warn = warn;
     this.subject = subject;
     this.matches = [];  // sparse array of matches indexed by startpos
