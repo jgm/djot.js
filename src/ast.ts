@@ -5,9 +5,15 @@ import { EventParser } from "./block";
 
 type Attributes = Record<string, string>;
 
-type SourceLoc = { line: number, col: number, offset: number }
+type SourceLoc = {
+  line: number,
+  col: number,
+  offset: number }
 
-type Pos = { start: SourceLoc, end: SourceLoc }
+type Pos = {
+  start: SourceLoc,
+  end: SourceLoc
+}
 
 interface HasAttributes {
   attributes?: Attributes;
@@ -22,7 +28,8 @@ interface HasText {
   text: string;
 }
 
-type Block = Para
+type Block =
+    Para
   | Heading
   | ThematicBreak
   | Section
@@ -31,7 +38,8 @@ type Block = Para
   | RawBlock
   | BlockQuote
   | List
-  | Table;
+  | Table
+  ;
 
 interface Para extends HasAttributes, HasChildren<Inline> {
   tag: "para";
@@ -86,7 +94,8 @@ interface Table extends HasAttributes {
   children: (Row | Caption)[];
 }
 
-type Inline = Str
+type Inline =
+    Str
   | SoftBreak
   | HardBreak
   | Nbsp
