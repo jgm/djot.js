@@ -222,11 +222,9 @@ class PandocRenderer {
                          right: "AlignRight",
                          center: "AlignCenter",
                          default: "AlignDefault" };
-        const toColSpec = function(cell : AstNode) {
-          if ("align" in cell) {
-            return [{t: alignMap[cell.align] || "AlignDefault"},
-                    {t: "ColWidthDefault"}];
-          }
+        const toColSpec = function(cell : Cell) {
+          return [{t: alignMap[cell.align] || "AlignDefault"},
+                  {t: "ColWidthDefault"}];
         }
         const self = this;
         const toPandocCell = function(cell : AstNode) {
