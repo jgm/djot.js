@@ -3,7 +3,8 @@
 import fs from "fs";
 import { performance } from "perf_hooks";
 import { EventParser } from "./block";
-import { parse, renderAST, Doc } from "./ast";
+import { parse, renderAST } from "./parse";
+import { Doc } from "./ast";
 import { renderHTML } from "./html";
 import { applyFilter } from "./filter";
 import { PandocRenderer, PandocParser } from "./pandoc";

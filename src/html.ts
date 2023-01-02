@@ -1,8 +1,6 @@
-import {
-  Doc, Reference, Footnote, Link, HasChildren, HasAttributes,
-  AstNode, ParseOptions, getStringContent
-}
-  from "./ast";
+import { Doc, Reference, Footnote, Link, HasChildren,
+         HasAttributes, AstNode } from "./ast";
+import { getStringContent, ParseOptions } from "./parse";
 
 const defaultWarnings = function(message: string, pos?: number | null) {
   console.log(message + (pos ? " at " + pos : "") + "\n");

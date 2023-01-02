@@ -19,6 +19,7 @@
     "src/block.ts",
     "src/event.ts",
     "src/ast.ts",
+    "src/parse.ts",
     "src/html.ts",
     "src/filter.ts",
     "src/pandoc.ts",

@@ -1,11 +1,12 @@
 import { Doc, AstNode, HasChildren,
-         HasAttributes, isBlock, Block, Para, Heading, Div, List,
-         Table, Caption, Row, isCaption, isRow,
+         HasAttributes, Block, Para, Heading, Div, List,
+         Table, Caption, Row,
          BlockQuote, Section, CodeBlock, RawBlock,
          Term, Definition, Footnote, Reference, Symb,
          Link, Image, HasText, RawInline, FootnoteReference,
-         isInline, Inline, Str, Math,
-         Verbatim, getStringContent } from "./ast";
+         Inline, Str, Math, Verbatim,
+         isInline,  isBlock, isCaption, isRow } from "./ast";
+import { getStringContent } from "./parse";
 
 const isWhitespace = function(node : Inline) : boolean {
   const tag : string = node.tag;

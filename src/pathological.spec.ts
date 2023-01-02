@@ -1,4 +1,4 @@
-import { parse } from "./ast";
+import { parse } from "./parse";
 
 const ignoreWarnings = () => { /* do nothing */ };
 

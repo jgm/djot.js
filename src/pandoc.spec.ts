@@ -1,4 +1,4 @@
-import { parse, Doc } from "./ast";
+import { parse } from "./parse";
 import { PandocRenderer, PandocParser } from "./pandoc";
 
 describe("PandocParser", () => {
