@@ -1,18 +1,22 @@
 import { Doc, Reference, Footnote, Link, HasChildren,
-         HasAttributes, AstNode } from "./ast";
+         HasAttributes, AstNode, Visitor } from "./ast";
 import { getStringContent, ParseOptions } from "./parse";
 import { Options, Warning } from "./options";
 
+interface HTMLOptions extends ParseOptions {
+  overrides?: Visitor<HTMLRenderer, string>;
+}
+
 class HTMLRenderer {
   warn: (warning : Warning) => void;
-  options: ParseOptions;
+  options: HTMLOptions;
   tight: boolean;
   footnoteIndex: Record<string, number>;
   nextFootnoteIndex: number;
   references: Record<string, Reference>;
   footnotes: Record<string, Footnote>;
 
-  constructor(options : ParseOptions) {
+  constructor(options : HTMLOptions) {
     this.warn = options.warn || (() => {});
     this.options = options || {};
     this.tight = false;
@@ -139,6 +143,14 @@ class HTMLRenderer {
   }
 
   renderAstNode(node: AstNode): string {
+    const override = this.options.overrides?.[node.tag];
+    if (override) {
+      return (override as (node: AstNode, context: HTMLRenderer) => string)(node, this);
+    }
+    return this.renderAstNodeDefault(node);
+  }
+
+  renderAstNodeDefault(node: AstNode): string {
     let result = ""
     let extraAttr: Record<string, string> = {};
     switch (node.tag) {
@@ -439,9 +451,9 @@ class HTMLRenderer {
   }
 }
 
-const renderHTML = function (ast: Doc, options: ParseOptions = {}): string {
+const renderHTML = function(ast: Doc, options: HTMLOptions = {}): string {
   const renderer = new HTMLRenderer(options);
   return renderer.render(ast);
 }
 
-export { renderHTML }
+export { renderHTML, HTMLRenderer }
