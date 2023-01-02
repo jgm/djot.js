@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 
-import { EventParser } from "./lib/block.js";
-import { parse, renderAST } from "./lib/ast.js";
-import { renderHTML } from "./lib/html.js";
-import { applyFilter } from "./lib/filter.js";
-import { PandocRenderer, PandocParser } from "./lib/pandoc.js";
-import { DjotRenderer } from "./lib/djot-renderer.js";
 import fs from "fs";
 import { performance } from "perf_hooks";
+import { EventParser } from "./block";
+import { parse, renderAST, Doc } from "./ast";
+import { renderHTML } from "./html";
+import { applyFilter } from "./filter";
+import { PandocRenderer, PandocParser } from "./pandoc";
+import { DjotRenderer } from "./djot-renderer";
 
-const warn = function(msg, pos) {
+const warn = function(msg : string, pos ?: number | null) : void {
   process.stderr.write(msg + (pos ? " at " + pos : "") + "\n");
 }
 
@@ -40,6 +40,7 @@ let files = [];
 
 let args = process.argv;
 let i = 2;
+
 while (args[i]) {
   let arg = args[i];
   switch (arg) {
@@ -78,7 +79,6 @@ while (args[i]) {
       } catch(err) {
         process.stderr.write("Error loading filter " + fp + ":\n");
         throw(err);
-        process.exit(1);
       }
       break;
     }
@@ -103,7 +103,7 @@ while (args[i]) {
       break;
     case "--quiet":
     case "-q":
-      options.warn = (msg, pos) => {};
+      options.warn = () => {};
       break;
     case "--help":
     case "-h":
@@ -157,7 +157,7 @@ try {
     console.log("]");
   } else {
     let startTime = performance.now();
-    let ast;
+    let ast : Doc | null = null;
     if (from === "djot") {
       ast = parse(input, options);
     } else if (from === "pandoc") {
@@ -168,9 +168,18 @@ try {
     let endTime = performance.now();
     let parseTime = (endTime - startTime).toFixed(1);
 
+    if (!ast) {
+      throw(new Error("No AST was produced."));
+    }
+
     startTime = performance.now();
     filters.forEach(filter => {
-      applyFilter(ast, filter);
+      if (ast) {
+        applyFilter(ast, filter);
+        if (!ast) {
+          throw(new Error("Filter destroyed AST."));
+        }
+      }
     });
     endTime = performance.now();
     let filterTime = (endTime - startTime).toFixed(1);
@@ -191,8 +200,9 @@ try {
         process.stdout.write(renderAST(ast));
         break;
       case "pandoc":
-        process.stdout.write(JSON.stringify(new PandocRenderer(ast, warn).toPandoc(),
-                null, compact ? 0 : 2));
+        process.stdout.write(
+          JSON.stringify(new PandocRenderer(ast, warn).toPandoc(),
+            null, compact ? 0 : 2));
         process.stdout.write("\n");
         break;
       default:
@@ -203,14 +213,16 @@ try {
     if (timing) {
       process.stderr.write(`Timings: parse ${parseTime} ms, filter ${filterTime} ms, render ${renderTime} ms\n`);
     }
+
   }
-} catch(err) {
-    process.stderr.write(err.toString() + "\n");
+} catch(err : any) {
+    process.stderr.write("Error: " + err.toString() + "\n");
     if (err.stack) {
       process.stderr.write(err.stack);
     }
-    process.exitcode = 1;
+    process.exit(1);
 }
 
-
-process.exitcode = 0;
+// We set exitCode rather than using exit(0), because the latter
+// can cut short the output stream.
+process.exitCode = 0;

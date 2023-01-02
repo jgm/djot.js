@@ -1,2 +1,2 @@
 #!/bin/sh -e
-node cli.mjs "$@"
+node ./lib/cli.js "$@"

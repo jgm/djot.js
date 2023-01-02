@@ -21,7 +21,7 @@
     }
   },
   "bin": {
-    "djot": "./cli.mjs"
+    "djot": "./lib/cli.js"
   },
   "man": ["./doc/djot.1"],
   "types": "./types/index.d.ts",
