@@ -3,7 +3,7 @@ import { PandocRenderer, PandocParser } from "./pandoc";
 
 describe("PandocParser", () => {
   it("parses some things", () => {
-    let json =
+    const json =
       {
         "pandoc-api-version": [
           1,
@@ -406,7 +406,7 @@ describe("PandocParser", () => {
           }
         ]
       };
-    let ast = new PandocParser().fromPandoc(json);
+    const ast = new PandocParser().fromPandoc(json);
     expect(ast).toStrictEqual(
       {
         "tag": "doc",
@@ -643,7 +643,7 @@ describe("PandocParser", () => {
 });
 describe("PandocRenderer", () => {
   it("renders some things", () => {
-    let inp = `*hello* [a link](url){.foo}
+    const inp = `*hello* [a link](url){.foo}
 
 ## heading
 
@@ -662,7 +662,7 @@ describe("PandocRenderer", () => {
 
   list
 `;
-    let ast = parse(inp, {});
+    const ast = parse(inp, {});
     expect(new PandocRenderer(ast, () => {}).toPandoc()).toStrictEqual(
       {
         "pandoc-api-version": [

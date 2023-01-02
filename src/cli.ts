@@ -14,16 +14,16 @@ const warn = function(msg : string, pos ?: number | null) : void {
 }
 
 let timing = false;
-let options = {sourcePositions: false, warn: warn};
+const options = {sourcePositions: false, warn: warn};
 let to = 'html';
 let from = 'djot';
 let compact = false;
 let width = 72;
-let toFormats = ["html","ast","astpretty","events","djot","pandoc"];
-let fromFormats = ["djot","ast","pandoc"];
-let filters = [];
+const toFormats = ["html","ast","astpretty","events","djot","pandoc"];
+const fromFormats = ["djot","ast","pandoc"];
+const filters = [];
 
-let usage = `djot [OPTIONS] FILE*
+const usage = `djot [OPTIONS] FILE*
 Options:
   --to,-t FORMAT       Format to convert to
                        (${toFormats.join("|")})
@@ -38,11 +38,11 @@ Options:
 `;
 let files = [];
 
-let args = process.argv;
+const args = process.argv;
 let i = 2;
 
 while (args[i]) {
-  let arg = args[i];
+  const arg = args[i];
   switch (arg) {
     case "--to":
     case "-t":
@@ -66,15 +66,15 @@ while (args[i]) {
       break;
     case "--filter": {
       i++;
-      let fp = args[i];
+      const fp = args[i];
       if (typeof(fp) !== "string") {
         process.stderr.write("--filter expects a FILE argument\n");
         process.exit(1);
       }
-      let filter = fs.readFileSync(fp, "utf8");
-      let filterprog = `"use strict"; return ( function() { ${filter} } );`;
+      const filter = fs.readFileSync(fp, "utf8");
+      const filterprog = `"use strict"; return ( function() { ${filter} } );`;
       try {
-        let compiledFilter = Function(filterprog)();
+        const compiledFilter = Function(filterprog)();
         filters.push(compiledFilter);
       } catch(err) {
         process.stderr.write("Error loading filter " + fp + ":\n");
@@ -166,7 +166,7 @@ try {
       ast = JSON.parse(input);
     }
     let endTime = performance.now();
-    let parseTime = (endTime - startTime).toFixed(1);
+    const parseTime = (endTime - startTime).toFixed(1);
 
     if (!ast) {
       throw(new Error("No AST was produced."));
@@ -182,7 +182,7 @@ try {
       }
     });
     endTime = performance.now();
-    let filterTime = (endTime - startTime).toFixed(1);
+    const filterTime = (endTime - startTime).toFixed(1);
 
     startTime = performance.now();
     switch (to) {
@@ -208,7 +208,7 @@ try {
       default:
     }
     endTime = performance.now();
-    let renderTime = (endTime - startTime).toFixed(1);
+    const renderTime = (endTime - startTime).toFixed(1);
 
     if (timing) {
       process.stderr.write(`Timings: parse ${parseTime} ms, filter ${filterTime} ms, render ${renderTime} ms\n`);
