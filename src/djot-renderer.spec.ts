@@ -1,7 +1,7 @@
 import { Doc, Block } from "./ast";
 import { DjotRenderer } from "./djot-renderer";
 
-const cicero : string = "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis."
+const cicero  = "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis."
 
 const mkdoc = function(children : Block[]) : Doc {
   return {tag: "doc",
@@ -11,7 +11,7 @@ const mkdoc = function(children : Block[]) : Doc {
 }
 
 describe("DjotRenderer", () => {
-  let cicero1 : Doc = mkdoc([
+  const cicero1 : Doc = mkdoc([
       { tag: "para",
         children: [ { tag: "str", text: cicero } ] }]);
 
@@ -27,7 +27,7 @@ ab illo inventore veritatis.
     );
   });
 
-  let cicero2 : Doc = mkdoc([
+  const cicero2 : Doc = mkdoc([
       { tag: "para",
         children: [ { tag: "str", text: "Quoth Cicero:" } ] },
       { tag: "blockquote",
@@ -60,7 +60,7 @@ Thus Cicero.
   });
 
   it("handles block quotes properly", () => {
-    let cicero3 : Doc = mkdoc([
+    const cicero3 : Doc = mkdoc([
         { tag: "para",
           children: [ { tag: "str", text: "Test." }] },
         { tag: "heading", level: 3,

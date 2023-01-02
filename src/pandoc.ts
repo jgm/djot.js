@@ -27,11 +27,11 @@ const paraToPlain = function(elt : PandocElt) : PandocElt {
 
 const toPandocAttr = function(node : AstNode) : PandocAttr {
   if ("attributes" in node && node.attributes) {
-    let id = node.attributes.id || "";
-    let classes =
+    const id = node.attributes.id || "";
+    const classes =
          (node.attributes.class && node.attributes.class.split(" ")) || [];
-    let kvs = [];
-    for (let k in node.attributes) {
+    const kvs = [];
+    for (const k in node.attributes) {
       if (k !== id && k !== "class") {
        kvs.push([k, node.attributes[k]]);
       }
@@ -63,7 +63,7 @@ class PandocRenderer {
 
   toPandocChildren (node : AstNode) : PandocElt[] {
     if ("children" in node) {
-        let children : PandocElt[] = [];
+        const children : PandocElt[] = [];
         node.children.forEach((child : AstNode) => {
           this.addToPandocElts(children, child);
         });
@@ -74,14 +74,14 @@ class PandocRenderer {
   }
 
   toPandocDefinitionListItem (list : AstNode) : ((item : AstNode) => any[]) {
-    let self = this;
+    const self = this;
     return function(item : AstNode) : any[] {
       if (!("children" in item)) {
         return [];
       }
-      let [x, y] = item.children;
+      const [x, y] = item.children;
       let term : Term = { tag: "term", children: [] };
-      let definition : Definition = { tag: "definition", children: [] };;
+      let definition : Definition = { tag: "definition", children: [] };
       if (x.tag === "term") {
         term = x;
         if (y.tag === "definition") {
@@ -90,7 +90,7 @@ class PandocRenderer {
       } else if (x.tag === "definition") {
         definition = x;
       }
-      let result = [];
+      const result = [];
       if (term) {
         result.push(self.toPandocChildren(term));
       }
@@ -103,7 +103,7 @@ class PandocRenderer {
 
   toPandocListItem (list : AstNode) :
           ((item : AstNode) => PandocElt[]) {
-      let self = this;
+      const self = this;
     return function(item : AstNode) : PandocElt[] {
       let elts = self.toPandocChildren(item);
       if ("checkbox" in item && item.checkbox && elts[0].t === "Para") {
@@ -124,7 +124,7 @@ class PandocRenderer {
     switch (node.tag) {
       case "section":
       case "div": {
-        let attrs = toPandocAttr(node);
+        const attrs = toPandocAttr(node);
         if (node.tag === "section") {
           attrs[1].unshift("section");
         }
@@ -171,7 +171,7 @@ class PandocRenderer {
           } else {
             delim = "Period";
           }
-          let start : number = node.start || 1;
+          const start : number = node.start || 1;
           elts.push({ t: "OrderedList", c: [[start, {t: style}, {t: delim}],
                                             items] } );
         }
@@ -191,7 +191,7 @@ class PandocRenderer {
         break;
 
       case "code_block": {
-        let attrs = toPandocAttr(node);
+        const attrs = toPandocAttr(node);
         if (node.lang) {
           attrs[1].unshift(node.lang);
         }
@@ -208,28 +208,28 @@ class PandocRenderer {
         break;
 
       case "table": {
-        let attrs = toPandocAttr(node);
-        let nullattr = ["",[],[]];
+        const attrs = toPandocAttr(node);
+        const nullattr = ["",[],[]];
         let caption : PandocElt[] = [];
         let colspecs : any = [];
         let theadrows : any = [];
-        let tbodies : any = [];
-        let tfoot = [nullattr, []];
+        const tbodies : any = [];
+        const tfoot = [nullattr, []];
         let curheads : any = [];
         let currows : any = [];
-        let alignMap : Record<string, string> =
+        const alignMap : Record<string, string> =
                        { left: "AlignLeft",
                          right: "AlignRight",
                          center: "AlignCenter",
                          default: "AlignDefault" };
-        let toColSpec = function(cell : AstNode) {
+        const toColSpec = function(cell : AstNode) {
           if ("align" in cell) {
             return [{t: alignMap[cell.align] || "AlignDefault"},
                     {t: "ColWidthDefault"}];
           }
         }
-        let self = this;
-        let toPandocCell = function(cell : AstNode) {
+        const self = this;
+        const toPandocCell = function(cell : AstNode) {
           if ("children" in cell) {
             return [ toPandocAttr(cell),
                      {t: ("align" in cell && alignMap[cell.align]) ||
@@ -239,13 +239,13 @@ class PandocRenderer {
                      [{t: "Plain", c: self.toPandocChildren(cell)}] ]
           }
         }
-        let toPandocRow = function(row : AstNode) {
+        const toPandocRow = function(row : AstNode) {
           if ("children" in row) {
             return [toPandocAttr(row), row.children.map(toPandocCell)];
           }
         }
         for (let i=0; i<node.children.length; i++) {
-          let row = node.children[i];
+          const row = node.children[i];
           if (!("children" in row)) {
             break;
           }
@@ -334,7 +334,7 @@ class PandocRenderer {
 
       case "single_quoted":
       case "double_quoted": {
-        let quoteType = {t: node.tag === "single_quoted" ? "SingleQuote"
+        const quoteType = {t: node.tag === "single_quoted" ? "SingleQuote"
                                                         : "DoubleQuote"};
         elts.push({ t: "Quoted", c: [quoteType, this.toPandocChildren(node)]});
         break;
@@ -346,7 +346,7 @@ class PandocRenderer {
         if (node.tag === "email") {
           url = "mailto:" + url;
         }
-        let attr = toPandocAttr(node);
+        const attr = toPandocAttr(node);
         attr[1].unshift(node.tag === "email" ? "email" : "uri");
         elts.push({ t: "Link",
                      c: [attr,
@@ -359,13 +359,13 @@ class PandocRenderer {
       case "image":
       case "link": {
         let destination = node.destination || "";
-        let linkAttrs : Record<string,any> = {};
+        const linkAttrs : Record<string,any> = {};
         if (node.reference) {
-          let ref = this.doc.references[node.reference];
+          const ref = this.doc.references[node.reference];
           if (ref) {
             destination = ref.destination || "";
             if (ref.attributes) {
-              for (let k in ref.attributes) {
+              for (const k in ref.attributes) {
                 linkAttrs[k] = ref.attributes[k];
               }
             }
@@ -374,7 +374,7 @@ class PandocRenderer {
           }
         }
         if (node.attributes) {
-          for (let k in node.attributes) {
+          for (const k in node.attributes) {
             if (linkAttrs[k] && k === "class") {
               linkAttrs[k] += " " + node.attributes[k];
             } else if (!linkAttrs[k]) {
@@ -382,10 +382,10 @@ class PandocRenderer {
             }
           }
         }
-       let attrs = toPandocAttr({tag: "link", attributes: linkAttrs,
+       const attrs = toPandocAttr({tag: "link", attributes: linkAttrs,
                                       children: []});
-        let url = destination || "";
-        let title = (node.attributes && node.attributes.title) || "";
+        const url = destination || "";
+        const title = (node.attributes && node.attributes.title) || "";
         if (title) {
           attrs[2] = attrs[2].filter(([k,v]) => k !== "title");
         }
@@ -428,7 +428,7 @@ class PandocRenderer {
         break;
 
       case "footnote_reference": {
-        let note = this.doc.footnotes[node.text];
+        const note = this.doc.footnotes[node.text];
         if (note) {
           elts.push({ t: "Note", c: this.toPandocChildren(note) });
         } else {
@@ -450,7 +450,7 @@ class PandocRenderer {
 }
 
 const fromPandocAttr = function(pattr : any[]) : Attributes | null {
-  let attr : Attributes = {};
+  const attr : Attributes = {};
   if (pattr[0]) {
     attr.id = pattr[0];
   }
@@ -475,7 +475,7 @@ const hasCheckbox = function(elt : PandocElt[]) : CheckboxStatus | null {
   if (!elt[0]) {
     return null;
   }
-  let x = elt[0];
+  const x = elt[0];
   if (!isPlainOrPara(x)) {
     return null;
   }
@@ -499,7 +499,7 @@ const hasCheckbox = function(elt : PandocElt[]) : CheckboxStatus | null {
 class PandocParser {
 
   footnotes : Record<string, Footnote> = {};
-  footnoteIndex : number = 0;
+  footnoteIndex  = 0;
   warn : (msg : string) => void;
 
   constructor(warn ?: (msg : string) => void) {
@@ -508,9 +508,9 @@ class PandocParser {
 
   fromPandocInlines (elts : PandocElt[]) : Inline[] {
     let accum : string[] = [];
-    let inlines : Inline[] = [];
+    const inlines : Inline[] = [];
     for (let i=0; i < elts.length; i++) {
-      let elt = elts[i];
+      const elt = elts[i];
       if (elt.t === "Str") {
         accum.push(elt.c);
       } else if (elt.t === "Space") {
@@ -550,10 +550,10 @@ class PandocParser {
             break;
 
           case "Span": {
-            let span : Span =
+            const span : Span =
                        {tag: "span",
                         children: this.fromPandocInlines(elt.c[1])};
-            let attr = fromPandocAttr(elt.c[0]);
+            const attr = fromPandocAttr(elt.c[0]);
             if (attr) {
               span.attributes = attr;
             }
@@ -593,8 +593,8 @@ class PandocParser {
             break;
 
           case "Code": {
-            let attr = fromPandocAttr(elt.c[0]);
-            let code : Verbatim =
+            const attr = fromPandocAttr(elt.c[0]);
+            const code : Verbatim =
                         ({tag: "verbatim",
                           text: elt.c[1]});
             if (attr) {
@@ -611,10 +611,10 @@ class PandocParser {
               attr = attr || {};
               attr.title = elt.c[2][1];
             }
-            let dest = elt.c[2][0];
-            let children = this.fromPandocInlines(elt.c[1]);
+            const dest = elt.c[2][0];
+            const children = this.fromPandocInlines(elt.c[1]);
             if (elt.t === "Image") {
-              let img : Image =
+              const img : Image =
                     {tag: "image",
                      destination: dest,
                      children: children };
@@ -623,7 +623,7 @@ class PandocParser {
               }
               inlines.push(img);
             } else {
-              let link : Link =
+              const link : Link =
                     {tag: "link",
                      destination: dest,
                      children: children };
@@ -644,8 +644,8 @@ class PandocParser {
 
           case "Note": {
             this.footnoteIndex++;
-            let label = this.footnoteIndex.toString();
-            let note = elt.c.map((b : PandocElt) => {
+            const label = this.footnoteIndex.toString();
+            const note = elt.c.map((b : PandocElt) => {
               return this.fromPandocBlock(b);
             });
             this.footnotes[this.footnoteIndex.toString()] =
@@ -679,9 +679,9 @@ class PandocParser {
 
       case "Div": {
         let attr = fromPandocAttr(block.c[0]);
-        let tag = /\bsection\b/.test((attr && attr.class) || "")
+        const tag = /\bsection\b/.test((attr && attr.class) || "")
                     ? "section" : "div";
-        let blocks = block.c[1].map((b : PandocElt) => {
+        const blocks = block.c[1].map((b : PandocElt) => {
                       return this.fromPandocBlock(b);
                     });
         if (tag === "section") {
@@ -692,7 +692,7 @@ class PandocParser {
           }
           return {tag: "section", attributes: attr, children: blocks};
         } else {
-          let div : Div = {tag: "div", children: blocks};
+          const div : Div = {tag: "div", children: blocks};
           if (attr) {
             div.attributes = attr;
           }
@@ -701,8 +701,8 @@ class PandocParser {
       }
 
       case "Header": {
-        let attr = fromPandocAttr(block.c[1]);
-        let heading : Heading =
+        const attr = fromPandocAttr(block.c[1]);
+        const heading : Heading =
                {tag: "heading",
                 level: block.c[0],
                 children: this.fromPandocInlines(block.c[2])};
@@ -719,10 +719,10 @@ class PandocParser {
         return {tag: "raw_block", format: block.c[0], text: block.c[1]};
 
       case "CodeBlock": {
-        let attr = fromPandocAttr(block.c[0]);
+        const attr = fromPandocAttr(block.c[0]);
         let lang;
         if (attr && attr.class) {
-          let classes = attr.class.split(/  */);
+          const classes = attr.class.split(/  */);
           lang = classes[0];
           classes.shift();
           if (classes.length > 0) {
@@ -731,7 +731,7 @@ class PandocParser {
             delete attr.class;
           }
         }
-        let res : CodeBlock =
+        const res : CodeBlock =
                   {tag: "code_block",
                   lang: lang,
                   text: block.c[1]};
@@ -745,13 +745,13 @@ class PandocParser {
       }
 
       case "DefinitionList": {
-        let items : DefinitionListItem[] = [];
-        let tight = false;
+        const items : DefinitionListItem[] = [];
+        const tight = false;
         for (let i=0; i<block.c.length; i++) {
-          let rawterm = block.c[i][0];
-          let rawdefs = block.c[i][1];
-          let term : Inline[] = this.fromPandocInlines(rawterm);
-          let def : Block[] = [];
+          const rawterm = block.c[i][0];
+          const rawdefs = block.c[i][1];
+          const term : Inline[] = this.fromPandocInlines(rawterm);
+          const def : Block[] = [];
           for (let j=0; j<rawdefs.length; j++) {
             rawdefs[j].map((b : PandocElt) => {
               def.push(this.fromPandocBlock(b));
@@ -767,7 +767,7 @@ class PandocParser {
 
       case "OrderedList":
       case "BulletList": {
-        let items : ListItem[] = [];
+        const items : ListItem[] = [];
         let tight = false;
         let rawitems;
         if (block.t === "BulletList") {
@@ -776,8 +776,8 @@ class PandocParser {
           rawitems = block.c[1];
         }
         for (let i=0; i<rawitems.length; i++) {
-          let checkbox = hasCheckbox(rawitems[i]);
-          let listItem : ListItem =
+          const checkbox = hasCheckbox(rawitems[i]);
+          const listItem : ListItem =
                   {tag: "list_item",
                    children: rawitems[i].map((b : PandocElt) => {
                                    if (b.t === "Plain") {
@@ -795,7 +795,7 @@ class PandocParser {
         if (block.t === "BulletList") {
           return {tag: "list", style: "-", tight: tight, children: items};
         } else if (block.t === "OrderedList") {
-          let start = block.c[0][0];
+          const start = block.c[0][0];
           let style : string;
           switch (block.c[0][1].t) {
             case "Decimal": style = "1"; break;
@@ -816,8 +816,8 @@ class PandocParser {
       }
 
       case "Table": {
-        let attr = fromPandocAttr(block.c[0]);
-        let rawcaption = block.c[1][1];
+        const attr = fromPandocAttr(block.c[0]);
+        const rawcaption = block.c[1][1];
         let caption : Inline[] = [];
         if (rawcaption.length > 1 ||
             (rawcaption.length === 1 && !isPlainOrPara(rawcaption[0]))) {
@@ -826,43 +826,43 @@ class PandocParser {
           caption = this.fromPandocInlines(rawcaption[0].c);
         }
 
-        let rawcolspecs = block.c[2];
-        let aligns : Alignment[] = [];
-        for (let i in rawcolspecs) {
+        const rawcolspecs = block.c[2];
+        const aligns : Alignment[] = [];
+        for (const i in rawcolspecs) {
           aligns.push(rawcolspecs[i][0].t.slice(5).toLowerCase());
         }
 
-        let rows : Row[] = [];
-        let rawtheadrows = block.c[3][1];
-        for (let i in rawtheadrows) {
+        const rows : Row[] = [];
+        const rawtheadrows = block.c[3][1];
+        for (const i in rawtheadrows) {
           rows.push(this.fromPandocRow(rawtheadrows[i], true, 0, aligns));
         }
 
-        let tbodies = block.c[4];
-        for (let i in tbodies) {
-          let rowheadcolumns : number = tbodies[i][1];
-          let rawsubheadrows = tbodies[i][2];
-          for (let i in rawsubheadrows) {
+        const tbodies = block.c[4];
+        for (const i in tbodies) {
+          const rowheadcolumns : number = tbodies[i][1];
+          const rawsubheadrows = tbodies[i][2];
+          for (const i in rawsubheadrows) {
             rows.push(this.fromPandocRow(rawsubheadrows[i], true,
                                           rowheadcolumns, aligns));
           }
-          let rawbodyrows = tbodies[i][3];
-          for (let i in rawbodyrows) {
+          const rawbodyrows = tbodies[i][3];
+          for (const i in rawbodyrows) {
             rows.push(this.fromPandocRow(rawbodyrows[i], false,
                                           rowheadcolumns, aligns));
           }
         }
 
-        let rawfootrows = block.c[5][1];
-        for (let i in rawfootrows) {
+        const rawfootrows = block.c[5][1];
+        for (const i in rawfootrows) {
           rows.push(this.fromPandocRow(rawfootrows[i], false, 0, aligns));
         }
 
-        let children : (Row | Caption)[] = rows;
+        const children : (Row | Caption)[] = rows;
         if (caption.length > 0) {
           children.unshift({tag: "caption", children: caption});
         }
-        let table : Table = {tag: "table", children: children};
+        const table : Table = {tag: "table", children: children};
         if (attr) {
           table.attributes = attr;
         }
@@ -870,7 +870,7 @@ class PandocParser {
       }
 
       case "LineBlock": {
-        let ils : Inline[] = [];
+        const ils : Inline[] = [];
         for (let i=0; i<block.c.length; i++) {
           if (i > 0) {
             ils.push({tag: "hardbreak"});
@@ -891,14 +891,14 @@ class PandocParser {
 
   fromPandocRow(rawrow : any, head : boolean,
                  rowheadcols : number, aligns : Alignment[]) : Row {
-    let attr = fromPandocAttr(rawrow[0]);
-    let rawcells = rawrow[1];
-    let cells : Cell[] = [];
+    const attr = fromPandocAttr(rawrow[0]);
+    const rawcells = rawrow[1];
+    const cells : Cell[] = [];
     for (let i=0; i < rawcells.length; i++) {
       cells.push(this.fromPandocCell(rawcells[i],
                           head || i < rowheadcols, aligns[i]));
     }
-    let row : Row = {tag: "row", head: head, children: cells};
+    const row : Row = {tag: "row", head: head, children: cells};
     if (attr) {
       row.attributes = attr;
     }
@@ -907,12 +907,12 @@ class PandocParser {
 
   fromPandocCell(rawcell : any, head : boolean, defaultAlign : Alignment) : Cell {
     let cs : Inline[] = [];
-    let attr = fromPandocAttr(rawcell[0]);
+    const attr = fromPandocAttr(rawcell[0]);
     let align = rawcell[1].t.slice(5).toLowerCase();
     if (align === "default") {
       align = defaultAlign;
     }
-    let rawblocks = rawcell[4];
+    const rawblocks = rawcell[4];
     if (rawblocks.length > 1 || (rawblocks.length === 1 &&
           !isPlainOrPara(rawblocks[0]))) {
       this.warn("Skipping table cell with block-level content.");
@@ -920,7 +920,7 @@ class PandocParser {
     } else if (rawblocks[0]) {
       cs = this.fromPandocInlines(rawblocks[0].c);
     }
-    let cell : Cell = {tag: "cell", head: head, align: align, children: cs};
+    const cell : Cell = {tag: "cell", head: head, align: align, children: cs};
     if (attr) {
       cell.attributes = attr;
     }
@@ -931,8 +931,8 @@ class PandocParser {
     if (!pandoc) {
       return null;
     }
-    let blocks = pandoc.blocks;
-    let docblocks : Block[] = blocks.map((b : PandocElt) => {
+    const blocks = pandoc.blocks;
+    const docblocks : Block[] = blocks.map((b : PandocElt) => {
       return this.fromPandocBlock(b)
     });
 
@@ -943,7 +943,7 @@ class PandocParser {
   }
 
   parseJSON (json : string) : Doc | null {
-    let pandoc = JSON.parse(json);
+    const pandoc = JSON.parse(json);
     return this.fromPandoc(pandoc);
   }
 }

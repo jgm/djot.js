@@ -1,6 +1,6 @@
 import { Doc, AstNode, HasChildren,
          HasAttributes, isBlock, Block, Para, Heading, Div, List,
-         Table, Caption, Row, Cell, isCaption, isRow,
+         Table, Caption, Row, isCaption, isRow,
          BlockQuote, Section, CodeBlock, RawBlock,
          Term, Definition, Footnote, Reference, Symb,
          Link, Image, HasText, RawInline, FootnoteReference,
@@ -8,7 +8,7 @@ import { Doc, AstNode, HasChildren,
          Verbatim, getStringContent } from "./ast";
 
 const isWhitespace = function(node : Inline) : boolean {
-  let tag : string = node.tag;
+  const tag : string = node.tag;
   return (tag === "space" || tag === "softbreak" || tag === "linebreak");
 }
 
@@ -22,10 +22,10 @@ const endsWithWhitespace = function(node : HasChildren<Inline>) : boolean {
 }
 
 const verbatimDelim = function(node : HasText, minticks : number) : string {
-  let backtickGroups = node.text.match(/(`+)/g);
-  let backtickGroupLens : Record<number,boolean> = {};
+  const backtickGroups = node.text.match(/(`+)/g);
+  const backtickGroupLens : Record<number,boolean> = {};
   if (backtickGroups) {
-    for (let i in backtickGroups) {
+    for (const i in backtickGroups) {
       backtickGroupLens[backtickGroups[i].length] = true;
     }
   }
@@ -40,7 +40,7 @@ const toRoman = function(x : number) : string {
   if (x < 0 || x >= 4000) {
     return "?";
   }
-  let rom : string = "";
+  let rom  = "";
   while (x > 0) {
     if (x >= 1000) { rom += "M"; x -= 1000 }
     else if (x >= 900) { rom += "CM"; x-= 900 }
@@ -61,8 +61,8 @@ const toRoman = function(x : number) : string {
 }
 
 const formatNumber = function(num : number, style : string) : string {
-  let delimPattern = style.replace(/[a-zA-Z0-9]+/g,"$");
-  let numFormat = style.replace(/[.()]/g, "");
+  const delimPattern = style.replace(/[a-zA-Z0-9]+/g,"$");
+  const numFormat = style.replace(/[.()]/g, "");
   let numStr : string;
   switch (numFormat) {
     case "1":
@@ -95,10 +95,10 @@ class DjotRenderer {
   //             >0 means wrap to width, with softbreaks as spaces
   prefixes : string[] = [];
   buffer : string[] = [];
-  startOfLine : boolean = true;
-  endOfPrefix : number = 0;
-  column : number = 0;
-  needsBlankLine : boolean = false;
+  startOfLine  = true;
+  endOfPrefix  = 0;
+  column  = 0;
+  needsBlankLine  = false;
 
   constructor(doc : Doc, wrapWidth ?: number) {
     this.doc = doc;
@@ -183,7 +183,7 @@ class DjotRenderer {
     }
 
     if (idx < this.buffer.length - 1) {
-      let excessOnLine : string[] = this.buffer.splice(idx + 1);
+      const excessOnLine : string[] = this.buffer.splice(idx + 1);
       if (this.buffer[this.buffer.length - 1] === " ") {
         this.buffer.pop();  // pop space at end of line
       }
@@ -219,7 +219,7 @@ class DjotRenderer {
   }
 
   noWrap (action : () => void) : void {
-    let oldWrapWidth = this.wrapWidth;
+    const oldWrapWidth = this.wrapWidth;
     this.wrapWidth = -1; // no wrap + soft breaks are spaces
     action();
     this.wrapWidth = oldWrapWidth;
@@ -227,7 +227,7 @@ class DjotRenderer {
 
   inlineContainer (delim : string, needsBraces ?: boolean)
       : ((node : HasChildren<Inline>) => void) {
-    let self = this;
+    const self = this;
     return function(node : HasChildren<Inline>) : void {
       needsBraces = needsBraces || self.needsBraces(node);
       if (needsBraces) self.lit("{");
@@ -239,7 +239,7 @@ class DjotRenderer {
   }
 
   litlines (s : string) : void {
-    let lns = s.split(/\r?\n/);
+    const lns = s.split(/\r?\n/);
     if (lns[lns.length - 1] === "") {
       lns.pop();
     }
@@ -250,7 +250,7 @@ class DjotRenderer {
   }
 
   verbatimNode (node : HasText) : void {
-    let ticks = verbatimDelim(node, 1);
+    const ticks = verbatimDelim(node, 1);
     this.lit(ticks);
     if (/^`/.test(node.text)) {
       this.lit(" ");
@@ -267,16 +267,16 @@ class DjotRenderer {
       this.renderChildren<Block>(node.children);
       this.prefixes = [];
       this.cr();
-      let hasReferences = Object.keys(node.references).length > 0;
+      const hasReferences = Object.keys(node.references).length > 0;
       if (hasReferences) {
         this.cr();
         this.newline();
       }
-      for (let k in node.references) {
+      for (const k in node.references) {
         this.renderNode(node.references[k]);
       }
-      let hasFootnotes = Object.keys(node.footnotes).length > 0;
-      for (let k in node.footnotes) {
+      const hasFootnotes = Object.keys(node.footnotes).length > 0;
+      for (const k in node.footnotes) {
         this.renderNode(node.footnotes[k]);
       }
       this.prefixes = [];
@@ -319,7 +319,7 @@ class DjotRenderer {
       this.blankline();
     },
     heading: (node : Heading) => {
-      let hashes = "#".repeat(node.level);
+      const hashes = "#".repeat(node.level);
       this.lit(hashes + " ");
       this.prefixes.push(hashes + " ");
       this.renderChildren<Inline>(node.children);
@@ -337,7 +337,7 @@ class DjotRenderer {
       this.renderChildren<Block>(node.children);
     },
     code_block: (node : CodeBlock) => {
-      let ticks = verbatimDelim(node, 3);
+      const ticks = verbatimDelim(node, 3);
       this.lit(ticks);
       if (node.lang) {
         this.lit(" " + node.lang);
@@ -349,7 +349,7 @@ class DjotRenderer {
       this.blankline();
     },
     raw_block: (node : RawBlock) => {
-      let ticks = verbatimDelim(node, 3);
+      const ticks = verbatimDelim(node, 3);
       this.lit(ticks);
       this.lit(" =" + node.format);
       this.cr();
@@ -359,12 +359,12 @@ class DjotRenderer {
       this.blankline();
     },
     list: (node : List)  => {
-      let style = node.style;
-      let start = node.start || 1;
-      let items = node.children;
-      let tight = node.tight;
+      const style = node.style;
+      const start = node.start || 1;
+      const items = node.children;
+      const tight = node.tight;
       for (let i=0; i < items.length; i++) {
-        let item = items[i];
+        const item = items[i];
         if (i > 0) {
           this.cr();
           if (!tight) {
@@ -406,14 +406,14 @@ class DjotRenderer {
       this.renderChildren<Block>(node.children);
     },
     table: (node : Table) => {
-      let captions : Caption[] = node.children.filter(isCaption);
-      let rows : Row[] = node.children.filter(isRow);
+      const captions : Caption[] = node.children.filter(isCaption);
+      const rows : Row[] = node.children.filter(isRow);
       for (let i=0; i < rows.length; i++) {
-        let row = rows[i];
+        const row = rows[i];
         // if last row was head and this is not, add separator line
         if ("head" in row && !row.head && i > 0 &&
             rows[i-1].head) {
-          let lastRow : Row = rows[i-1];
+          const lastRow : Row = rows[i-1];
           for (let j=0; j < lastRow.children.length; j++) {
             if (j === 0) { this.lit("|"); }
             switch (lastRow && lastRow.children[j].align) {
@@ -435,7 +435,7 @@ class DjotRenderer {
         }
         // now add the proper row
         for (let j=0; j < row.children.length; j++) {
-          let cell = row.children[j];
+          const cell = row.children[j];
           if (j === 0) { this.lit("|"); }
           this.noWrap(() => {
             // this awkward test is needed because a Caption can
@@ -557,7 +557,7 @@ class DjotRenderer {
 
   renderNode<A extends AstNode>(node : A) : void {
     this.doBlankLines();
-    let handler = this.handlers[node.tag];
+    const handler = this.handlers[node.tag];
     if (handler) {
       if ("attributes" in node && isBlock(node)) {
         this.renderAttributes<Block>(node);
@@ -574,13 +574,13 @@ class DjotRenderer {
     if (!node.attributes || Object.keys(node.attributes).length === 0) {
       return;
     }
-    let attr = node.attributes;
+    const attr = node.attributes;
     this.lit("{");
     let isfirst = true;
     if (isBlock(node)) {
       this.prefixes.push(" ");
     }
-    for (let k in attr) {
+    for (const k in attr) {
       if (!isfirst) {
         this.space();
       }
@@ -588,7 +588,7 @@ class DjotRenderer {
         this.lit("#");
         this.lit(attr[k]);
       } else if (k === "class") {
-        let classes = attr[k].split(/  */);
+        const classes = attr[k].split(/  */);
         for (let i=0; i < classes.length; i++) {
           if (i > 0) {
             this.space();
