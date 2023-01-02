@@ -1,28 +1,26 @@
 import { Doc, AstNode } from "./ast";
 
-// TODO convert code examples to js:
 /* Support filters that walk the AST and transform a
  * document between parsing and rendering, like pandoc Lua filters.
+ * Here is an example of a filter that
+ * capitalizes all the content text in a document:
  *
- * This filter uppercases all str elements.
+ * // This filter capitalizes regular text, leaving code and URLs unaffected
+ * return {
+ *   str: (el) => {
+ *     el.text = el.text.toUpperCase();
+ *   }
+ * }
  *
- *     return {
- *       str: function(e)
- *         e.text = e.text:upper()
- *        }
- *     }
+ * Here's a filter that prints a list of all the URLs you
+ * link to in a document.  This filter doesn't alter the
+ * document at all; it just prints the list to stderr.
  *
- * A filter may define functions for as many different tag types
- * as it likes.  traverse will walk the AST and apply matching
- * functions to each node.
- *
- * To load a filter:
- *
- *     let filter = require_filter(path)
- *
- * or
- *
- *     let filter = load_filter(string)
+ * return {
+ *   link: (el) => {
+ *     process.stderr:write(el.destination + "\n")
+ *   }
+ * }
  *
  * By default filters do a bottom-up traversal; that is, the
  * filter for a node is run after its children have been processed.
@@ -30,45 +28,66 @@ import { Doc, AstNode } from "./ast";
  * to run separate actions on entering a node (before processing the
  * children) and on exiting (after processing the children). To do
  * this, associate the node's tag with a table containing `enter` and/or
- * `exit` functions.  The following filter will capitalize text
- * that is nested inside emphasis, but not other text:
- *
- *     let capitalize = 0
- *     return {
- *        emph = {
- *          enter = function(e)
- *            capitalize = capitalize + 1
- *          end,
- *          exit = function(e)
- *            capitalize = capitalize - 1
- *          end,
- *        },
- *        str = function(e)
- *          if capitalize > 0 {
- *            e.text = e.text:upper()
- *           }
- *        }
- *     }
- *
+ * `exit` functions.  The `enter` function is run when we traverse
+ * *into* the node, before we traverse its children, and the `exit`
+ * function is run after we have traversed the node's children.
  * For a top-down traversal, you'd just use the `enter` functions.
  * If the tag is associated directly with a function, as in the
- * first example above, it is treated as an `exit` function.
+ * first example above, it is treated as an `exit' function.
+ *
+ * The following filter will capitalize text
+ * that is nested inside emphasis, but not other text:
+ *
+ * // This filter capitalizes the contents of emph
+ * // nodes instead of italicizing them.
+ * let capitalize = 0;
+ * return {
+ *    emph: {
+ *      enter: (e) => {
+ *        capitalize = capitalize + 1;
+ *      },
+ *      exit: (e) => {
+ *        capitalize = capitalize - 1;
+ *        e.tag = "span";
+ *      },
+ *    },
+ *    str: (e) => {
+ *      if (capitalize > 0) {
+ *        e.text = e.text.toUpperCase();
+ *       }
+ *    }
+ * }
  *
  * It is possible to inhibit traversal into the children of a node,
  * by having the `enter` function return the value true (or any truish
- * value, say `'stop'`).  This can be used, for example, to prevent
+ * value, say `"stop"`).  This can be used, for example, to prevent
  * the contents of a footnote from being processed:
  *
- *     return {
- *       footnote = {
- *         enter = function(e)
- *           return true
- *         }
- *        }
+ *
+ * return {
+ *  footnote: {
+ *    enter: (e) => {
+ *      return true
  *     }
+ *   }
+ * }
  *
  * A single filter may return a table with multiple tables, which will be
- * applied sequentially.
+ * applied sequentially:
+ *
+ * // This filter includes two sub-filters, run in sequence
+ * return [
+ *   { // first filter changes (TM) to trademark symbol
+ *     str: (e) => {
+ *       e.text = e.text.replace(/\\(TM\\)/, "™");
+ *     }
+ *   },
+ *   { // second filter changes '[]' to '()' in text
+ *     str: (e) => {
+ *       e.text = e.text.replace(/\\(/,"[").replace(/\\)/,"]");
+ *     }
+ *   }
+ * ]
  */
 
 type Transform = (node : any) => void | boolean;
