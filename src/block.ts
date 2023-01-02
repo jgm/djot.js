@@ -583,7 +583,7 @@ class EventParser {
           const para = this.addContainer(new Container(this.paraSpec, {}));
           // reparse the text we couldn't parse as a block attribute:
           if (!para.inlineParser || !attrContainer) {
-            throw ("Missing inlineParser or attrContainer");
+            throw(new Error("Missing inlineParser or attrContainer"));
             return false;
           }
           para.inlineParser.attributeSlices = attrContainer.extra.slices;
@@ -1009,7 +1009,7 @@ class EventParser {
                           spec.content === ContentType.ListItem;
                       }
                     } else {
-                      throw "No tip after opening container";
+                      throw(new Error("No tip after opening container"));
                     }
                     break;
                   }

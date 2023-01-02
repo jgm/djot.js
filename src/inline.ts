@@ -777,7 +777,7 @@ class InlineParser {
         // i.e. we have something interesting at pos
         const c = subject.codePointAt(pos);
         if (c === undefined) {
-          throw ("code point at " + pos + " is undefined.");
+          throw (new Error("Code point at " + pos + " is undefined."));
         }
 
         if (c === C_CR || c === C_LF) { // cr or lf

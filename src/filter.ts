@@ -78,7 +78,7 @@ type Filter = () => (FilterPart | FilterPart[]);
 
 const handleAstNode = function(node : any, filterpart : FilterPart) : void {
   if (!node || !node.tag) {
-    throw("Filter caled on a non-node.");
+    throw(new Error("Filter caled on a non-node."));
   }
   let transformIn : Transform | undefined;
   let transformOut : Transform | undefined;
@@ -90,7 +90,7 @@ const handleAstNode = function(node : any, filterpart : FilterPart) : void {
     } else if (typeof transform === "function") {
       transformOut = transform;
     } else {
-      throw("Transform has wrong type.");
+      throw(new Error("Transform has wrong type."));
     }
     if (transformIn) {
       const stopTraversal = transformIn(node);
@@ -131,7 +131,7 @@ const applyFilter = function(node : Doc, filter : Filter) : void {
   } else if (typeof f === "object") {
     traverse(node, f);
   } else {
-    throw("Filter returned wrong type: " + typeof f);
+    throw(new Error("Filter returned wrong type: " + typeof f));
   }
 }
 

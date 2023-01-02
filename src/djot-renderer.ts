@@ -55,7 +55,7 @@ const toRoman = function(x : number) : string {
     else if (x >= 5)   { rom += "V"; x -= 5 }
     else if (x == 4)   { rom += "IV"; x -= 4 }
     else if (x >= 1)   { rom += "I"; x -= 1 }
-    else { throw("toRoman encountered x = " + x); }
+    else { throw(new Error("toRoman encountered x = " + x)); }
   }
   return rom;
 }
@@ -81,7 +81,7 @@ const formatNumber = function(num : number, style : string) : string {
       numStr = toRoman(num);
       break;
     default:
-      throw("formatNumber encountered unknown style " + style);
+      throw(new Error("formatNumber encountered unknown style " + style));
   }
   return delimPattern.replace("$", numStr);
 }

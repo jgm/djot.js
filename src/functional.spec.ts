@@ -74,7 +74,7 @@ const parseTests = function(fp: string): Test[] {
     }
     const m = line.match(/^(`+)\s*(.*)/);
     if (!m) {
-      throw ("Test start line did not have expected form.");
+      throw (new Error("Test start line did not have expected form."));
     }
     const ticks = new RegExp("^" + m[1]);
     const options = m[2];

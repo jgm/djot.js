@@ -439,7 +439,7 @@ const romanToNumber = function(s: string): number {
     const c = s.charAt(i);
     const n = romanDigits[c];
     if (!n) {
-      throw ("Encountered bad character in roman numeral " + s);
+      throw (new Error("Encountered bad character in roman numeral " + s));
     }
     if (n < prevdigit) { // e.g. ix
       total = total - n;
@@ -565,7 +565,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
   const popContainer = function(pos?: Pos) {
     const node = containers.pop();
     if (!node) {
-      throw ("Container stack is empty (popContainer)");
+      throw (new Error("Container stack is empty (popContainer)"));
     }
     if (pos && node.pos) {
       node.pos.end = pos.end;
@@ -576,7 +576,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
     if (containers.length > 0) {
       return containers[containers.length - 1];
     } else {
-      throw ("Container stack is empty (topContainer)");
+      throw (new Error("Container stack is empty (topContainer)"));
     }
   }
   // points to last child of top container, or top container if
@@ -918,7 +918,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
           top.attributes[top.data.key] = // append multiple values to key
             top.attributes[top.data.key] + val;
         } else {
-          throw ("Encountered value without key");
+          throw (new Error("Encountered value without key"));
         }
       },
 
@@ -1003,7 +1003,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
             tip.tag = "raw_inline";
             tip.format = format;
           } else {
-            throw ("raw_format is not after verbatim or code_block");
+            throw (new Error("raw_format is not after verbatim or code_block."));
           }
         }
       },
@@ -1151,7 +1151,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
         // take first if ambiguous
         const listStyle = node.data.styles[0];
         if (!listStyle) {
-          throw ("No style defined for list");
+          throw (new Error("No style defined for list"));
         }
         const listStart = getListStart(node.data.firstMarker, listStyle);
         addChildToTip({
