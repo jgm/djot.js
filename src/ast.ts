@@ -89,14 +89,6 @@ interface Caption extends HasAttributes {
   children: Inline[];
 }
 
-function isRow(node : Row | Caption) : node is Row {
-  return ("head" in node);
-}
-
-function isCaption(node : Row | Caption) : node is Caption {
-  return (!("head" in node));
-}
-
 interface Table extends HasAttributes {
   tag: "table";
   children: (Row | Caption)[];
@@ -372,6 +364,14 @@ const inlineTags : Record<string, boolean> = {
 
 function isInline(node : AstNode) : node is Inline {
   return inlineTags[node.tag] || false;
+}
+
+function isRow(node : Row | Caption) : node is Row {
+  return ("head" in node);
+}
+
+function isCaption(node : Row | Caption) : node is Caption {
+  return (!("head" in node));
 }
 
 
