@@ -1,7 +1,7 @@
 import { Event } from "./event";
 import { EventParser } from "./block";
 
-// Types for the AST
+// Types defining the AST
 
 type Attributes = Record<string, string>;
 
@@ -40,24 +40,6 @@ type Block = Para
   | BlockQuote
   | List
   | Table;
-
-const blockTags : Record<string, boolean> = {
-  para: true,
-  heading: true,
-  thematic_break: true,
-  section: true,
-  div: true,
-  code_block: true,
-  raw_block: true,
-  list: true,
-  table: true,
-  reference: true,
-  footnote: true
-};
-
-function isBlock(node : AstNode) : node is Block {
-  return blockTags[node.tag] || false;
-}
 
 interface Para extends HasAttributes, HasInlineChildren {
   tag: "para";
@@ -151,43 +133,6 @@ type Inline = Str
   | DoubleQuoted
   | SingleQuoted
   ;
-
-const inlineTags : Record<string, boolean> = {
-  str: true,
-  softbreak: true,
-  hardbreak: true,
-  nbsp: true,
-  symb: true,
-  verbatim: true,
-  raw_inline: true,
-  math: true,
-  url: true,
-  email: true,
-  footnote_reference: true,
-  left_single_quote: true,
-  right_single_quote: true,
-  left_double_quote: true,
-  right_double_quote: true,
-  ellipses: true,
-  em_dash: true,
-  en_dash: true,
-  emph: true,
-  strong: true,
-  link: true,
-  image: true,
-  span: true,
-  mark: true,
-  superscript: true,
-  subscript: true,
-  insert: true,
-  delete: true,
-  double_quoted: true,
-  single_quoted: true,
-};
-
-function isInline(node : AstNode) : node is Inline {
-  return inlineTags[node.tag] || false;
-}
 
 
 interface Str extends HasAttributes, HasText {
@@ -322,7 +267,6 @@ type CheckboxStatus = "checked" | "unchecked";
 interface ListItem extends HasAttributes, HasBlockChildren {
   tag: "list_item";
   checkbox?: CheckboxStatus;
-  // TODO
 }
 
 interface DefinitionListItem extends HasAttributes {
@@ -373,12 +317,73 @@ interface Doc extends HasBlockChildren, HasAttributes {
   footnotes: Record<string, Footnote>;
 }
 
+/* Type functions */
+
+const blockTags : Record<string, boolean> = {
+  para: true,
+  heading: true,
+  thematic_break: true,
+  section: true,
+  div: true,
+  code_block: true,
+  raw_block: true,
+  list: true,
+  table: true,
+  reference: true,
+  footnote: true
+};
+
+function isBlock(node : AstNode) : node is Block {
+  return blockTags[node.tag] || false;
+}
+
+const inlineTags : Record<string, boolean> = {
+  str: true,
+  softbreak: true,
+  hardbreak: true,
+  nbsp: true,
+  symb: true,
+  verbatim: true,
+  raw_inline: true,
+  math: true,
+  url: true,
+  email: true,
+  footnote_reference: true,
+  left_single_quote: true,
+  right_single_quote: true,
+  left_double_quote: true,
+  right_double_quote: true,
+  ellipses: true,
+  em_dash: true,
+  en_dash: true,
+  emph: true,
+  strong: true,
+  link: true,
+  image: true,
+  span: true,
+  mark: true,
+  superscript: true,
+  subscript: true,
+  insert: true,
+  delete: true,
+  double_quoted: true,
+  single_quoted: true,
+};
+
+function isInline(node : AstNode) : node is Inline {
+  return inlineTags[node.tag] || false;
+}
+
+
+/* Types not used for defining the AST but for processing */
+
 interface Container {
   children: any[];
   attributes?: Attributes;
   data: Record<string,any>;
   pos?: Pos;
 }
+
 
 const getStringContent = function(node: (AstNode | Container)): string {
   const buffer: string[] = [];
