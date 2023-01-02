@@ -25,6 +25,10 @@ doc/djot.1: doc/djot.md
 	  --variable footer="djot $(VERSION)" \
 	  $< -s -o $@
 
+djot-schema.json:
+	# npm install -g typescript-json-schema
+	typescript-json-schema src/ast.ts Doc > $@
+
 clean:
 	rm -rf dist
 .PHONY: clean
