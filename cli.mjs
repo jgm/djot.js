@@ -3,6 +3,7 @@
 import { EventParser } from "./lib/block.js";
 import { parse, renderAST } from "./lib/ast.js";
 import { renderHTML } from "./lib/html.js";
+import { applyFilter } from "./lib/filter.js";
 import { PandocRenderer, PandocParser } from "./lib/pandoc.js";
 import { DjotRenderer } from "./lib/djot-renderer.js";
 import fs from "fs";
@@ -20,16 +21,18 @@ let compact = false;
 let width = 72;
 let toFormats = ["html","ast","astpretty","events","djot","pandoc"];
 let fromFormats = ["djot","ast","pandoc"];
+let filters = [];
 
 let usage = `djot [OPTIONS] FILE*
 Options:
   --to,-t FORMAT       Format to convert to
                        (${toFormats.join("|")})
   --from,-f FORMAT     Format to convert from (${fromFormats.join("|")})
+  --filter FILE        Apply filter defined in FILE (may be repeated)
   --compact            Use compact (rather than pretty) JSON
   --width,-w NUMBER    Wrap width for djot output (-1 = compact, 0 = no wrap)
   --sourcepos,-p       Include source positions
-  --time,-t            Print parse time to stderr
+  --time               Print parse time to stderr
   --quiet,-q           Suppress warnings
   --help,-h            This usage message
 `;
@@ -45,7 +48,7 @@ while (args[i]) {
       i++;
       to = args[i];
       if (!toFormats.includes(to)) {
-        process.stdout.write("--to/-t expects " +
+        process.stderr.write("--to/-t expects " +
           toFormats.join("|") + ", got " + JSON.stringify(to) + "\n");
         process.exit(1);
       }
@@ -55,11 +58,30 @@ while (args[i]) {
       i++;
       from = args[i];
       if (!fromFormats.includes(from)) {
-        process.stdout.write("--from/-f expects " +
+        process.stderr.write("--from/-f expects " +
           fromFormats.join("|") + ", got " + JSON.stringify(from) + "\n");
         process.exit(1);
       }
       break;
+    case "--filter": {
+      i++;
+      let fp = args[i];
+      if (typeof(fp) !== "string") {
+        process.stderr.write("--filter expects a FILE argument\n");
+        process.exit(1);
+      }
+      let filter = fs.readFileSync(fp, "utf8");
+      let filterprog = `"use strict"; return ( function() { ${filter} } );`;
+      try {
+        let compiledFilter = Function(filterprog)();
+        filters.push(compiledFilter);
+      } catch(err) {
+        process.stderr.write("Error loading filter " + fp + ":\n");
+        throw(err);
+        process.exit(1);
+      }
+      break;
+    }
     case "--compact":
       compact = true;
       break;
@@ -77,7 +99,6 @@ while (args[i]) {
       options.sourcePositions = true;
       break;
     case "--time":
-    case "-t":
       timing = true;
       break;
     case "--quiet":
@@ -148,6 +169,13 @@ try {
     let parseTime = (endTime - startTime).toFixed(1);
 
     startTime = performance.now();
+    filters.forEach(filter => {
+      applyFilter(ast, filter);
+    });
+    endTime = performance.now();
+    let filterTime = (endTime - startTime).toFixed(1);
+
+    startTime = performance.now();
     switch (to) {
       case "html":
         process.stdout.write(renderHTML(ast, options));
@@ -173,7 +201,7 @@ try {
     let renderTime = (endTime - startTime).toFixed(1);
 
     if (timing) {
-      process.stderr.write(`Timings: parse ${parseTime} ms, render ${renderTime} ms\n`);
+      process.stderr.write(`Timings: parse ${parseTime} ms, filter ${filterTime} ms, render ${renderTime} ms\n`);
     }
   }
 } catch(err) {
