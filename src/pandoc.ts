@@ -810,7 +810,8 @@ class PandocParser {
             case "TwoParens": style = "(" + style + ")"; break;
             default: style = style + ".";
           }
-          return {tag: "list", style: style, tight: tight, children: items};
+          return {tag: "list", style: style, start: start,
+                  tight: tight, children: items};
         }
       }
 
