@@ -1,7 +1,7 @@
 import { Doc, Block } from "./ast";
 import { DjotRenderer } from "./djot-renderer";
 
-const cicero  = "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis."
+const cicero  = "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis superlongunbreakablewordthatwontfitononeline."
 
 const mkdoc = function(children : Block[]) : Doc {
   return {tag: "doc",
@@ -22,7 +22,8 @@ iste natus error sit
 voluptatem accusantium
 doloremque laudantium, totam
 rem aperiam, eaque ipsa quae
-ab illo inventore veritatis.
+ab illo inventore veritatis
+superlongunbreakablewordthatwontfitononeline.
 `
     );
   });
@@ -47,17 +48,210 @@ ab illo inventore veritatis.
 > natus error sit voluptatem accusantium
 > doloremque laudantium, totam rem
 > aperiam, eaque ipsa quae ab illo
-> inventore veritatis.
+> inventore veritatis
+> superlongunbreakablewordthatwontfitononeline.
 >
 > Sed ut perspiciatis unde omnis iste
 > natus error sit voluptatem accusantium
 > doloremque laudantium, totam rem
 > aperiam, eaque ipsa quae ab illo
-> inventore veritatis.
+> inventore veritatis
+> superlongunbreakablewordthatwontfitononeline.
 
 Thus Cicero.
 `);
   });
+
+  it("handles footnotes", () => {
+    const fn : Doc =
+      {
+        "tag": "doc",
+        "references": {},
+        "footnotes": {
+          "1": {
+            "tag": "footnote",
+            "label": "1",
+            "children": [
+              {
+                "tag": "para",
+                "children": [
+                  {
+                    "tag": "str",
+                    "text": "This is the note."
+                  }
+                ]
+              },
+              {
+                "tag": "para",
+                "children": [
+                  {
+                    "tag": "str",
+                    "text": "Par 2."
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "children": [
+          {
+            "tag": "para",
+            "children": [
+              {
+                "tag": "str",
+                "text": "hi"
+              },
+              {
+                "tag": "footnote_reference",
+                "text": "1"
+              }
+            ]
+          }
+        ]
+      };
+    expect(new DjotRenderer(fn, 30).render()).toStrictEqual(
+`hi[^1]
+
+[^1]: This is the note.
+
+  Par 2.
+`);
+   });
+
+
+  it("handles lists properly", () => {
+    const lst : Doc = mkdoc([
+    {
+      "tag": "list",
+      "style": "1.",
+      "children": [
+        {
+          "tag": "list_item",
+          "children": [
+            {
+              "tag": "para",
+              "children": [
+                {
+                  "tag": "str",
+                  "text": "one"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tag": "list_item",
+          "children": [
+            {
+              "tag": "para",
+              "children": [
+                {
+                  "tag": "str",
+                  "text": "two"
+                }
+              ]
+            },
+            {
+              "tag": "list",
+              "style": "-",
+              "children": [
+                {
+                  "tag": "list_item",
+                  "children": [
+                    {
+                      "tag": "para",
+                      "children": [
+                        {
+                          "tag": "str",
+                          "text": "a"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "tag": "list_item",
+                  "children": [
+                    {
+                      "tag": "para",
+                      "children": [
+                        {
+                          "tag": "str",
+                          "text": "b"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "tight": true
+            }
+          ]
+        },
+        {
+          "tag": "list_item",
+          "children": [
+            {
+              "tag": "para",
+              "children": [
+                {
+                  "tag": "str",
+                  "text": "three"
+                }
+              ]
+            },
+            {
+              "tag": "list",
+              "style": "(i)",
+              "children": [
+                {
+                  "tag": "list_item",
+                  "children": [
+                    {
+                      "tag": "para",
+                      "children": [
+                        {
+                          "tag": "str",
+                          "text": "four"
+                        }
+                      ]
+                    },
+                    {
+                      "tag": "para",
+                      "children": [
+                        {
+                          "tag": "str",
+                          "text": "subparagraph"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "start": 4,
+              "tight": false
+            }
+          ]
+        }
+      ],
+      "start": 1,
+      "tight": false
+    }]);
+    expect(new DjotRenderer(lst, 30).render()).toStrictEqual(
+`1. one
+
+2. two
+
+   - a
+   - b
+
+3. three
+
+   (iv) four
+
+        subparagraph
+`);
+   });
 
   it("handles block quotes properly", () => {
     const cicero3 : Doc = mkdoc([
@@ -79,7 +273,7 @@ etc.
    });
 
   it("does tables", () => {
-    const cicero3 : Doc = mkdoc([
+    const tbl : Doc = mkdoc([
     {
       "tag": "table",
       "children": [
@@ -225,7 +419,7 @@ etc.
         }
       ]
     }]);
-    expect(new DjotRenderer(cicero3, 30).render()).toStrictEqual(
+    expect(new DjotRenderer(tbl, 30).render()).toStrictEqual(
 `|a|b|
 |:--|--:|
 |c|d|
