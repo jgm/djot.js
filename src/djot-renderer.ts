@@ -166,8 +166,11 @@ class DjotRenderer {
   }
 
   wrap () : void {
+    if (this.wrapWidth <= 0) {
+      return;
+    }
     let idx = this.buffer.length - 1;
-    if (this.wrapWidth > 0 && !this.startOfLine && this.buffer.length > 0 &&
+    if (!this.startOfLine && this.buffer.length > 0 &&
            this.column > this.wrapWidth) {
       // backup to last space:
       let lastbuff;
