@@ -18,8 +18,8 @@ let to = 'html';
 let from = 'djot';
 let compact = false;
 let width = 72;
-let toFormats = ["html","ast","ast-json","events","djot","pandoc-json"];
-let fromFormats = ["djot","pandoc-json"];
+let toFormats = ["html","ast","astpretty","events","djot","pandoc"];
+let fromFormats = ["djot","ast","pandoc"];
 
 let usage = `djot [OPTIONS] FILE*
 Options:
@@ -139,8 +139,10 @@ try {
     let ast;
     if (from === "djot") {
       ast = parse(input, options);
-    } else if (from === "pandoc-json") {
+    } else if (from === "pandoc") {
       ast = new PandocParser(options.warn).parseJSON(input);
+    } else if (from === "ast") {
+      ast = JSON.parse(input);
     }
     let endTime = performance.now();
     let parseTime = (endTime - startTime).toFixed(1);
@@ -153,14 +155,14 @@ try {
       case "djot":
         process.stdout.write((new DjotRenderer(ast, width).render()));
         break;
-      case "ast-json":
+      case "ast":
         process.stdout.write(JSON.stringify(ast, null, compact ? 0 : 2));
         process.stdout.write("\n");
         break;
-      case "ast":
+      case "astpretty":
         process.stdout.write(renderAST(ast));
         break;
-      case "pandoc-json":
+      case "pandoc":
         process.stdout.write(JSON.stringify(new PandocRenderer(ast, warn).toPandoc(),
                 null, compact ? 0 : 2));
         process.stdout.write("\n");
