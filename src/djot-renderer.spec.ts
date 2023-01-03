@@ -278,6 +278,10 @@ etc.
       "tag": "table",
       "children": [
         {
+          "tag": "caption",
+          "children": []
+        },
+        {
           "tag": "row",
           "children": [
             {
@@ -431,4 +435,3 @@ etc.
    });
 
 });
-

@@ -230,7 +230,11 @@ class HTMLRenderer {
         break;
 
       case "caption":
-        this.inTags("caption", node, 1);
+        // AST always has at least a dummy caption, no
+        // need to render that.
+        if (node.children.length > 0) {
+          this.inTags("caption", node, 1);
+        }
         break;
 
       case "row":

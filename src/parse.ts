@@ -15,7 +15,8 @@ import {
   isRow,
   isBlock,
   isCaption,
-  isInline } from "./ast";
+  isInline,
+  Caption} from "./ast";
 
 /* Types not used for defining the AST but for processing */
 
@@ -891,9 +892,17 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
 
       ["-table"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
+        const rows = node.children;
+        let caption: Caption = {
+          tag: "caption",
+          children: []
+        };
+        if (rows[0]?.tag === "caption") {
+          caption = rows.shift();
+        }
         addChildToTip({
           tag: "table",
-          children: node.children,
+          children: [caption, ...rows],
           attributes: node.attributes
         }, node.pos);
       },
