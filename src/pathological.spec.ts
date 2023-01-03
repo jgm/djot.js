@@ -55,6 +55,7 @@ describe("Pathological tests", () => {
       const test : string = tests[testname];
       const ast = parse(test, {warn: ignoreWarnings});
       expect(ast).toBeTruthy();
+      await new Promise(r => setTimeout(r,0)); // dummy sleep see #6
     }, 1000);
   }
 });
