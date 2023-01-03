@@ -922,7 +922,6 @@ class EventParser {
     this.pos = this.starteol;
     this.finishedLine = true;
     return true;
-    return true;
   }
 
   // Returns an iterator over events.  At each iteration, the iterator
