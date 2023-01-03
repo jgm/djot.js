@@ -34,12 +34,12 @@ You can use `djot` to
 For example, to convert a `gfm` document `mydoc.md` to djot,
 
 ```
-pandoc mydoc.md -f gfm -t json | djot -f pandoc-json -t djot > mydoc.dj
+pandoc mydoc.md -f gfm -t json | djot -f pandoc -t djot > mydoc.dj
 ```
 
 And to convert back to `gfm`,
 
 ```
-djot mydoc.dj -t pandoc-json | pandoc -f json -t gfm
+djot mydoc.dj -t pandoc | pandoc -f json -t gfm
 ```
 
