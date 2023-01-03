@@ -1,4 +1,5 @@
 import { parse } from "./parse";
+import { performance } from "perf_hooks";
 
 const MAXLINES = 5;
 const MAXLENGTH = 5;
@@ -39,12 +40,25 @@ const randomstring = function() : string {
 }
 
 describe("Fuzz tests", () => {
-  it("does not exhibit pathological behavior on random input", () => {
+  const timeout = 80;
+  it("does not exhibit pathological behavior on random input", async () => {
+    await new Promise(r => setTimeout(r,0)); // dummy sleep see #6
     for (let i=1; i <= NUMTESTS; i++) {
       let s = randomstring();
+      let startTime = performance.now();
       const ast = parse(s, {warn: (() => {})});
-      expect(ast).toBeTruthy();
+      let endTime = performance.now();
+      let elapsed = endTime - startTime;
+      let status : string;
+      if (!ast) {
+        status = "Could not parse:\n" + s;
+      } else if (elapsed > timeout) {
+        status = "Parsing took too long (" + elapsed.toFixed(1) + " ms) for:\n" + s;
+      } else {
+        status = "OK";
+      }
+      expect(status).toBe("OK");
     }
-  }, 10);
+  }, timeout * NUMTESTS);
 });
 
