@@ -261,7 +261,7 @@ interface ListItem extends HasAttributes, HasChildren<Block> {
 
 interface DefinitionListItem extends HasAttributes {
   tag: "definition_list_item";
-  children: (Term | Definition)[];
+  children: [Term, Definition];
 }
 
 interface Term extends HasAttributes, HasChildren<Inline> {
