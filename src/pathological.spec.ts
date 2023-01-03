@@ -1,4 +1,5 @@
 import { parse } from "./parse";
+import { performance } from "perf_hooks";
 
 const ignoreWarnings = () => { /* do nothing */ };
 
@@ -51,11 +52,13 @@ const tests : Record<string, string> = {
 
 describe("Pathological tests", () => {
   for (const testname in tests) {
-    it("does not exhibit pathological behavior on " + testname, async () => {
+    it("does not exhibit pathological behavior on " + testname, () => {
       const test : string = tests[testname];
+      const start = performance.now();
       const ast = parse(test, {warn: ignoreWarnings});
+      const end = performance.now();
       expect(ast).toBeTruthy();
-      await new Promise(r => setTimeout(r,0)); // dummy sleep see #6
-    }, 1000);
+      expect(end - start).toBeLessThan(1000);
+    });
   }
 });

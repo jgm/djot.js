@@ -41,7 +41,7 @@ const randomstring = function() : string {
 
 describe("Fuzz tests", () => {
   const timeout = 80;
-  it("does not exhibit pathological behavior on random input", async () => {
+  it("does not exhibit pathological behavior on random input", () => {
     for (let i=1; i <= NUMTESTS; i++) {
       let s = randomstring();
       let startTime = performance.now();
@@ -58,7 +58,6 @@ describe("Fuzz tests", () => {
       }
       expect(status).toBe("OK");
     }
-    await new Promise(r => setTimeout(r,0)); // dummy sleep see #6
-  }, timeout * NUMTESTS);
+  });
 });
 
