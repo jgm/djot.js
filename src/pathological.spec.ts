@@ -51,12 +51,10 @@ const tests : Record<string, string> = {
 
 describe("Pathological tests", () => {
   for (const testname in tests) {
-    it("does not exhibit pathological behavior on " + testname, () => {
+    it("does not exhibit pathological behavior on " + testname, async () => {
       const test : string = tests[testname];
-      setTimeout(() => {
-        const ast = parse(test, {warn: ignoreWarnings});
-        expect(ast).toBeTruthy();
-      }, 1000).unref();
-    });
+      const ast = parse(test, {warn: ignoreWarnings});
+      expect(ast).toBeTruthy();
+    }, 1000);
   }
 });
