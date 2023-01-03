@@ -452,7 +452,7 @@ class DjotRenderer {
         }
         this.cr();
       }
-      if (captions.length > 0) {
+      if (captions.length > 0 && captions[0].children.length > 0) {
         this.newline();
         this.lit("^ ");
         this.needsBlankLine = false;

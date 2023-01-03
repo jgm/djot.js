@@ -88,7 +88,7 @@ interface Caption extends HasAttributes {
 
 interface Table extends HasAttributes {
   tag: "table";
-  children: (Row | Caption)[];
+  children: [Caption, ...Row[]];
 }
 
 type Inline =

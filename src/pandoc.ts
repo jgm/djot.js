@@ -237,7 +237,9 @@ class PandocRenderer {
             colspecs = row.children.map(toColSpec);
           }
           if (row.tag === "caption") {
-            caption = this.toPandocChildren(row);
+            if (row.children.length) {
+              caption = this.toPandocChildren(row);
+            }
           } else if (row.head) {
             if (currows.length === 0) {
               curheads.push(toPandocRow(row));
@@ -804,12 +806,12 @@ class PandocParser {
       case "Table": {
         const attr = fromPandocAttr(block.c[0]);
         const rawcaption = block.c[1][1];
-        let caption : Inline[] = [];
+        let caption : Caption = { tag: "caption", children: []};
         if (rawcaption.length > 1 ||
             (rawcaption.length === 1 && !isPlainOrPara(rawcaption[0]))) {
           this.warn("Skipping block-level content in table caption.");
         } else if (rawcaption[0] && "c" in rawcaption[0]) {
-          caption = this.fromPandocInlines(rawcaption[0].c);
+          caption.children = this.fromPandocInlines(rawcaption[0].c);
         }
 
         const rawcolspecs = block.c[2];
@@ -844,11 +846,7 @@ class PandocParser {
           rows.push(this.fromPandocRow(rawfootrows[i], false, 0, aligns));
         }
 
-        const children : (Row | Caption)[] = rows;
-        if (caption.length > 0) {
-          children.unshift({tag: "caption", children: caption});
-        }
-        const table : Table = {tag: "table", children: children};
+        const table : Table = {tag: "table", children: [caption, ...rows] };
         if (attr) {
           table.attributes = attr;
         }
