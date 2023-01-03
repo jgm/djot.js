@@ -79,25 +79,11 @@ class PandocRenderer {
       if (!("children" in item)) {
         return [];
       }
-      const [x, y] = item.children;
-      let term : Term = { tag: "term", children: [] };
-      let definition : Definition = { tag: "definition", children: [] };
-      if (x.tag === "term") {
-        term = x;
-        if (y.tag === "definition") {
-          definition = y;
-        }
-      } else if (x.tag === "definition") {
-        definition = x;
-      }
-      const result = [];
-      if (term) {
-        result.push(self.toPandocChildren(term));
-      }
-      if (definition) {
-        result.push([self.toPandocChildren(definition)]);
-      }
-      return result;
+      const [term, definition] = item.children;
+      return [
+        self.toPandocChildren(term),
+        [self.toPandocChildren(definition)],
+      ];
     };
   }
 
@@ -949,4 +935,3 @@ class PandocParser {
 }
 
 export { PandocRenderer, PandocParser };
-
