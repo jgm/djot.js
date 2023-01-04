@@ -88,14 +88,13 @@ const isSpecial = function(cp: number) {
 }
 
 // find first special character starting from startpos, and not
-// going beyond endpos, or -1 if none found.
-const findSpecial = function(s: string, startpos: number, endpos: number)
-        : number {
+// going beyond endpos, or null if none found.
+const findSpecial = function(s: string, startpos: number, endpos: number) {
   let i = startpos;
   while (i <= endpos) {
     let cp = s.codePointAt(i);
     if (!cp) {
-      return -1;
+      return null;
     }
     if (isSpecial(cp)) {
       return i;
@@ -103,7 +102,7 @@ const findSpecial = function(s: string, startpos: number, endpos: number)
     i++;
     cp = s.codePointAt(i);
   }
-  return -1;
+  return null;
 }
 
 const matchesPattern = function(match: Event, patt: RegExp): boolean {
@@ -723,7 +722,7 @@ class InlineParser {
         const sp = pos;
         const nextSpecial = findSpecial(subject, pos, endpos);
         let ep2;
-        if (nextSpecial === -1) {
+        if (nextSpecial === null) {
           ep2 = endpos;
         } else {
           ep2 = nextSpecial;
@@ -762,7 +761,7 @@ class InlineParser {
         // find next interesting character:
         const nextSpecial = findSpecial(subject, pos, endpos);
         let newpos;
-        if (nextSpecial === -1) {
+        if (nextSpecial === null) {
           newpos = endpos + 1;
         } else {
           newpos = nextSpecial;
