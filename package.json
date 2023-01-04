@@ -30,7 +30,7 @@
   "scripts": {
     "test": "jest",
     "build": "tsc && webpack",
-    "bench": "node ./bench/bench.js"
+    "bench": "tsc && node ./bench/bench.js"
   },
   "files": [
     "./dist/djot.js",
