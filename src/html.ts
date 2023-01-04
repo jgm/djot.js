@@ -8,8 +8,7 @@ const defaultWarnings = function(message: string, pos?: number | null) {
 
 class HTMLRenderer {
   warn: (message: string, pos?: number | null) => void;
-  options : ParseOptions;
-  buffer: string[];
+  options: ParseOptions;
   tight: boolean;
   footnoteIndex: Record<string, number>;
   nextFootnoteIndex: number;
@@ -19,7 +18,6 @@ class HTMLRenderer {
   constructor(options : ParseOptions) {
     this.warn = options.warn || defaultWarnings;
     this.options = options || {};
-    this.buffer = [];
     this.tight = false;
     this.footnoteIndex = {};
     this.nextFootnoteIndex = 1;
@@ -39,12 +37,12 @@ class HTMLRenderer {
       .replace(/"/g, "&quot;");
   }
 
-  out(s: string): void {
-    this.buffer.push(this.escape(s));
+  out(s: string): string {
+    return this.escape(s);
   }
 
-  literal(s: string): void {
-    this.buffer.push(s);
+  literal(s: string): string {
+    return s;
   }
 
   smartPunctuationMap : Record<string, string> = {
@@ -58,7 +56,8 @@ class HTMLRenderer {
   }
 
   renderAttributes(node: HasAttributes, extraAttrs?: Record<string, string>)
-    : void {
+    : string {
+    let result = ""
     if (extraAttrs) {
       for (const k in extraAttrs) {
         if (k === "class") {
@@ -66,9 +65,9 @@ class HTMLRenderer {
           if (node.attributes && node.attributes.class) {
             v = v + " " + node.attributes.class;
           }
-          this.literal(` ${k}="${this.escapeAttribute(v)}"`);
+          result += this.literal(` ${k}="${this.escapeAttribute(v)}"`);
         } else {
-          this.literal(` ${k}="${this.escapeAttribute(extraAttrs[k])}"`);
+          result += this.literal(` ${k}="${this.escapeAttribute(extraAttrs[k])}"`);
         }
       }
     }
@@ -76,42 +75,45 @@ class HTMLRenderer {
       for (const k in node.attributes) {
         const v = node.attributes[k];
         if (!(k === "class" && extraAttrs && extraAttrs.class)) {
-          this.literal(` ${k}="${this.escapeAttribute(v)}"`);
+          result += this.literal(` ${k}="${this.escapeAttribute(v)}"`);
         }
       }
     }
     if (this.options.sourcePositions && node.pos) {
       const sp = node.pos.start;
       const ep = node.pos.end;
-      this.literal(` data-startpos="${sp.line}:${sp.col}:${sp.offset}" data-endpos="${ep.line}:${ep.col}:${ep.offset}"`);
+      result += this.literal(` data-startpos="${sp.line}:${sp.col}:${sp.offset}" data-endpos="${ep.line}:${ep.col}:${ep.offset}"`);
     }
+    return result;
   }
 
   renderTag(tag: string, node: AstNode, extraAttrs?: Record<string, string>)
-    : void {
-    this.literal("<");
-    this.literal(tag);
+    : string {
+    let result = ""
+    result += this.literal("<");
+    result += this.literal(tag);
     if ("attributes" in node || extraAttrs || node.pos) {
-      this.renderAttributes(node, extraAttrs);
+      result += this.renderAttributes(node, extraAttrs);
     }
-    this.literal(">");
+    result += this.literal(">");
+    return result;
   }
 
-  renderCloseTag(tag: string): void {
-    this.literal("</");
-    this.literal(tag);
-    this.literal(">");
+  renderCloseTag(tag: string): string {
+    return `</${tag}>`
   }
 
   inTags(tag: string, node: AstNode, newlines: number,
-    extraAttrs?: Record<string, string>): void {
-    this.renderTag(tag, node, extraAttrs);
-    if (newlines >= 2) { this.literal("\n"); }
+    extraAttrs?: Record<string, string>): string {
+    let result = ""
+    result += this.renderTag(tag, node, extraAttrs);
+    if (newlines >= 2) { result += this.literal("\n"); }
     if ("children" in node) {
-      this.renderChildren(node);
+      result += this.renderChildren(node);
     }
-    this.renderCloseTag(tag);
-    if (newlines >= 1) { this.literal("\n"); }
+    result += this.renderCloseTag(tag);
+    if (newlines >= 1) { result += this.literal("\n"); }
+    return result;
   }
 
   addBacklink(orignote: Footnote, ident: number): Footnote {
@@ -135,85 +137,89 @@ class HTMLRenderer {
     return note;
   }
 
-  renderChildren(node: HasChildren<AstNode>): void {
+  renderChildren(node: HasChildren<AstNode>): string {
+    let result = ""
     const oldtight = this.tight;
     if ("tight" in node) {
       this.tight = !!node.tight;
     }
-    node.children.forEach(child => {
-      this.renderAstNode(child);
+    node.children.forEach((child) => {
+      result += this.renderAstNode(child);
     });
     if ("tight" in node) {
       this.tight = oldtight;
     }
+    return result
   }
 
-  renderAstNode(node: AstNode): void {
+  renderAstNode(node: AstNode): string {
+    let result = ""
     let extraAttr: Record<string, string> = {};
     switch (node.tag) {
       case "para":
         if (this.tight) {
-          this.renderChildren(node);
-          this.literal("\n");
+          result += this.renderChildren(node);
+          result += this.literal("\n");
         } else {
-          this.inTags("p", node, 1);
+          result += this.inTags("p", node, 1);
         }
         break;
 
       case "block_quote":
-        this.inTags("blockquote", node, 2);
+        result += this.inTags("blockquote", node, 2);
         break;
 
       case "div":
-        this.inTags("div", node, 2);
+        result += this.inTags("div", node, 2);
         break;
 
       case "section":
-        this.inTags("section", node, 2);
+        result += this.inTags("section", node, 2);
         break;
 
       case "list_item":
         extraAttr = {};
         if (node.checkbox) {
-          extraAttr.class =
-            node.checkbox === "checked" ? "checked" : "unchecked";
+          extraAttr.class = node.checkbox === "checked"
+            ? "checked"
+            : "unchecked";
         }
-        this.inTags("li", node, 2, extraAttr);
+        result += this.inTags("li", node, 2, extraAttr);
         break;
 
       case "definition_list_item":
-        this.renderChildren(node);
+        result += this.renderChildren(node);
         break;
 
       case "definition":
-        this.inTags("dd", node, 2);
+        result += this.inTags("dd", node, 2);
         break;
 
       case "term":
-        this.inTags("dt", node, 1);
+        result += this.inTags("dt", node, 1);
         break;
 
       case "list":
         if (node.style === "-" || node.style === "*" || node.style === "+") {
-          this.inTags("ul", node, 2);
+          result += this.inTags("ul", node, 2);
         } else if (node.style === ":") {
-          this.inTags("dl", node, 2);
+          result += this.inTags("dl", node, 2);
         } else if (node.style === "X") {
-          this.inTags("ul", node, 2, { class: "task-list" });
+          result += this.inTags("ul", node, 2, { class: "task-list" });
         } else {
           extraAttr = {};
           if (node.start && node.start !== 1) {
-            extraAttr.start = node.start.toString()
+            extraAttr.start = node.start.toString();
           }
           if (node.style && !/1/.test(node.style)) {
             extraAttr.type = node.style.replace(/[().]/g, "");
           }
-          this.inTags("ol", node, 2, extraAttr);
+          result += this.inTags("ol", node, 2, extraAttr);
         }
         break;
 
       case "heading":
-        this.inTags(`h${node.level}`, node, 1);
+        result += this.inTags(`h${node.level}`, node, 1);
         break;
 
       case "footnote_reference": {
@@ -224,31 +230,31 @@ class HTMLRenderer {
           this.footnoteIndex[label] = index;
           this.nextFootnoteIndex++;
         }
-        this.renderTag("a", node, {
+        result += this.renderTag("a", node, {
           id: "fnref" + index,
           href: "#fn" + index,
           role: "doc-noteref"
         });
-        this.literal("<sup>");
-        this.out(index.toString());
-        this.literal("</sup></a>");
+        result += this.literal("<sup>");
+        result += this.out(index.toString());
+        result += this.literal("</sup></a>");
         break;
       }
 
       case "table":
-        this.inTags("table", node, 2);
+        result += this.inTags("table", node, 2);
         break;
 
       case "caption":
         // AST always has at least a dummy caption, no
         // need to render that.
         if (node.children.length > 0) {
-          this.inTags("caption", node, 1);
+          result += this.inTags("caption", node, 1);
         }
         break;
 
       case "row":
-        this.inTags("tr", node, 2);
+        result += this.inTags("tr", node, 2);
         break;
 
       case "cell": {
@@ -256,104 +262,104 @@ class HTMLRenderer {
         if (node.align !== "default") {
           cellAttr.style = `text-align: ${node.align};`;
         }
-        this.inTags(node.head ? "th" : "td", node, 1, cellAttr);
+        result += this.inTags(node.head ? "th" : "td", node, 1, cellAttr);
         break;
       }
 
       case "thematic_break":
-        this.renderTag("hr", node);
-        this.literal("\n");
+        result += this.renderTag("hr", node);
+        result += this.literal("\n");
         break;
 
       case "code_block":
-        this.renderTag("pre", node);
-        this.literal("<code");
+        result += this.renderTag("pre", node);
+        result += this.literal("<code");
         if (node.lang) {
-          this.literal(` class="language-${this.escapeAttribute(node.lang)}"`);
+          result += this.literal(` class="language-${this.escapeAttribute(node.lang)}"`);
         }
-        this.literal(">");
-        this.out(node.text);
-        this.renderCloseTag("code");
-        this.renderCloseTag("pre");
-        this.literal("\n");
+        result += this.literal(">");
+        result += this.out(node.text);
+        result += this.renderCloseTag("code");
+        result += this.renderCloseTag("pre");
+        result += this.literal("\n");
         break;
 
       case "raw_block":
         if (node.format === "html") {
-          this.literal(node.text);
+          result += this.literal(node.text);
         }
         break;
 
       case "str":
         if (node.attributes) {
-          this.renderTag("span", node);
-          this.out(node.text);
-          this.renderCloseTag("span");
+          result += this.renderTag("span", node);
+          result += this.out(node.text);
+          result += this.renderCloseTag("span");
         } else {
-          this.out(node.text);
+          result += this.out(node.text);
         }
         break;
 
       case "smart_punctuation":
-        this.literal(this.smartPunctuationMap[node.type] || node.text);
+        result += this.literal(this.smartPunctuationMap[node.type] || node.text);
         break;
 
       case "double_quoted":
-        this.literal(this.smartPunctuationMap.left_double_quote || "\"");
-        this.renderChildren(node);
-        this.literal(this.smartPunctuationMap.right_double_quote || "\"");
+        result += this.literal(this.smartPunctuationMap.left_double_quote || '"');
+        result += this.renderChildren(node);
+        result += this.literal(this.smartPunctuationMap.right_double_quote || '"');
         break;
 
       case "single_quoted":
-        this.literal(this.smartPunctuationMap.left_single_quote || "'");
-        this.renderChildren(node);
-        this.literal(this.smartPunctuationMap.right_single_quote || "'");
+        result += this.literal(this.smartPunctuationMap.left_single_quote || "'");
+        result += this.renderChildren(node);
+        result += this.literal(this.smartPunctuationMap.right_single_quote || "'");
         break;
 
       case "symb": {
-        this.out(`:${node.alias}:`);
+        result += this.out(`:${node.alias}:`);
         break;
       }
 
       case "math":
-        this.renderTag("span", node,
+        result += this.renderTag("span", node,
           { class: "math " + (node.display ? "display" : "inline") });
         if (node.display) {
-          this.out("\\[");
+          result += this.out("\\[");
         } else {
-          this.out("\\(");
+          result += this.out("\\(");
         }
-        this.out(node.text);
+        result += this.out(node.text);
         if (node.display) {
-          this.out("\\]");
+          result += this.out("\\]");
         } else {
-          this.out("\\)");
+          result += this.out("\\)");
         }
-        this.renderCloseTag("span");
+        result += this.renderCloseTag("span");
         break;
 
       case "verbatim":
-        this.renderTag("code", node);
-        this.out(node.text);
-        this.renderCloseTag("code");
+        result += this.renderTag("code", node);
+        result += this.out(node.text);
+        result += this.renderCloseTag("code");
         break;
 
       case "raw_inline":
         if (node.format === "html") {
-          this.literal(node.text);
+          result += this.literal(node.text);
         }
         break;
 
       case "soft_break":
-        this.literal("\n");
+        result += this.literal("\n");
         break;
 
       case "hard_break":
-        this.literal("<br>\n");
+        result += this.literal("<br>\n");
         break;
 
       case "non_breaking_space":
-        this.literal("&nbsp;");
+        result += this.literal("&nbsp;");
         break;
 
       case "link":
@@ -396,9 +402,9 @@ class HTMLRenderer {
           }
         }
         if (node.tag === "image") {
-          this.renderTag("img", node, extraAttr);
+          result += this.renderTag("img", node, extraAttr);
         } else {
-          this.inTags("a", node, 0, extraAttr);
+          result += this.inTags("a", node, 0, extraAttr);
         }
         break;
       }
@@ -411,51 +417,53 @@ class HTMLRenderer {
         } else {
           extraAttr.href = node.text;
         }
-        this.renderTag("a", node, extraAttr);
-        this.out(node.text);
-        this.renderCloseTag("a");
+        result += this.renderTag("a", node, extraAttr);
+        result += this.out(node.text);
+        result += this.renderCloseTag("a");
         break;
 
       case "strong":
-        this.inTags("strong", node, 0);
+        result += this.inTags("strong", node, 0);
         break;
 
       case "emph":
-        this.inTags("em", node, 0);
+        result += this.inTags("em", node, 0);
         break;
 
       case "span":
-        this.inTags("span", node, 0);
+        result += this.inTags("span", node, 0);
         break;
 
       case "mark":
-        this.inTags("mark", node, 0);
+        result += this.inTags("mark", node, 0);
         break;
 
       case "insert":
-        this.inTags("ins", node, 0);
+        result += this.inTags("ins", node, 0);
         break;
 
       case "delete":
-        this.inTags("del", node, 0);
+        result += this.inTags("del", node, 0);
         break;
 
       case "superscript":
-        this.inTags("sup", node, 0);
+        result += this.inTags("sup", node, 0);
         break;
 
       case "subscript":
-        this.inTags("sub", node, 0);
+        result += this.inTags("sub", node, 0);
         break;
 
       default:
     }
+    return result
   }
 
   render(doc: Doc): string {
+    let result = "";
     this.references = doc.references;
     this.footnotes = doc.footnotes;
-    this.renderChildren(doc);
+    result += this.renderChildren(doc);
     if (this.nextFootnoteIndex > 1) {
       // render notes
       const orderedFootnotes = [];
@@ -463,16 +471,16 @@ class HTMLRenderer {
         const index = this.footnoteIndex[k];
         orderedFootnotes[index] = this.footnotes[k];
       }
-      this.literal(`<section role="doc-endnotes">\n<hr>\n<ol>\n`);
+      result += this.literal(`<section role="doc-endnotes">\n<hr>\n<ol>\n`);
       for (let i = 1; i < orderedFootnotes.length; i++) {
-        this.literal(`<li id="fn${i}">\n`);
+        result += this.literal(`<li id="fn${i}">\n`);
         const note = this.addBacklink(orderedFootnotes[i], i);
-        this.renderChildren(note);
-        this.literal(`</li>\n`);
+        result += this.renderChildren(note);
+        result += this.literal(`</li>\n`);
       }
-      this.literal(`</ol>\n</section>\n`);
+      result += this.literal(`</ol>\n</section>\n`);
     }
-    return this.buffer.join("");
+    return result;
   }
 }
 
