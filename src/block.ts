@@ -166,7 +166,7 @@ class EventParser {
 
     this.specs = [
       {
-        name: "blockquote",
+        name: "block_quote",
         type: ContentType.Block,
         content: ContentType.Block,
         continue: (container) => {
@@ -180,7 +180,7 @@ class EventParser {
         open: (spec) => {
           if (this.find(pattBlockquotePrefix) !== null) {
             this.addContainer(new Container(spec, {}));
-            this.addMatch(this.pos, this.pos, "+blockquote");
+            this.addMatch(this.pos, this.pos, "+block_quote");
             this.pos = this.pos + 1;
             return true;
           } else {
@@ -188,7 +188,7 @@ class EventParser {
           }
         },
         close: (container) => {
-          this.addMatch(this.pos, this.pos, "-blockquote");
+          this.addMatch(this.pos, this.pos, "-block_quote");
           this.containers.pop();
         }
       },

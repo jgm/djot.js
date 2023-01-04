@@ -60,7 +60,7 @@ interface Div extends HasAttributes, HasChildren<Block> {
 }
 
 interface BlockQuote extends HasAttributes, HasChildren<Block> {
-  tag: "blockquote";
+  tag: "block_quote";
 }
 
 interface CodeBlock extends HasAttributes, HasText {
@@ -162,11 +162,11 @@ interface EnDash extends HasAttributes, HasText {
 }
 
 interface SoftBreak extends HasAttributes {
-  tag: "softbreak";
+  tag: "soft_break";
 }
 
 interface HardBreak extends HasAttributes {
-  tag: "hardbreak";
+  tag: "hard_break";
 }
 
 interface Nbsp extends HasAttributes {
@@ -174,7 +174,7 @@ interface Nbsp extends HasAttributes {
 }
 
 interface Symb extends HasAttributes {
-  tag: "symbol";
+  tag: "symb";
   alias: string;
 }
 
@@ -312,6 +312,7 @@ interface Doc extends HasChildren<Block>, HasAttributes {
 const blockTags : Record<string, boolean> = {
   para: true,
   heading: true,
+  block_quote: true,
   thematic_break: true,
   section: true,
   div: true,
@@ -329,8 +330,8 @@ function isBlock(node : AstNode) : node is Block {
 
 const inlineTags : Record<string, boolean> = {
   str: true,
-  softbreak: true,
-  hardbreak: true,
+  soft_break: true,
+  hard_break: true,
   nbsp: true,
   symb: true,
   verbatim: true,

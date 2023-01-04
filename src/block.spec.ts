@@ -22,26 +22,26 @@ describe("EventParser", () => {
     ]);
   });
 
-  it("parses blockquotes", () => {
+  it("parses block quotes", () => {
     const events = [];
     for (const event of new EventParser("> hello\n> there\nlazy\n>\n> hi\n", ignoreWarnings)) {
       //                            01234567 89012345 67890 12 345678
       events.push(event);
     }
     expect(events).toStrictEqual([
-      { startpos: 0, endpos: 0, annot: "+blockquote" },
+      { startpos: 0, endpos: 0, annot: "+block_quote" },
       { startpos: 2, endpos: 2, annot: "+para" },
       { startpos: 2, endpos: 6, annot: "str" },
-      { startpos: 7, endpos: 7, annot: "softbreak" },
+      { startpos: 7, endpos: 7, annot: "soft_break" },
       { startpos: 10, endpos: 14, annot: "str" },
-      { startpos: 15, endpos: 15, annot: "softbreak" },
+      { startpos: 15, endpos: 15, annot: "soft_break" },
       { startpos: 16, endpos: 19, annot: "str" },
       { startpos: 20, endpos: 20, annot: "-para" },
       { startpos: 22, endpos: 22, annot: "blankline" },
       { startpos: 25, endpos: 25, annot: "+para" },
       { startpos: 25, endpos: 26, annot: "str" },
       { startpos: 27, endpos: 27, annot: "-para" },
-      { startpos: 27, endpos: 27, annot: "-blockquote" }
+      { startpos: 27, endpos: 27, annot: "-block_quote" }
     ]);
   });
 
@@ -54,9 +54,9 @@ describe("EventParser", () => {
     expect(events).toStrictEqual([
       { startpos: 0, endpos: 1, annot: "+heading" },
       { startpos: 3, endpos: 7, annot: "str" },
-      { startpos: 8, endpos: 8, annot: "softbreak" },
+      { startpos: 8, endpos: 8, annot: "soft_break" },
       { startpos: 12, endpos: 16, annot: "str" },
-      { startpos: 17, endpos: 17, annot: "softbreak" },
+      { startpos: 17, endpos: 17, annot: "soft_break" },
       { startpos: 18, endpos: 21, annot: "str" },
       { startpos: 22, endpos: 22, annot: "-heading" }
     ]);
@@ -181,7 +181,7 @@ describe("EventParser", () => {
     expect(events).toStrictEqual([
       { startpos: 3, endpos: 3, annot: "+caption" },
       { startpos: 3, endpos: 11, annot: "str" },
-      { startpos: 12, endpos: 12, annot: "softbreak" },
+      { startpos: 12, endpos: 12, annot: "soft_break" },
       { startpos: 13, endpos: 13, annot: "+strong" },
       { startpos: 14, endpos: 17, annot: "str" },
       { startpos: 18, endpos: 18, annot: "-strong" },
@@ -234,7 +234,7 @@ describe("EventParser", () => {
       { startpos: 2, endpos: 5, annot: "note_label" },
       { startpos: 9, endpos: 9, annot: "+para" },
       { startpos: 9, endpos: 17, annot: "str" },
-      { startpos: 18, endpos: 18, annot: "softbreak" },
+      { startpos: 18, endpos: 18, annot: "soft_break" },
       { startpos: 19, endpos: 22, annot: "str" },
       { startpos: 23, endpos: 23, annot: "-para" },
       { startpos: 24, endpos: 24, annot: "blankline" },
@@ -280,7 +280,7 @@ describe("EventParser", () => {
     expect(events).toStrictEqual([
       { startpos: 0, endpos: 0, annot: "+para" },
       { startpos: 0, endpos: 4, annot: "str" },
-      { startpos: 5, endpos: 5, annot: "softbreak" },
+      { startpos: 5, endpos: 5, annot: "soft_break" },
       { startpos: 6, endpos: 9, annot: "str" },
       { startpos: 10, endpos: 10, annot: "+strong" },
       { startpos: 11, endpos: 13, annot: "str" },

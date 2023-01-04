@@ -118,7 +118,7 @@ class PandocRenderer {
         break;
       }
 
-      case "blockquote":
+      case "block_quote":
         elts.push({ t: "BlockQuote", c: this.toPandocChildren(node) });
         break;
 
@@ -274,11 +274,11 @@ class PandocRenderer {
         elts.push({ t: "RawInline", c: [node.format, node.text] });
         break;
 
-      case "softbreak":
+      case "soft_break":
         elts.push({ t: "SoftBreak" });
         break;
 
-      case "hardbreak":
+      case "hard_break":
         elts.push({ t: "LineBreak" });
         break;
 
@@ -314,7 +314,7 @@ class PandocRenderer {
         elts.push({ t: "Str", c: this.symbols[node.tag] || "" });
         break;
 
-      case "symbol":
+      case "symb":
         elts.push({ t: "Span", c: [["",["symbol"],[["alias",node.alias]]],
                     [{t: "Str", c: ":" + node.alias + ":"}]]});
         break;
@@ -509,11 +509,11 @@ class PandocParser {
         }
         switch (elt.t) {
           case "SoftBreak":
-            inlines.push({tag: "softbreak"});
+            inlines.push({tag: "soft_break"});
             break;
 
           case "LineBreak":
-            inlines.push({tag: "hardbreak"});
+            inlines.push({tag: "hard_break"});
             break;
 
           case "Emph":
@@ -659,7 +659,7 @@ class PandocParser {
         return {tag: "para", children: this.fromPandocInlines(block.c)};
 
       case "BlockQuote":
-        return {tag: "blockquote",
+        return {tag: "block_quote",
                 children: block.c.map((b : PandocElt) => {
                   return this.fromPandocBlock(b)
                 })};
@@ -857,7 +857,7 @@ class PandocParser {
         const ils : Inline[] = [];
         for (let i=0; i<block.c.length; i++) {
           if (i > 0) {
-            ils.push({tag: "hardbreak"});
+            ils.push({tag: "hard_break"});
           }
           ils.push(...this.fromPandocInlines(block.c[i]));
         }

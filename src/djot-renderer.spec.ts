@@ -31,7 +31,7 @@ superlongunbreakablewordthatwontfitononeline.
   const cicero2 : Doc = mkdoc([
       { tag: "para",
         children: [ { tag: "str", text: "Quoth Cicero:" } ] },
-      { tag: "blockquote",
+      { tag: "block_quote",
         children: [
           { tag: "para", children: [ { tag: "str", text: cicero } ]},
           { tag: "para", children: [ { tag: "str", text: cicero } ]}

@@ -38,7 +38,7 @@ describe("InlineParser", () => {
       { annot: "nbsp", startpos: 5, endpos: 5 },
       { annot: "str", startpos: 6, endpos: 7 },
       { annot: "escape", startpos: 9, endpos: 9 },
-      { annot: "hardbreak", startpos: 10, endpos: 10 }
+      { annot: "hard_break", startpos: 10, endpos: 10 }
     ]);
   });
 
@@ -208,12 +208,12 @@ describe("InlineParser", () => {
     ]);
   });
 
-  it("parses symbols", () => {
+  it("parses symbs", () => {
     const parser = new InlineParser(':+1:', ignoreWarnings);
     //                             0123
     parser.feed(0,3);
     expect(parser.getMatches()).toStrictEqual([
-      { annot: "symbol", startpos: 0, endpos: 3 }
+      { annot: "symb", startpos: 0, endpos: 3 }
     ]);
   });
 

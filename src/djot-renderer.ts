@@ -10,7 +10,7 @@ import { getStringContent } from "./parse";
 
 const isWhitespace = function(node : Inline) : boolean {
   const tag : string = node.tag;
-  return (tag === "space" || tag === "softbreak" || tag === "linebreak");
+  return (tag === "space" || tag === "soft_break" || tag === "hard_break");
 }
 
 const beginsWithWhitespace = function(node : HasChildren<Inline>) : boolean {
@@ -91,9 +91,9 @@ class DjotRenderer {
 
   doc : Doc;
   wrapWidth : number;
-  // wrapWidth == 0 means no wrap but softbreaks are breaks
-  //             -1 means no wrap and softbreaks are spaces
-  //             >0 means wrap to width, with softbreaks as spaces
+  // wrapWidth == 0 means no wrap but soft_breaks are breaks
+  //             -1 means no wrap and soft_breaks are spaces
+  //             >0 means wrap to width, with soft_breaks as spaces
   prefixes : string[] = [];
   buffer : string[] = [];
   startOfLine  = true;
@@ -207,7 +207,7 @@ class DjotRenderer {
     this.lit(" ");
   }
 
-  softbreak () : void {
+  soft_break () : void {
     if (this.wrapWidth === 0) {
       this.newline();
     } else {
@@ -330,7 +330,7 @@ class DjotRenderer {
       this.prefixes.pop();
       this.blankline();
     },
-    blockquote: (node: BlockQuote) => {
+    block_quote: (node: BlockQuote) => {
       this.prefixes.push("> ");
       this.lit("> ");
       this.renderChildren<Block>(node.children);
@@ -472,7 +472,7 @@ class DjotRenderer {
       });
     },
     space: () => { this.space(); },
-    softbreak: () => { this.softbreak(); },
+    soft_break: () => { this.soft_break(); },
     right_single_quote: () => { this.lit("'"); },
     left_single_quote: () => { this.lit("'"); },
     right_double_quote: () => { this.lit("\""); },
@@ -493,7 +493,7 @@ class DjotRenderer {
     footnote_reference: (node : FootnoteReference) => {
       this.lit("[^" + node.text + "]");
     },
-    symbol: (node : Symb) => {
+    symb: (node : Symb) => {
       this.lit(":" + node.alias + ":");
     },
     link: (node : Link) => {

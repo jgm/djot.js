@@ -252,7 +252,7 @@ const matchers = {
         }
       }
       self.addMatch(pos, pos, "escape");
-      self.addMatch(pos + 1, mLineEnd.endpos, "hardbreak");
+      self.addMatch(pos + 1, mLineEnd.endpos, "hard_break");
       return mLineEnd.endpos + 1;
     } else {
       const mPunct = boundedFind(subject, pattPunctuation, pos + 1, endpos);
@@ -346,7 +346,7 @@ const matchers = {
   [C_COLON]: function(self: InlineParser, pos: number, endpos: number): number | null {
     const m = boundedFind(self.subject, pattSymbol, pos, endpos)
     if (m) {
-      self.addMatch(m.startpos, m.endpos, "symbol");
+      self.addMatch(m.startpos, m.endpos, "symb");
       return m.endpos + 1;
     } else {
       self.addMatch(pos, pos, "str");
@@ -639,8 +639,8 @@ class InlineParser {
     if (sorted.length > 0) {
       let last = sorted[sorted.length - 1];
       let { startpos, endpos, annot } = last;
-      // remove final softbreak
-      if (annot === "softbreak") {
+      // remove final soft_break
+      if (annot === "soft_break") {
         sorted.pop();
         last = sorted[sorted.length - 1];
         startpos = last.startpos;
@@ -783,10 +783,10 @@ class InlineParser {
         if (c === C_CR || c === C_LF) { // cr or lf
           if (c === C_CR && subject.codePointAt(pos + 1) === C_LF &&
             pos + 1 <= endpos) {
-            this.addMatch(pos, pos + 1, "softbreak");
+            this.addMatch(pos, pos + 1, "soft_break");
             pos = pos + 2;
           } else {
-            this.addMatch(pos, pos, "softbreak");
+            this.addMatch(pos, pos, "soft_break");
             pos = pos + 1;
           }
         } else if (this.verbatim > 0) {

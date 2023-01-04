@@ -3,9 +3,9 @@
 .
 doc
   para
-    symbol alias="+1"
+    symb alias="+1"
     str text=" "
-    symbol alias="scream"
+    symb alias="scream"
 ```
 
 ``` a
@@ -13,6 +13,6 @@ doc
 .
 doc
   para
-    symbol alias="ice"
+    symb alias="ice"
     str text="scream:"
 ```

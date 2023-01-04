@@ -5,10 +5,10 @@ const ignoreWarnings = () => { /* do nothing */ };
 
 const testfiles = [
   "attributes.test",
-  "blockquote.test",
+  "block_quote.test",
   "code_blocks.test",
   "definition_lists.test",
-  "symbol.test",
+  "symb.test",
   "emphasis.test",
   "escapes.test",
   "fenced_divs.test",

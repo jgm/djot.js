@@ -281,7 +281,7 @@ text{a=x
 > a
 .
 doc
-  blockquote attr="long value spanning multiple lines"
+  block_quote attr="long value spanning multiple lines"
     para
       str text="a"
 ```
@@ -292,7 +292,7 @@ doc
 > ou
 .
 doc
-  blockquote
+  block_quote
     para key="bar a$bim"
       str text="ou"
 ```

@@ -458,10 +458,10 @@ describe("PandocParser", () => {
                 ]
               },
               {
-                "tag": "blockquote",
+                "tag": "block_quote",
                 "children": [
                   {
-                    "tag": "blockquote",
+                    "tag": "block_quote",
                     "children": [
                       {
                         "tag": "para",

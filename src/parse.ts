@@ -39,7 +39,7 @@ const addStringContent = function(node: (AstNode | Container),
   if ("text" in node) {
     buffer.push(node.text);
   } else if ("tag" in node &&
-    (node.tag === "softbreak" || node.tag === "hardbreak")) {
+    (node.tag === "soft_break" || node.tag === "hard_break")) {
     buffer.push("\n");
   } else if ("children" in node) {
     node.children.forEach((child: AstNode) => {
@@ -115,8 +115,8 @@ interface ParseOptions {
 // Parsing ocntext:
 enum Context {
   Normal = 0,    // add str nodes as children of tip
-  Verbatim = 1,  // gather str, escape, softbreak, hardbreak in accumulatedText
-  Literal = 2    // gather str, softbreak, hardbreak in accumulatedText
+  Verbatim = 1,  // gather str, escape, soft_break, hard_break in accumulatedText
+  Literal = 2    // gather str, soft_break, hard_break in accumulatedText
 }
 
 const parse = function(input: string, options: ParseOptions = {}): Doc {
@@ -258,9 +258,9 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
           accumulatedText.push(txt);
         }
       },
-      softbreak: (suffixes, startpos, endpos, pos) => {
+      soft_break: (suffixes, startpos, endpos, pos) => {
         if (context === Context.Normal) {
-          addChildToTip({ tag: "softbreak" }, pos);
+          addChildToTip({ tag: "soft_break" }, pos);
         } else {
           accumulatedText.push("\n");
         }
@@ -272,9 +272,9 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
         }
       },
 
-      hardbreak: (suffixes, startpos, endpos, pos) => {
+      hard_break: (suffixes, startpos, endpos, pos) => {
         if (context === Context.Normal) {
-          addChildToTip({ tag: "hardbreak" }, pos);
+          addChildToTip({ tag: "hard_break" }, pos);
         } else {
           accumulatedText.push("\n");
         }
@@ -288,10 +288,10 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
         }
       },
 
-      symbol: (suffixes, startpos, endpos, pos) => {
+      symb: (suffixes, startpos, endpos, pos) => {
         if (context === Context.Normal) {
           const alias = input.substring(startpos + 1, endpos);
-          addChildToTip({ tag: "symbol", alias: alias }, pos);
+          addChildToTip({ tag: "symb", alias: alias }, pos);
         } else {
           const txt = input.substring(startpos, endpos + 1);
           accumulatedText.push(txt);
@@ -872,14 +872,14 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
         topContainer().data.checkbox = "unchecked";
       },
 
-      ["+blockquote"]: (suffixes, startpos, endpos, pos) => {
+      ["+block_quote"]: (suffixes, startpos, endpos, pos) => {
         pushContainer(pos);
       },
 
-      ["-blockquote"]: (suffixes, startpos, endpos, pos) => {
+      ["-block_quote"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         addChildToTip({
-          tag: "blockquote",
+          tag: "block_quote",
           children: node.children,
           attributes: node.attributes
         }, node.pos);

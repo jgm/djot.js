@@ -150,7 +150,7 @@ class HTMLRenderer {
         }
         break;
 
-      case "blockquote":
+      case "block_quote":
         this.inTags("blockquote", node, 2);
         break;
 
@@ -324,7 +324,7 @@ class HTMLRenderer {
         this.literal("&ndash;");
         break;
 
-      case "symbol": {
+      case "symb": {
         this.out(`:${node.alias}:`);
         break;
       }
@@ -358,11 +358,11 @@ class HTMLRenderer {
         }
         break;
 
-      case "softbreak":
+      case "soft_break":
         this.literal("\n");
         break;
 
-      case "hardbreak":
+      case "hard_break":
         this.literal("<br>\n");
         break;
 

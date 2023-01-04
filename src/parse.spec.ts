@@ -17,7 +17,7 @@ describe("Parser", () => {
           "text": "hi there"
         },
         {
-          "tag": "softbreak"
+          "tag": "soft_break"
         },
         {
           "tag": "str",
@@ -48,7 +48,7 @@ describe("Parser", () => {
   "footnotes": {},
   "children": [
     {
-      "tag": "blockquote",
+      "tag": "block_quote",
       "children": [
         {
           "tag": "para",
@@ -141,7 +141,7 @@ describe("Parser", () => {
 `doc
   para (1:1:0-3:0:15)
     str (1:1:0-1:8:7) text="hi there"
-    softbreak (2:0:8-2:0:8)
+    soft_break (2:0:8-2:0:8)
     str (2:1:9-2:6:14) text="friend"
   para (4:1:17-5:0:25)
     str (4:1:17-4:8:24) text="new para"
