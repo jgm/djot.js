@@ -95,7 +95,7 @@ type Inline =
     Str
   | SoftBreak
   | HardBreak
-  | Nbsp
+  | NonBreakingSpace
   | Symb
   | Verbatim
   | RawInline
@@ -169,8 +169,8 @@ interface HardBreak extends HasAttributes {
   tag: "hard_break";
 }
 
-interface Nbsp extends HasAttributes {
-  tag: "nbsp";
+interface NonBreakingSpace extends HasAttributes {
+  tag: "non_breaking_space";
 }
 
 interface Symb extends HasAttributes {
@@ -332,7 +332,7 @@ const inlineTags : Record<string, boolean> = {
   str: true,
   soft_break: true,
   hard_break: true,
-  nbsp: true,
+  non_breaking_space: true,
   symb: true,
   verbatim: true,
   raw_inline: true,
@@ -399,7 +399,7 @@ export {
   Str,
   SoftBreak,
   HardBreak,
-  Nbsp,
+  NonBreakingSpace,
   Symb,
   Verbatim,
   RawInline,

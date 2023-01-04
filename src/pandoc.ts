@@ -46,7 +46,7 @@ class PandocRenderer {
   doc : Doc;
   warn : (msg : string, pos ?: number | null) => void;
   symbols : Record<string, string> =
-    { nbsp: " ",
+    { non_breaking_space: " ",
       ellipses: "⋯",
       em_dash: "-",
       en_dash: "-",
@@ -303,7 +303,7 @@ class PandocRenderer {
                          node.text] });
         break;
 
-      case "nbsp":
+      case "non_breaking_space":
       case "ellipses":
       case "em_dash":
       case "en_dash":

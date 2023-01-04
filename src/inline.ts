@@ -263,7 +263,7 @@ const matchers = {
       } else if (pos + 1 <= endpos &&
         subject.codePointAt(pos + 1) === C_SPACE) {
         self.addMatch(pos, pos, "escape");
-        self.addMatch(pos + 1, pos + 1, "nbsp");
+        self.addMatch(pos + 1, pos + 1, "non_breaking_space");
         return pos + 2;
       } else {
         self.addMatch(pos, pos, "str");

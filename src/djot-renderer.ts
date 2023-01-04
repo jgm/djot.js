@@ -480,7 +480,7 @@ class DjotRenderer {
     ellipses: () => { this.lit("..."); },
     em_dash: () => { this.lit("---"); },
     en_dash: () => { this.lit("--"); },
-    nbsp: () => { this.lit("\\ "); },
+    non_breaking_space: () => { this.lit("\\ "); },
     single_quoted: this.inlineContainer("'"),
     double_quoted: this.inlineContainer("\""),
     emph: this.inlineContainer("_"),

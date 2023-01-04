@@ -35,7 +35,7 @@ describe("InlineParser", () => {
       { annot: "escape", startpos: 2, endpos: 2 },
       { annot: "str", startpos: 3, endpos: 3 },
       { annot: "escape", startpos: 4, endpos: 4 },
-      { annot: "nbsp", startpos: 5, endpos: 5 },
+      { annot: "non_breaking_space", startpos: 5, endpos: 5 },
       { annot: "str", startpos: 6, endpos: 7 },
       { annot: "escape", startpos: 9, endpos: 9 },
       { annot: "hard_break", startpos: 10, endpos: 10 }

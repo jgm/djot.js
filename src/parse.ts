@@ -280,11 +280,11 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
         }
       },
 
-      nbsp: (suffixes, startpos, endpos, pos) => {
+      non_breaking_space: (suffixes, startpos, endpos, pos) => {
         if (context === Context.Verbatim) {
           accumulatedText.push("\\ ");
         } else {
-          addChildToTip({ tag: "nbsp" }, pos);
+          addChildToTip({ tag: "non_breaking_space" }, pos);
         }
       },
 

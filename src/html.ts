@@ -366,7 +366,7 @@ class HTMLRenderer {
         this.literal("<br>\n");
         break;
 
-      case "nbsp":
+      case "non_breaking_space":
         this.literal("&nbsp;");
         break;
 
