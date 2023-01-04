@@ -37,14 +37,6 @@ class HTMLRenderer {
       .replace(/"/g, "&quot;");
   }
 
-  out(s: string): string {
-    return this.escape(s);
-  }
-
-  literal(s: string): string {
-    return s;
-  }
-
   smartPunctuationMap : Record<string, string> = {
     right_single_quote: "&rsquo;",
     left_single_quote: "&lsquo;",
@@ -65,9 +57,9 @@ class HTMLRenderer {
           if (node.attributes && node.attributes.class) {
             v = v + " " + node.attributes.class;
           }
-          result += this.literal(` ${k}="${this.escapeAttribute(v)}"`);
+          result += ` ${k}="${this.escapeAttribute(v)}"`;
         } else {
-          result += this.literal(` ${k}="${this.escapeAttribute(extraAttrs[k])}"`);
+          result += ` ${k}="${this.escapeAttribute(extraAttrs[k])}"`;
         }
       }
     }
@@ -75,27 +67,27 @@ class HTMLRenderer {
       for (const k in node.attributes) {
         const v = node.attributes[k];
         if (!(k === "class" && extraAttrs && extraAttrs.class)) {
-          result += this.literal(` ${k}="${this.escapeAttribute(v)}"`);
+          result += ` ${k}="${this.escapeAttribute(v)}"`;
         }
       }
     }
     if (this.options.sourcePositions && node.pos) {
       const sp = node.pos.start;
       const ep = node.pos.end;
-      result += this.literal(` data-startpos="${sp.line}:${sp.col}:${sp.offset}" data-endpos="${ep.line}:${ep.col}:${ep.offset}"`);
+      result += ` data-startpos="${sp.line}:${sp.col}:${sp.offset}" data-endpos="${ep.line}:${ep.col}:${ep.offset}"`;
     }
     return result;
   }
 
   renderTag(tag: string, node: AstNode, extraAttrs?: Record<string, string>)
     : string {
-    let result = ""
-    result += this.literal("<");
-    result += this.literal(tag);
+    let result = "";
+    result += "<";
+    result += tag;
     if ("attributes" in node || extraAttrs || node.pos) {
       result += this.renderAttributes(node, extraAttrs);
     }
-    result += this.literal(">");
+    result += ">";
     return result;
   }
 
@@ -107,12 +99,12 @@ class HTMLRenderer {
     extraAttrs?: Record<string, string>): string {
     let result = ""
     result += this.renderTag(tag, node, extraAttrs);
-    if (newlines >= 2) { result += this.literal("\n"); }
+    if (newlines >= 2) { result += "\n"; }
     if ("children" in node) {
       result += this.renderChildren(node);
     }
     result += this.renderCloseTag(tag);
-    if (newlines >= 1) { result += this.literal("\n"); }
+    if (newlines >= 1) { result += "\n";  }
     return result;
   }
 
@@ -159,7 +151,7 @@ class HTMLRenderer {
       case "para":
         if (this.tight) {
           result += this.renderChildren(node);
-          result += this.literal("\n");
+          result += "\n";
         } else {
           result += this.inTags("p", node, 1);
         }
@@ -235,9 +227,9 @@ class HTMLRenderer {
           href: "#fn" + index,
           role: "doc-noteref"
         });
-        result += this.literal("<sup>");
-        result += this.out(index.toString());
-        result += this.literal("</sup></a>");
+        result += "<sup>";
+        result += this.escape(index.toString());
+        result += "</sup></a>";
         break;
       }
 
@@ -268,56 +260,56 @@ class HTMLRenderer {
 
       case "thematic_break":
         result += this.renderTag("hr", node);
-        result += this.literal("\n");
+        result += "\n";
         break;
 
       case "code_block":
         result += this.renderTag("pre", node);
-        result += this.literal("<code");
+        result += "<code";
         if (node.lang) {
-          result += this.literal(` class="language-${this.escapeAttribute(node.lang)}"`);
+          result += ` class="language-${this.escapeAttribute(node.lang)}"`;
         }
-        result += this.literal(">");
-        result += this.out(node.text);
+        result += ">";
+        result += this.escape(node.text);
         result += this.renderCloseTag("code");
         result += this.renderCloseTag("pre");
-        result += this.literal("\n");
+        result += "\n";
         break;
 
       case "raw_block":
         if (node.format === "html") {
-          result += this.literal(node.text);
+          result += node.text;
         }
         break;
 
       case "str":
         if (node.attributes) {
           result += this.renderTag("span", node);
-          result += this.out(node.text);
+          result += this.escape(node.text);
           result += this.renderCloseTag("span");
         } else {
-          result += this.out(node.text);
+          result += this.escape(node.text);
         }
         break;
 
       case "smart_punctuation":
-        result += this.literal(this.smartPunctuationMap[node.type] || node.text);
+        result += this.smartPunctuationMap[node.type] || node.text;
         break;
 
       case "double_quoted":
-        result += this.literal(this.smartPunctuationMap.left_double_quote || '"');
+        result += this.smartPunctuationMap.left_double_quote || '"';
         result += this.renderChildren(node);
-        result += this.literal(this.smartPunctuationMap.right_double_quote || '"');
+        result += this.smartPunctuationMap.right_double_quote || '"';
         break;
 
       case "single_quoted":
-        result += this.literal(this.smartPunctuationMap.left_single_quote || "'");
+        result += this.smartPunctuationMap.left_single_quote || "'";
         result += this.renderChildren(node);
-        result += this.literal(this.smartPunctuationMap.right_single_quote || "'");
+        result += this.smartPunctuationMap.right_single_quote || "'";
         break;
 
       case "symb": {
-        result += this.out(`:${node.alias}:`);
+        result += this.escape(`:${node.alias}:`);
         break;
       }
 
@@ -325,41 +317,41 @@ class HTMLRenderer {
         result += this.renderTag("span", node,
           { class: "math " + (node.display ? "display" : "inline") });
         if (node.display) {
-          result += this.out("\\[");
+          result += this.escape("\\[");
         } else {
-          result += this.out("\\(");
+          result += this.escape("\\(");
         }
-        result += this.out(node.text);
+        result += this.escape(node.text);
         if (node.display) {
-          result += this.out("\\]");
+          result += this.escape("\\]");
         } else {
-          result += this.out("\\)");
+          result += this.escape("\\)");
         }
         result += this.renderCloseTag("span");
         break;
 
       case "verbatim":
         result += this.renderTag("code", node);
-        result += this.out(node.text);
+        result += this.escape(node.text);
         result += this.renderCloseTag("code");
         break;
 
       case "raw_inline":
         if (node.format === "html") {
-          result += this.literal(node.text);
+          result += node.text;
         }
         break;
 
       case "soft_break":
-        result += this.literal("\n");
+        result += "\n";
         break;
 
       case "hard_break":
-        result += this.literal("<br>\n");
+        result += "<br>\n";
         break;
 
       case "non_breaking_space":
-        result += this.literal("&nbsp;");
+        result += "&nbsp;";
         break;
 
       case "link":
@@ -418,7 +410,7 @@ class HTMLRenderer {
           extraAttr.href = node.text;
         }
         result += this.renderTag("a", node, extraAttr);
-        result += this.out(node.text);
+        result += this.escape(node.text);
         result += this.renderCloseTag("a");
         break;
 
@@ -471,14 +463,14 @@ class HTMLRenderer {
         const index = this.footnoteIndex[k];
         orderedFootnotes[index] = this.footnotes[k];
       }
-      result += this.literal(`<section role="doc-endnotes">\n<hr>\n<ol>\n`);
+      result += `<section role="doc-endnotes">\n<hr>\n<ol>\n`;
       for (let i = 1; i < orderedFootnotes.length; i++) {
-        result += this.literal(`<li id="fn${i}">\n`);
+        result += `<li id="fn${i}">\n`;
         const note = this.addBacklink(orderedFootnotes[i], i);
         result += this.renderChildren(note);
-        result += this.literal(`</li>\n`);
+        result += `</li>\n`;
       }
-      result += this.literal(`</ol>\n</section>\n`);
+      result += `</ol>\n</section>\n`;
     }
     return result;
   }
