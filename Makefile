@@ -8,6 +8,10 @@ build:
 	tsc
 .PHONY: build
 
+bench:
+	npm run bench
+.PHONY: bench
+
 dist/djot.js:
 	npm run build
 
