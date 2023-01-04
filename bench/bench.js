@@ -14,13 +14,11 @@ const convert = (contents) => djot.renderHTML(djot.parse(contents, options), opt
 
 const files = [
   "block-list-flat.dj",
-  "inline-entity.dj",
   "block-bq-flat.dj",
   "block-list-nested.dj",
   "inline-escape.dj",
   "block-bq-nested.dj",
   "block-ref-flat.dj",
-  "inline-html.dj",
   "block-code.dj",
   "block-ref-nested.dj",
   "inline-links-flat.dj",
@@ -29,14 +27,10 @@ const files = [
   "inline-links-nested.dj",
   "block-heading.dj",
   "inline-backticks.dj",
-  "inline-newlines.dj",
   "block-hr.dj",
   "inline-em-flat.dj",
   "lorem1.dj",
-  "block-html.dj",
   "inline-em-nested.dj",
-  "rawtabs.dj",
-  "block-lheading.dj",
   "inline-em-worst.dj",
   "readme.dj" ];
 
