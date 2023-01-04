@@ -1,0 +1,5 @@
+_this _is _a _bunch_ of_ nested_ emphases_
+
+*this *is *a *bunch* of* nested* emphases*
+
+_{*this _{*is _{*a _{*bunch*}_ of*}_ nested*}_ emphases*}_
