@@ -23,8 +23,10 @@ pm.dj:
 		| pandoc -t json | ./djot -f pandoc -t djot > $@
 
 check-optimization: pm.dj
-	node --trace_opt --trace_deopt --allow-natives-syntax ./lib/cli.js \
-		pm.dj | grep deopt | awk '{ print $$0 "\n"; }'
+	rm isolate*v8.log
+	node --log-all ./lib/cli.js pm.dj >/dev/null
+	npx v8-deopt-viewer -i isolate*v8.log
+	open ./v8-deopt-viewer/index.html
 .PHONY: check-optimization
 
 update-playground: playground/djot.js
