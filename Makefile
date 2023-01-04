@@ -18,6 +18,15 @@ dist/djot.js:
 playground/djot.js: dist/djot.js
 	cp $< playground/djot.js
 
+pm.dj:
+	curl https://raw.githubusercontent.com/jgm/pandoc/master/MANUAL.txt \
+		| pandoc -t json | ./djot -f pandoc -t djot > $@
+
+check-optimization: pm.dj
+	node --trace_opt --trace_deopt --allow-natives-syntax ./lib/cli.js \
+		pm.dj | grep deopt | awk '{ print $$0 "\n"; }'
+.PHONY: check-optimization
+
 update-playground: playground/djot.js
 	rsync -a --delete playground website:djot.net/
 .PHONY: update-playground
