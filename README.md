@@ -129,6 +129,16 @@ Example of usage:
 </ul>
 ```
 
+### Rendering djot
+
+`DjotRenderer`
+
+Example of usage:
+
+``` js
+```
+
+
 ### Pandoc interoperability
 
 `PandocRenderer`
@@ -149,7 +159,6 @@ Example of usage:
 
 ``` js
 ```
-
 
 ### Filters
 
