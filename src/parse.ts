@@ -1066,31 +1066,45 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
       },
 
       left_single_quote: (suffixes, startpos, endpos, pos) => {
-        addChildToTip({ tag: "left_single_quote", text: "'" }, pos);
+        addChildToTip({ tag: "smart_punctuation",
+                        type: "left_single_quote",
+                        text: "'" }, pos);
       },
 
       right_single_quote: (suffixes, startpos, endpos, pos) => {
-        addChildToTip({ tag: "right_single_quote", text: "'" }, pos);
+        addChildToTip({ tag: "smart_punctuation",
+                        type: "right_single_quote",
+                        text: "'" }, pos);
       },
 
       left_double_quote: (suffixes, startpos, endpos, pos) => {
-        addChildToTip({ tag: "left_double_quote", text: '"' }, pos);
+        addChildToTip({ tag: "smart_punctuation",
+                        type: "left_double_quote",
+                        text: '"' }, pos);
       },
 
       right_double_quote: (suffixes, startpos, endpos, pos) => {
-        addChildToTip({ tag: "right_double_quote", text: '"' }, pos);
+        addChildToTip({ tag: "smart_punctuation",
+                        type: "right_double_quote",
+                        text: '"' }, pos);
       },
 
       ellipses: (suffixes, startpos, endpos, pos) => {
-        addChildToTip({ tag: "ellipses", text: "..." }, pos);
+        addChildToTip({ tag: "smart_punctuation",
+                        type: "ellipses",
+                        text: "..." }, pos);
       },
 
       en_dash: (suffixes, startpos, endpos, pos) => {
-        addChildToTip({ tag: "en_dash", text: "--" }, pos);
+        addChildToTip({ tag: "smart_punctuation",
+                        type: "en_dash",
+                        text: "--" }, pos);
       },
 
       em_dash: (suffixes, startpos, endpos, pos) => {
-        addChildToTip({ tag: "em_dash", text: "---" }, pos);
+        addChildToTip({ tag: "smart_punctuation",
+                        type: "em_dash",
+                        text: "---" }, pos);
       },
 
       // We set the blanklines property of a parent list or

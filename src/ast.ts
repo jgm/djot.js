@@ -103,13 +103,7 @@ type Inline =
   | Url
   | Email
   | FootnoteReference
-  | LeftSingleQuote
-  | RightSingleQuote
-  | LeftDoubleQuote
-  | RightDoubleQuote
-  | Ellipses
-  | EmDash
-  | EnDash
+  | SmartPunctuation
   | Emph
   | Strong
   | Link
@@ -133,32 +127,19 @@ interface FootnoteReference extends HasAttributes, HasText {
   tag: "footnote_reference";
 }
 
-interface LeftSingleQuote extends HasAttributes, HasText {
-  tag: "left_single_quote";
-}
 
-interface RightSingleQuote extends HasAttributes, HasText {
-  tag: "right_single_quote";
-}
+type SmartPunctuationType =
+  "left_single_quote" |
+  "right_single_quote" |
+  "left_double_quote" |
+  "right_double_quote" |
+  "ellipses" |
+  "em_dash" |
+  "en_dash";
 
-interface LeftDoubleQuote extends HasAttributes, HasText {
-  tag: "left_double_quote";
-}
-
-interface RightDoubleQuote extends HasAttributes, HasText {
-  tag: "right_double_quote";
-}
-
-interface Ellipses extends HasAttributes, HasText {
-  tag: "ellipses";
-}
-
-interface EmDash extends HasAttributes, HasText {
-  tag: "em_dash";
-}
-
-interface EnDash extends HasAttributes, HasText {
-  tag: "en_dash";
+interface SmartPunctuation extends HasAttributes, HasText {
+  tag: "smart_punctuation";
+  type: SmartPunctuationType;
 }
 
 interface SoftBreak extends HasAttributes {
@@ -340,13 +321,7 @@ const inlineTags : Record<string, boolean> = {
   url: true,
   email: true,
   footnote_reference: true,
-  left_single_quote: true,
-  right_single_quote: true,
-  left_double_quote: true,
-  right_double_quote: true,
-  ellipses: true,
-  em_dash: true,
-  en_dash: true,
+  smart_punctuation: true,
   emph: true,
   strong: true,
   link: true,
@@ -407,13 +382,8 @@ export {
   Url,
   Email,
   FootnoteReference,
-  LeftSingleQuote,
-  RightSingleQuote,
-  LeftDoubleQuote,
-  RightDoubleQuote,
-  Ellipses,
-  EmDash,
-  EnDash,
+  SmartPunctuationType,
+  SmartPunctuation,
   Emph,
   Strong,
   Link,

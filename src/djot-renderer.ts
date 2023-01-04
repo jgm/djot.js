@@ -4,7 +4,7 @@ import { Doc, AstNode, HasChildren,
          BlockQuote, Section, CodeBlock, RawBlock,
          Term, Definition, Footnote, Reference, Symb,
          Link, Image, HasText, RawInline, FootnoteReference,
-         Inline, Str, Math, Verbatim,
+         Inline, Str, Math, Verbatim, SmartPunctuation,
          isInline,  isBlock, isCaption, isRow } from "./ast";
 import { getStringContent } from "./parse";
 
@@ -473,13 +473,7 @@ class DjotRenderer {
     },
     space: () => { this.space(); },
     soft_break: () => { this.soft_break(); },
-    right_single_quote: () => { this.lit("'"); },
-    left_single_quote: () => { this.lit("'"); },
-    right_double_quote: () => { this.lit("\""); },
-    left_double_quote: () => { this.lit("\""); },
-    ellipses: () => { this.lit("..."); },
-    em_dash: () => { this.lit("---"); },
-    en_dash: () => { this.lit("--"); },
+    smart_punctuation: (node : SmartPunctuation) => { this.lit(node.text); },
     non_breaking_space: () => { this.lit("\\ "); },
     single_quoted: this.inlineContainer("'"),
     double_quoted: this.inlineContainer("\""),

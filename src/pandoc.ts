@@ -45,7 +45,7 @@ const toPandocAttr = function(node : AstNode) : PandocAttr {
 class PandocRenderer {
   doc : Doc;
   warn : (msg : string, pos ?: number | null) => void;
-  symbols : Record<string, string> =
+  smartPunctuationMap : Record<string, string> =
     { non_breaking_space: " ",
       ellipses: "⋯",
       em_dash: "-",
@@ -54,7 +54,6 @@ class PandocRenderer {
       right_single_quote: "’",
       left_double_quote: "“",
       right_double_quote: "”" };
-
 
   constructor(doc : Doc, warn ?: (msg : string, pos ?: number | null) => void) {
     this.doc = doc;
@@ -304,14 +303,12 @@ class PandocRenderer {
         break;
 
       case "non_breaking_space":
-      case "ellipses":
-      case "em_dash":
-      case "en_dash":
-      case "left_single_quote":
-      case "right_single_quote":
-      case "left_double_quote":
-      case "right_double_quote":
-        elts.push({ t: "Str", c: this.symbols[node.tag] || "" });
+        elts.push({ t: "Str", c: " " });
+        break;
+
+      case "smart_punctuation":
+        elts.push({ t: "Str", c: this.smartPunctuationMap[node.type] ||
+                                 node.text });
         break;
 
       case "symb":

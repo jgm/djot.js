@@ -47,6 +47,16 @@ class HTMLRenderer {
     this.buffer.push(s);
   }
 
+  smartPunctuationMap : Record<string, string> = {
+    right_single_quote: "&rsquo;",
+    left_single_quote: "&lsquo;",
+    right_double_quote: "&rdquo;",
+    left_double_quote: "&ldquo;",
+    ellipses: "&hellip;",
+    em_dash: "&mdash;",
+    en_dash: "&ndash;"
+  }
+
   renderAttributes(node: HasAttributes, extraAttrs?: Record<string, string>)
     : void {
     if (extraAttrs) {
@@ -284,44 +294,20 @@ class HTMLRenderer {
         }
         break;
 
-      case "left_double_quote":
-        this.literal("&ldquo;");
-        break;
-
-      case "right_double_quote":
-        this.literal("&rdquo;");
-        break;
-
-      case "left_single_quote":
-        this.literal("&lsquo;");
-        break;
-
-      case "right_single_quote":
-        this.literal("&rsquo;");
+      case "smart_punctuation":
+        this.literal(this.smartPunctuationMap[node.type] || node.text);
         break;
 
       case "double_quoted":
-        this.literal("&ldquo;");
+        this.literal(this.smartPunctuationMap.left_double_quote || "\"");
         this.renderChildren(node);
-        this.literal("&rdquo;");
+        this.literal(this.smartPunctuationMap.right_double_quote || "\"");
         break;
 
       case "single_quoted":
-        this.literal("&lsquo;");
+        this.literal(this.smartPunctuationMap.left_single_quote || "'");
         this.renderChildren(node);
-        this.literal("&rsquo;");
-        break;
-
-      case "ellipses":
-        this.literal("&hellip;");
-        break;
-
-      case "em_dash":
-        this.literal("&mdash;");
-        break;
-
-      case "en_dash":
-        this.literal("&ndash;");
+        this.literal(this.smartPunctuationMap.right_single_quote || "'");
         break;
 
       case "symb": {
