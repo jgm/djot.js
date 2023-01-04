@@ -1,26 +1,33 @@
 # djot.js
 
-This is a typescript rewrite of [djot's
-lua implementation](https://github.com/jgm/djot).
+A library and command-line tool for parsing and
+rendering the light markup format [djot](https://djot.net).
+
+This is a typescript rewrite of [djot's original lua
+implementation](https://github.com/jgm/djot.lua).
 It is currently powering the [djot
 playground](https://djot.net/playground).
 
-`npm run test` runs some tests.
+## Script API
 
-`npm run build` will generate a single-file library bundle `dist/djot.js`.
+| `npm run ...`    | Description                                           |
+| ---------------- | -----------                                           |
+| `build`          | Compile, bundle, and minify sources to `dist/djot.js` |
+| `test`           | Run tests                                             |
+| `bench`          | Run benchmarks                                        |
 
 ## Installing the command line utility
 
-From this source directory, you can install the command-line
-utility `djot` thus:
+You can install the command-line utility `djot` via
 
 ```
-npm install -g .
+npm install -g https://github.com/jgm/djot.js
 ```
 
-`djot --help` will give you some cryptic guidance.  For more
+`djot --help` will give a summary of options. For more
 extensive documentation, use `man djot` or see the
 [man page online](https://github.com/jgm/djot.js/blob/main/doc/djot.md).
+
 You can use `djot` to
 
 - convert from djot to HTML
@@ -42,4 +49,118 @@ And to convert back to `gfm`,
 ```
 djot mydoc.dj -t pandoc | pandoc -f json -t gfm
 ```
+
+## Library API
+
+### Parsing djot to an AST
+
+`parse(input : string, options : ParseOptions = {})`
+
+Example of usage:
+
+``` js
+> djot.parse("hello _there_", {});
+{
+  tag: 'doc',
+  references: {},
+  footnotes: {},
+  children: [ { tag: 'para', children: [Array] } ]
+}
+```
+
+`options` can have the following (optional) fields:
+
+- `sourcePositions : boolean`: include source positions in the AST
+- `warn : (message : string, pos ?: number | null) => void`:
+  function used to handle warnings from the parser.
+
+TODO regularize and make sure default doesn't print to stderr
+
+### Parsing djot to a stream of events
+
+`EventParser`
+
+Exposes an iterator over events, each with the form
+`{startpos : number, endpos : number, annot : string}`.
+Example of usage:
+
+```js
+> for (let event in new djot.EventParser("Hi _there_")) {
+...  console.log(event)
+... }
+{ startpos: 0, endpos: 0, annot: '+para' }
+{ startpos: 0, endpos: 2, annot: 'str' }
+{ startpos: 3, endpos: 3, annot: '+emph' }
+{ startpos: 4, endpos: 8, annot: 'str' }
+{ startpos: 9, endpos: 9, annot: '-emph' }
+{ startpos: 10, endpos: 10, annot: '-para' }
+```
+
+TODO change constructor to take options rather than warn
+TODO make non-public methods private
+
+### Pretty-printing the djot AST
+
+`renderAST(doc : Doc) : string`
+
+Example of usage:
+
+``` js
+> console.log(djot.renderAST(djot.parse("hi _there_")));
+doc
+  para
+    str text="hi "
+    emph
+      str text="there"
+```
+
+### Rendering the djot AST to HTML
+
+`renderHTML(ast : Doc, options : ParseOptions = {})`
+
+Example of usage:
+
+``` js
+> console.log(djot.renderHTML(djot.parse("- _hi_",{sourcePositions:true})));
+<ul>
+<li>
+<em>hi</em>
+</li>
+</ul>
+```
+
+### Pandoc interoperability
+
+`PandocRenderer`
+
+Example of usage:
+
+TODO fromPandoc, parseJSON, toPandoc
+TODO get  rid of parseJSON
+TODO regularize options for these
+
+``` js
+```
+
+
+`PandocParser`
+
+Example of usage:
+
+``` js
+```
+
+
+### Filters
+
+`applyFilter(node : Doc, filter : Filter)`
+
+Example of usage:
+
+``` js
+```
+
+TODO examples from man page
+
+TODO include core types in index.ts
 
