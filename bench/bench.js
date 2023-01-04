@@ -44,9 +44,12 @@ if (pattern) {
 
 files.filter(match).forEach((f) => {
   const contents = fs.readFileSync(__dirname + "/" + f, "utf8");
-  suite.add(f, () => { convert(contents) });
+  suite.add("parse " + f, () => { djotparser(contents) });
 });
 
+let readme = djotparser(fs.readFileSync(__dirname + "/readme.dj", "utf8"));
+
+suite.add("renderHTML readme", () => { djotrenderer(readme) });
 
 suite
     .on("cycle", function(event) {
