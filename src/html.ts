@@ -55,7 +55,7 @@ class HTMLRenderer {
         if (k === "class") {
           let v = extraAttrs[k];
           if (node.attributes && node.attributes.class) {
-            v = v + " " + node.attributes.class;
+            v = `${v} ${node.attributes.class}`;
           }
           result += ` ${k}="${this.escapeAttribute(v)}"`;
         } else {
@@ -81,9 +81,7 @@ class HTMLRenderer {
 
   renderTag(tag: string, node: AstNode, extraAttrs?: Record<string, string>)
     : string {
-    let result = "";
-    result += "<";
-    result += tag;
+    let result = `<${tag}`;
     if ("attributes" in node || extraAttrs || node.pos) {
       result += this.renderAttributes(node, extraAttrs);
     }
@@ -97,8 +95,7 @@ class HTMLRenderer {
 
   inTags(tag: string, node: AstNode, newlines: number,
     extraAttrs?: Record<string, string>): string {
-    let result = ""
-    result += this.renderTag(tag, node, extraAttrs);
+    let result = this.renderTag(tag, node, extraAttrs);
     if (newlines >= 2) { result += "\n"; }
     if ("children" in node) {
       result += this.renderChildren(node);
@@ -155,19 +152,16 @@ class HTMLRenderer {
         } else {
           result += this.inTags("p", node, 1);
         }
-        break;
+        return result;
 
       case "block_quote":
-        result += this.inTags("blockquote", node, 2);
-        break;
+        return this.inTags("blockquote", node, 2);
 
       case "div":
-        result += this.inTags("div", node, 2);
-        break;
+        return this.inTags("div", node, 2);
 
       case "section":
-        result += this.inTags("section", node, 2);
-        break;
+        return this.inTags("section", node, 2);
 
       case "list_item":
         extraAttr = {};
@@ -176,20 +170,16 @@ class HTMLRenderer {
             ? "checked"
             : "unchecked";
         }
-        result += this.inTags("li", node, 2, extraAttr);
-        break;
+        return this.inTags("li", node, 2, extraAttr);
 
       case "definition_list_item":
-        result += this.renderChildren(node);
-        break;
+        return this.renderChildren(node);
 
       case "definition":
-        result += this.inTags("dd", node, 2);
-        break;
+        return this.inTags("dd", node, 2);
 
       case "term":
-        result += this.inTags("dt", node, 1);
-        break;
+        return this.inTags("dt", node, 1);
 
       case "list":
         if (node.style === "-" || node.style === "*" || node.style === "+") {
@@ -208,11 +198,10 @@ class HTMLRenderer {
           }
           result += this.inTags("ol", node, 2, extraAttr);
         }
-        break;
+        return result;
 
       case "heading":
-        result += this.inTags(`h${node.level}`, node, 1);
-        break;
+        return this.inTags(`h${node.level}`, node, 1);
 
       case "footnote_reference": {
         const label = node.text;
@@ -230,12 +219,11 @@ class HTMLRenderer {
         result += "<sup>";
         result += this.escape(index.toString());
         result += "</sup></a>";
-        break;
+        return result;
       }
 
       case "table":
-        result += this.inTags("table", node, 2);
-        break;
+        return this.inTags("table", node, 2);
 
       case "caption":
         // AST always has at least a dummy caption, no
@@ -243,25 +231,23 @@ class HTMLRenderer {
         if (node.children.length > 0) {
           result += this.inTags("caption", node, 1);
         }
-        break;
+        return result;
 
       case "row":
-        result += this.inTags("tr", node, 2);
-        break;
+        return this.inTags("tr", node, 2);
 
       case "cell": {
         const cellAttr: Record<string, string> = {};
         if (node.align !== "default") {
           cellAttr.style = `text-align: ${node.align};`;
         }
-        result += this.inTags(node.head ? "th" : "td", node, 1, cellAttr);
-        break;
+        return this.inTags(node.head ? "th" : "td", node, 1, cellAttr);
       }
 
       case "thematic_break":
         result += this.renderTag("hr", node);
         result += "\n";
-        break;
+        return result;
 
       case "code_block":
         result += this.renderTag("pre", node);
@@ -274,13 +260,13 @@ class HTMLRenderer {
         result += this.renderCloseTag("code");
         result += this.renderCloseTag("pre");
         result += "\n";
-        break;
+        return result;
 
       case "raw_block":
         if (node.format === "html") {
           result += node.text;
         }
-        break;
+        return result;
 
       case "str":
         if (node.attributes) {
@@ -290,28 +276,25 @@ class HTMLRenderer {
         } else {
           result += this.escape(node.text);
         }
-        break;
+        return result;
 
       case "smart_punctuation":
-        result += this.smartPunctuationMap[node.type] || node.text;
-        break;
+        return this.smartPunctuationMap[node.type] || node.text;
 
       case "double_quoted":
         result += this.smartPunctuationMap.left_double_quote || '"';
         result += this.renderChildren(node);
         result += this.smartPunctuationMap.right_double_quote || '"';
-        break;
+        return result;
 
       case "single_quoted":
         result += this.smartPunctuationMap.left_single_quote || "'";
         result += this.renderChildren(node);
         result += this.smartPunctuationMap.right_single_quote || "'";
-        break;
+        return result;
 
-      case "symb": {
-        result += this.escape(`:${node.alias}:`);
-        break;
-      }
+      case "symb":
+        return this.escape(`:${node.alias}:`);
 
       case "math":
         result += this.renderTag("span", node,
@@ -328,31 +311,28 @@ class HTMLRenderer {
           result += this.escape("\\)");
         }
         result += this.renderCloseTag("span");
-        break;
+        return result;
 
       case "verbatim":
         result += this.renderTag("code", node);
         result += this.escape(node.text);
         result += this.renderCloseTag("code");
-        break;
+        return result;
 
       case "raw_inline":
         if (node.format === "html") {
           result += node.text;
         }
-        break;
+        return result;
 
       case "soft_break":
-        result += "\n";
-        break;
+        return "\n";
 
       case "hard_break":
-        result += "<br>\n";
-        break;
+        return "<br>\n";
 
       case "non_breaking_space":
-        result += "&nbsp;";
-        break;
+        return "&nbsp;";
 
       case "link":
       case "image": {
@@ -398,7 +378,7 @@ class HTMLRenderer {
         } else {
           result += this.inTags("a", node, 0, extraAttr);
         }
-        break;
+        return result;
       }
 
       case "url":
@@ -412,43 +392,35 @@ class HTMLRenderer {
         result += this.renderTag("a", node, extraAttr);
         result += this.escape(node.text);
         result += this.renderCloseTag("a");
-        break;
+        return result;
 
       case "strong":
-        result += this.inTags("strong", node, 0);
-        break;
+        return  this.inTags("strong", node, 0);
 
       case "emph":
-        result += this.inTags("em", node, 0);
-        break;
+        return  this.inTags("em", node, 0);
 
       case "span":
-        result += this.inTags("span", node, 0);
-        break;
+        return  this.inTags("span", node, 0);
 
       case "mark":
-        result += this.inTags("mark", node, 0);
-        break;
+        return  this.inTags("mark", node, 0);
 
       case "insert":
-        result += this.inTags("ins", node, 0);
-        break;
+        return  this.inTags("ins", node, 0);
 
       case "delete":
-        result += this.inTags("del", node, 0);
-        break;
+        return  this.inTags("del", node, 0);
 
       case "superscript":
-        result += this.inTags("sup", node, 0);
-        break;
+        return  this.inTags("sup", node, 0);
 
       case "subscript":
-        result += this.inTags("sub", node, 0);
-        break;
+        return  this.inTags("sub", node, 0);
 
       default:
+        return result;
     }
-    return result
   }
 
   render(doc: Doc): string {
