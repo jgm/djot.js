@@ -8,7 +8,7 @@ build:
 	tsc
 .PHONY: build
 
-bench:
+bench: build
 	npm run bench
 .PHONY: bench
 
