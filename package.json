@@ -29,7 +29,7 @@
   "types": "./types/index.d.ts",
   "scripts": {
     "test": "jest",
-    "build": "webpack",
+    "build": "tsc && webpack",
     "bench": "node ./bench/bench.js"
   },
   "files": [

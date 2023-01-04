@@ -10,11 +10,11 @@ playground](https://djot.net/playground).
 
 ## Script API
 
-| `npm run ...`    | Description                                           |
-| ---------------- | -----------                                           |
-| `build`          | Compile, bundle, and minify sources to `dist/djot.js` |
-| `test`           | Run tests                                             |
-| `bench`          | Run benchmarks                                        |
+| `npm run ...`    | Description                                    |
+| ---------------- | -----------                                    |
+| `build`          | Compile and bundle sources to `lib` and `dist` |
+| `test`           | Run tests                                      |
+| `bench`          | Run benchmarks                                 |
 
 ## Installing the command line utility
 
