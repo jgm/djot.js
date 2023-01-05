@@ -21,7 +21,7 @@ playground](https://djot.net/playground).
 You can install the command-line utility `djot` via
 
 ```
-npm install -g djot
+npm install -g djot-js
 ```
 
 `djot --help` will give a summary of options. For more
