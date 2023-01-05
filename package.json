@@ -29,7 +29,6 @@
   "types": "./types/index.d.ts",
   "scripts": {
     "test": "jest",
-    "genversion": "npx genversion --es6 --semi src/version.ts",
     "build": "tsc && webpack",
     "bench": "tsc && node ./bench/bench.js"
   },
@@ -39,7 +38,6 @@
     "./types/*.d.ts"
   ],
   "dependencies": {
-    "genversion": "^3.1.1"
   },
   "devDependencies": {
     "@types/jest": "^29.2.4",

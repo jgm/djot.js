@@ -1,13 +1,14 @@
 VERSION=$(shell grep '\"version\":' package.json | sed -e 's/.*: \"\([^"]*\)".*/\1/')
 
-test: build src/version.ts
+test: build
 	npm test --noStackTrace
 .PHONY: test
 
 src/version.ts: package.json
-	npm run genversion
+	grep '^ *"version":' $< | \
+	  sed 's/^ *"version": "*\([^"]*\)",/export const version = "\1";/' > $@
 
-build:
+build: src/version.ts
 	tsc
 .PHONY: build
 
@@ -15,7 +16,7 @@ bench: build
 	npm run bench
 .PHONY: bench
 
-dist/djot.js:
+dist/djot.js: build
 	npm run build
 
 playground/djot.js: dist/djot.js
