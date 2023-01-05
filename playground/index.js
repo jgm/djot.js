@@ -140,8 +140,7 @@ const debounce = (func, delay) => {
     }
 }
 
-const ignoreWarnings = () => {
-};
+const ignoreWarnings = () => { };
 
 function parse_and_render() {
   const text = document.getElementById("input").value;
@@ -186,7 +185,7 @@ function render() {
     result.innerText = djot.renderAST(ast);
   } else if (mode == "events") {
     let events = [];
-    for (let event of new djot.EventParser(text)) {
+    for (let event of djot.parseEvents(text)) {
       events.push(`{ startpos: ${event.startpos}, endpos: ${event.endpos}, annot: "${event.annot}" }`);
     }
     result.innerText = "[" + events.join("\n,") + "]";
