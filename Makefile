@@ -47,7 +47,7 @@ update-playground: playground/djot.js
 	ssh website 'sed -i.bkp -e "s/__DATE__/$$(date -Iseconds)/" djot.net/playground/index.html'
 .PHONY: update-playground
 
-doc/djot.1: doc/djot.md
+doc/djot.1: doc/djot.md package.json
 	pandoc \
 	  --metadata title="DJOT(1)" \
 	  --metadata author="" \
