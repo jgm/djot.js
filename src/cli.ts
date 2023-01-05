@@ -209,7 +209,7 @@ try {
         break;
       case "pandoc":
         process.stdout.write(
-          JSON.stringify(new PandocRenderer(ast, {warn: warn}).toPandoc(),
+          JSON.stringify(new PandocRenderer({warn: warn}).toPandoc(ast),
             null, compact ? 0 : 2));
         process.stdout.write("\n");
         break;

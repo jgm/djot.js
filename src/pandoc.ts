@@ -1,5 +1,5 @@
 import { AstNode, Doc, Block, Caption, Row, Cell, Alignment,
-         TaskListItem, OrderedListStyle, ListItem, Inline,
+         TaskListItem, OrderedListStyle, ListItem, Inline, Reference,
          Span, Verbatim, Image, Link,
          Attributes, CodeBlock, Heading, Div, Table, CheckboxStatus,
          DefinitionListItem, Term, Definition, Footnote } from "./ast";
@@ -69,7 +69,8 @@ const toPandocAttr = function(node : AstNode) : PandocAttr {
 }
 
 class PandocRenderer {
-  doc : Doc;
+  references : Record<string, Reference> = {};
+  footnotes : Record<string, Footnote> = {};
   options : Options;
   warn : (warning : Warning) => void;
   smartPunctuationMap : Record<string, string> =
@@ -82,8 +83,7 @@ class PandocRenderer {
       left_double_quote: "“",
       right_double_quote: "”" };
 
-  constructor(doc : Doc, options : Options = {}) {
-    this.doc = doc;
+  constructor(options : Options = {}) {
     this.options = options;
     this.warn = options.warn || (() => {});
   }
@@ -362,7 +362,7 @@ class PandocRenderer {
         let destination = node.destination || "";
         const linkAttrs : Record<string,any> = {};
         if (node.reference) {
-          const ref = this.doc.references[node.reference];
+          const ref = this.references[node.reference];
           if (ref) {
             destination = ref.destination || "";
             if (ref.attributes) {
@@ -429,7 +429,7 @@ class PandocRenderer {
         break;
 
       case "footnote_reference": {
-        const note = this.doc.footnotes[node.text];
+        const note = this.footnotes[node.text];
         if (note) {
           elts.push({ t: "Note", c: this.toPandocChildren(note) });
         } else {
@@ -443,10 +443,12 @@ class PandocRenderer {
     }
   }
 
-  toPandoc() : Pandoc {
+  toPandoc(doc : Doc) : Pandoc {
+    this.references = doc.references;
+    this.footnotes = doc.footnotes;
     return { ["pandoc-api-version"]: [1,22,2,1],
              meta: {},
-             blocks: this.toPandocChildren(this.doc) };
+             blocks: this.toPandocChildren(doc) };
   }
 }
 
