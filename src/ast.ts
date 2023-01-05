@@ -367,6 +367,7 @@ const blockTags : Record<string, boolean> = {
   code_block: true,
   raw_block: true,
   list: true,
+  definition_list: true,
   table: true,
   reference: true,
   footnote: true
