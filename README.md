@@ -59,13 +59,7 @@ djot mydoc.dj -t pandoc | pandoc -f json -t gfm
 Example of usage:
 
 ``` js
-> djot.parse("hello _there_", {});
-{
-  tag: 'doc',
-  references: {},
-  footnotes: {},
-  children: [ { tag: 'para', children: [Array] } ]
-}
+djot.parse("hello _there_", {sourcePositions: true});
 ```
 
 `options` can have the following (optional) fields:
@@ -74,7 +68,7 @@ Example of usage:
 - `warn : (message : string, pos ?: number | null) => void`:
   function used to handle warnings from the parser.
 
-TODO regularize and make sure default doesn't print to stderr
+TODO regularize options/warnings
 
 ### Parsing djot to a stream of events
 
@@ -85,15 +79,9 @@ Exposes an iterator over events, each with the form
 Example of usage:
 
 ```js
-> for (let event in new djot.EventParser("Hi _there_")) {
-...  console.log(event)
-... }
-{ startpos: 0, endpos: 0, annot: '+para' }
-{ startpos: 0, endpos: 2, annot: 'str' }
-{ startpos: 3, endpos: 3, annot: '+emph' }
-{ startpos: 4, endpos: 8, annot: 'str' }
-{ startpos: 9, endpos: 9, annot: '-emph' }
-{ startpos: 10, endpos: 10, annot: '-para' }
+for (let event in new djot.EventParser("Hi _there_")) {
+  console.log(event)
+}
 ```
 
 TODO change constructor to take options rather than warn
@@ -106,12 +94,7 @@ TODO make non-public methods private
 Example of usage:
 
 ``` js
-> console.log(djot.renderAST(djot.parse("hi _there_")));
-doc
-  para
-    str text="hi "
-    emph
-      str text="there"
+console.log(djot.renderAST(djot.parse("hi _there_")));
 ```
 
 ### Rendering the djot AST to HTML
@@ -121,12 +104,7 @@ doc
 Example of usage:
 
 ``` js
-> console.log(djot.renderHTML(djot.parse("- _hi_",{sourcePositions:true})));
-<ul>
-<li>
-<em>hi</em>
-</li>
-</ul>
+console.log(djot.renderHTML(djot.parse("- _hi_",{sourcePositions:true})));
 ```
 
 ### Rendering djot
@@ -167,9 +145,141 @@ Example of usage:
 Example of usage:
 
 ``` js
+const capitalizeFilter = () => {
+  return {
+           str: (e) => {
+             e.text = e.text.toUpperCase();
+           }
+  };
+};
+let ast = djot.parse("Hi there `verbatim`");
+djot.applyFilter(ast, capitalizeFilter);
 ```
 
-TODO examples from man page
+Filters are JavaScript programs that modify the parsed document
+prior to rendering.  Here is an example of a filter that
+capitalizes all the content text in a document:
 
-TODO include core types in index.ts
+```
+// This filter capitalizes regular text, leaving code and URLs unaffected
+return {
+  str: (el) => {
+    el.text = el.text.toUpperCase();
+  }
+}
+```
 
+Save this as `caps.js` use tell djot to use it using
+
+```
+djot --filter caps input.js
+```
+
+Note: never run a filter from a source you don't trust,
+without inspecting the code carefully. Filters are programs,
+and like any programs they can do bad things on your system.
+
+Here's a filter that prints a list of all the URLs you
+link to in a document.  This filter doesn't alter the
+document at all; it just prints the list to stderr.
+
+```
+return {
+  link: (el) => {
+    process.stderr:write(el.destination + "\n")
+  }
+}
+```
+
+A filter walks the document's abstract syntax tree, applying
+functions to like-tagged nodes, so you will want to get familiar
+with how djot's AST is designed. The easiest way to do this is
+to use `djot --ast` or `djot --astpretty`.
+
+By default filters do a bottom-up traversal; that is, the
+filter for a node is run after its children have been processed.
+It is possible to do a top-down travel, though, and even
+to run separate actions on entering a node (before processing the
+children) and on exiting (after processing the children). To do
+this, associate the node's tag with a table containing `enter` and/or
+`exit` functions.  The `enter` function is run when we traverse
+*into* the node, before we traverse its children, and the `exit`
+function is run after we have traversed the node's children.
+For a top-down traversal, you'd just use the `enter` functions.
+If the tag is associated directly with a function, as in the
+first example above, it is treated as an `exit' function.
+
+The following filter will capitalize text
+that is nested inside emphasis, but not other text:
+
+``` js
+// This filter capitalizes the contents of emph
+// nodes instead of italicizing them.
+let capitalize = 0;
+return {
+   emph: {
+     enter: (e) => {
+       capitalize = capitalize + 1;
+     },
+     exit: (e) => {
+       capitalize = capitalize - 1;
+       e.tag = "span";
+     },
+   },
+   str: (e) => {
+     if (capitalize > 0) {
+       e.text = e.text.toUpperCase();
+      }
+   }
+}
+```
+
+It is possible to inhibit traversal into the children of a node,
+by having the `enter` function return the value true (or any truish
+value, say `"stop"`).  This can be used, for example, to prevent
+the contents of a footnote from being processed:
+
+``` js
+return {
+ footnote: {
+   enter: (e) => {
+     return true
+    }
+  }
+}
+```
+
+A single filter may return a table with multiple tables, which will be
+applied sequentially:
+
+``` js
+// This filter includes two sub-filters, run in sequence
+return [
+  { // first filter changes (TM) to trademark symbol
+    str: (e) => {
+      e.text = e.text.replace(/\\(TM\\)/, "™");
+    }
+  },
+  { // second filter changes '[]' to '()' in text
+    str: (e) => {
+      e.text = e.text.replace(/\\(/,"[").replace(/\\)/,"]");
+    }
+  }
+]
+```
+
+Here is a simple filter that changes letter enumerated lists
+to roman-numbered:
+
+``` js
+// Changes letter-enumerated lists to roman-numbered
+return {
+  list: (e) => {
+    if (e.style === 'a.') {
+      e.style = 'i.';
+    } else if (e.style === 'A.') {
+      e.style = 'I.';
+    }
+  }
+}
+```
