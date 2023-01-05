@@ -180,11 +180,12 @@ class HTMLRenderer {
       case "term":
         return this.inTags("dt", node, 1);
 
+      case "definition_list":
+        return this.inTags("dl", node, 2);
+
       case "list":
         if (node.style === "-" || node.style === "*" || node.style === "+") {
           result += this.inTags("ul", node, 2);
-        } else if (node.style === ":") {
-          result += this.inTags("dl", node, 2);
         } else if (node.style === "X") {
           result += this.inTags("ul", node, 2, { class: "task-list" });
         } else {

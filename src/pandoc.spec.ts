@@ -595,8 +595,7 @@ describe("PandocParser", () => {
                 "tight": true
               },
               {
-                "tag": "list",
-                "style": ":",
+                "tag": "definition_list",
                 "children": [
                   {
                     "tag": "definition_list_item",
@@ -626,8 +625,7 @@ describe("PandocParser", () => {
                       }
                     ]
                   }
-                ],
-                "tight": false
+                ]
               }
             ],
             "attributes": {

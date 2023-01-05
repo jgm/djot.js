@@ -1,6 +1,6 @@
 import { Doc, AstNode, HasChildren,
          HasAttributes, Block, Para, Heading, Div, List,
-         Table, Caption, Row,
+         DefinitionList, Table, Caption, Row,
          BlockQuote, Section, CodeBlock, RawBlock,
          Term, Definition, Footnote, Reference, Symb,
          Link, Image, HasText, RawInline, FootnoteReference,
@@ -362,6 +362,21 @@ class DjotRenderer {
       this.lit(ticks);
       this.blankline();
     },
+    definition_list: (node : DefinitionList) => {
+      const items = node.children;
+      for (let i=0; i < items.length; i++) {
+        const item = items[i];
+        if (i > 0) {
+          this.newline();
+        }
+        this.lit(":");
+        this.needsBlankLine = false;
+        this.space();
+        this.prefixes.push(" ".repeat(2));
+        this.renderChildren<Term | Definition>(item.children);
+        this.prefixes.pop();
+      }
+    },
     list: (node : List)  => {
       const style = node.style;
       const start = node.start || 1;
@@ -391,11 +406,7 @@ class DjotRenderer {
           this.space();
         }
         this.prefixes.push(" ".repeat(marker.length + 1));
-        if (item.tag === "definition_list_item") {
-          this.renderChildren<Term | Definition>(item.children);
-        } else {
-          this.renderChildren<Block>(item.children);
-        }
+        this.renderChildren<Block>(item.children);
         this.prefixes.pop();
       }
       if (tight) { // otherwise we already have a blankline

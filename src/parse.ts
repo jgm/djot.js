@@ -795,14 +795,22 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
           throw (new Error("No style defined for list"));
         }
         const listStart = getListStart(node.data.firstMarker, listStyle);
-        addChildToTip({
-          tag: "list",
-          style: listStyle,
-          children: node.children,
-          start: listStart,
-          tight: node.data.tight,
-          attributes: node.attributes
-        }, node.pos);
+        if (listStyle === ":") {
+          addChildToTip({
+            tag: "definition_list",
+            children: node.children,
+            attributes: node.attributes
+          }, node.pos);
+        } else {
+          addChildToTip({
+            tag: "list",
+            style: listStyle,
+            children: node.children,
+            start: listStart,
+            tight: node.data.tight,
+            attributes: node.attributes
+          }, node.pos);
+        }
       },
 
       ["+list_item"]: (suffixes, startpos, endpos, pos) => {

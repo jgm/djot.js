@@ -145,6 +145,13 @@ class PandocRenderer {
         elts.push({ t: "BlockQuote", c: this.toPandocChildren(node) });
         break;
 
+      case "definition_list": {
+        let items : DefinitionListItem[] =
+                     node.children.map(this.toPandocDefinitionListItem(node));
+        elts.push({ t: "DefinitionList", c: items } );
+        break;
+      }
+
       case "list": {
         let items : PandocElt[][];
         if (node.style &&
@@ -152,9 +159,6 @@ class PandocRenderer {
             node.style === "X") {
           items = node.children.map(this.toPandocListItem(node));
           elts.push({ t: "BulletList", c: items } );
-        } else if (node.style === ":") {
-          items = node.children.map(this.toPandocDefinitionListItem(node));
-          elts.push({ t: "DefinitionList", c: items } );
         } else {
           items = node.children.map(this.toPandocListItem(node));
           let [style, delim] = reverseStyleMap[node.style as string];
@@ -753,7 +757,7 @@ class PandocParser {
                                  {tag: "definition", children: def}]});
         }
 
-        return {tag: "list", style: ":", tight: false, children: items};
+        return {tag: "definition_list", children: items};
       }
 
       case "OrderedList":

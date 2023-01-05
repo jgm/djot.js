@@ -35,6 +35,7 @@ type Block =
   | RawBlock
   | BlockQuote
   | List
+  | DefinitionList
   | Table
   ;
 
@@ -82,7 +83,7 @@ interface RawBlock extends HasAttributes {
 
 type ListStyle =
     "-"  | "+"  | "*"
-  | "X"  | ":"
+  | "X"
   | "1." | "1)" | "(1)"
   | "a." | "a)" | "(a)"
   | "A." | "A)" | "(A)"
@@ -94,7 +95,7 @@ interface List extends HasAttributes {
   style: ListStyle;
   tight: boolean;
   start?: number;
-  children: (ListItem | DefinitionListItem)[];
+  children: ListItem[];
 }
 
 interface Caption extends HasAttributes {
@@ -282,6 +283,11 @@ interface ListItem extends HasAttributes {
   children: Block[];
 }
 
+interface DefinitionList extends HasAttributes {
+  tag: "definition_list";
+  children: DefinitionListItem[];
+}
+
 interface DefinitionListItem extends HasAttributes {
   tag: "definition_list_item";
   children: [Term, Definition];
@@ -431,6 +437,7 @@ export {
   CheckboxStatus,
   ListItem,
   ListStyle,
+  DefinitionList,
   DefinitionListItem,
   Term,
   Definition,
