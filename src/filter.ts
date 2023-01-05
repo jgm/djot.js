@@ -154,9 +154,11 @@ const applyFilter = function(node : Doc, filter : Filter) : void {
   }
 }
 
-export {
+export type {
   Action,
   FilterPart,
   Filter,
-  applyFilter
+}
+export {
+  applyFilter,
 }

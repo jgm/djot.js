@@ -493,7 +493,7 @@ function isCaption(node : Row | Caption) : node is Caption {
 }
 
 
-export {
+export type {
   Attributes,
   SourceLoc,
   Pos,
@@ -558,6 +558,8 @@ export {
   Reference,
   Footnote,
   Visitor,
+}
+export {
   isInline,
   isBlock,
   isRow,

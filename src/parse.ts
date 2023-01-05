@@ -1320,10 +1320,11 @@ const renderAST = function(doc: Doc): string {
 }
 
 
-
+export type {
+  ParseOptions,
+}
 export {
   parse,
-  ParseOptions,
   renderAST,
   getStringContent,
   isBlock,
