@@ -3,7 +3,6 @@ import { Doc, Reference, Footnote, Link, HasChildren,
 import { getStringContent, ParseOptions } from "./parse";
 
 const defaultWarnings = function(message: string, pos?: number | null) {
-  console.log(message + (pos ? " at " + pos : "") + "\n");
 }
 
 class HTMLRenderer {
