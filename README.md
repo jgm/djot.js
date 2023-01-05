@@ -113,13 +113,28 @@ console.log(djot.renderAST(djot.parse("hi _there_")));
 
 `HTMLRenderOptions` extends `Options` with an `overrides`
 field, which maps node tags to overrides for their renderers.
-(TODO example and more explanation)
 
 Example of usage:
 
 ``` js
 console.log(djot.renderHTML(djot.parse("- _hi_",{sourcePositions:true})));
 ```
+
+Simple example of an override:
+
+``` js
+djot.renderHTML(
+  djot.parse("_hi_"),
+  { sourcePositions: true,
+    overrides: {
+      emph: (node, renderer) => {
+        return
+          `<span class="emphasized">${renderer.renderChildren(node)}</span>`;
+      }
+    } });
+```
+
+This yields: `<span class="emphasized">hi</span>`.
 
 ### Rendering djot
 
