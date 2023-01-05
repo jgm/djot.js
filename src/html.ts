@@ -10,7 +10,7 @@ interface HTMLRenderOptions extends Options {
 class HTMLRenderer {
   warn: (warning : Warning) => void;
   options: HTMLRenderOptions;
-  tight: boolean;
+  private tight: boolean;
   footnoteIndex: Record<string, number>;
   nextFootnoteIndex: number;
   references: Record<string, Reference>;
