@@ -78,6 +78,10 @@ way in which djot syntax can be customized.
 
 :   Suppress warnings.
 
+`--version`
+
+:   Print version
+
 `--help,-h`
 
 :   Print this message.
