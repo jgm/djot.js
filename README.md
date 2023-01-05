@@ -66,14 +66,23 @@ djot.parse("hello _there_", {sourcePositions: true});
 `options` can have the following (optional) fields:
 
 - `sourcePositions : boolean`: include source positions in the AST
-- `warn : (message : string, pos ?: number | null) => void`:
+- `warn : (message : Warning) => void`:
   function used to handle warnings from the parser.
 
-TODO regularize options/warnings
+A warning can be rendered using the `render()` method, so
+to render warnings to the console, for example, you could do:
+
+```
+{ warn: (warning) => console.log(warning.render()) }
+```
+
+Alternatively, you can directly access the fields
+`message` (string), `offset` (number if defined),
+and `pos` (`{ line: number, col: number, offset: number }` if defined).
 
 ### Parsing djot to a stream of events
 
-`EventParser`
+`new EventParser(input : string, options : Options = {})`
 
 Exposes an iterator over events, each with the form
 `{startpos : number, endpos : number, annot : string}`.
@@ -85,10 +94,12 @@ for (let event in new djot.EventParser("Hi _there_")) {
 }
 ```
 
-TODO change constructor to take options rather than warn
-TODO make non-public methods private
+The `Options` object has a `warn` property as described for `parse`,
+above.
 
-### Pretty-printing the djot AST
+TODO make non-public methods private or just export a function?
+
+[###](###) Pretty-printing the djot AST
 
 `renderAST(doc : Doc) : string`
 
@@ -100,7 +111,7 @@ console.log(djot.renderAST(djot.parse("hi _there_")));
 
 ### Rendering the djot AST to HTML
 
-`renderHTML(ast : Doc, options : ParseOptions = {})`
+`renderHTML(ast : Doc, options : Options = {})`
 
 Example of usage:
 

@@ -121,15 +121,15 @@ class EventParser {
   specs: BlockSpec[];
   paraSpec: BlockSpec;
 
-  constructor(subject: string, options?: Options) {
+  constructor(subject: string, options: Options = {}) {
     // Ensure the subject ends with a newline character
     if (subject.charAt(subject.length - 1) !== '\n') {
       subject = subject + "\n";
     }
     this.subject = subject;
     this.maxoffset = subject.length - 1;
-    this.options = options || {};
-    this.warn = this.options.warn || (() => {});
+    this.options = options;
+    this.warn = options.warn || (() => {});
     this.indent = 0;
     this.startline = 0;
     this.starteol = 0;

@@ -568,9 +568,9 @@ class InlineParser {
   matchers: { [codepoint: number]: (self: InlineParser, sp: number, ep: number) => null | number }; // functions to handle different code points
 
   constructor(subject: string,
-              options?: Options) {
-    this.options = options || {};
-    this.warn = this.options.warn || (() => {});
+              options: Options = {}) {
+    this.options = options;
+    this.warn = options.warn || (() => {});
     this.subject = subject;
     this.matches = [];  // sparse array of matches indexed by startpos
     // We use a sparse array because we sometimes want to replace early,

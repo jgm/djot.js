@@ -82,10 +82,10 @@ class PandocRenderer {
       left_double_quote: "“",
       right_double_quote: "”" };
 
-  constructor(doc : Doc, options ?: Options) {
+  constructor(doc : Doc, options : Options = {}) {
     this.doc = doc;
-    this.options = options || {};
-    this.warn = this.options.warn || (() => {});
+    this.options = options;
+    this.warn = options.warn || (() => {});
   }
 
   toPandocChildren (node : AstNode) : PandocElt[] {
@@ -504,9 +504,9 @@ class PandocParser {
   options : Options;
   warn : (warning : Warning) => void;
 
-  constructor(options ?: Options) {
-    this.options = options || {};
-    this.warn = this.options.warn || (() => {});
+  constructor(options : Options = {}) {
+    this.options = options;
+    this.warn = options.warn || (() => {});
   }
 
   fromPandocInlines (elts : PandocElt[]) : Inline[] {
