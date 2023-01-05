@@ -44,6 +44,7 @@ check-optimization: pm.dj
 
 update-playground: playground/djot.js
 	rsync -a --delete playground website:djot.net/
+	ssh website 'sed -i.bkp -e "s/__DATE__/$$(date -Iseconds)/" djot.net/playground/index.html'
 .PHONY: update-playground
 
 doc/djot.1: doc/djot.md
