@@ -107,17 +107,17 @@ class EventParser {
   options: Options;
   warn: (warning : Warning) => void;
   subject: string;
-  maxoffset: number;
-  indent: number;
-  startline: number;
-  starteol: number;
-  endeol: number;
-  matches: Event[];
-  containers: Container[];
-  pos: number;
-  lastMatchedContainer: number;
-  finishedLine: boolean;
-  returned: number;
+  private maxoffset: number;
+  private indent: number;
+  private startline: number;
+  private starteol: number;
+  private endeol: number;
+  private matches: Event[];
+  private containers: Container[];
+  private pos: number;
+  private lastMatchedContainer: number;
+  private finishedLine: boolean;
+  private returned: number;
   specs: BlockSpec[];
   paraSpec: BlockSpec;
 
