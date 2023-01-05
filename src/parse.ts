@@ -1,5 +1,5 @@
 import { Event } from "./event";
-import { EventParser } from "./block";
+import { parseEvents } from "./block";
 import { Options, Warning } from "./options";
 import {
   Attributes,
@@ -165,7 +165,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
   const footnotes: Record<string, Footnote> = {};
   const identifiers: Record<string, boolean> = {}; // identifiers used
   const blockAttributes: Attributes = {}; // accumulated block attributes
-  const parser = new EventParser(input, options);
+  const parser = parseEvents(input, options);
   let warn = options.warn || (() => {});
   const addBlockAttributes = function(container: HasAttributes) {
     if (Object.keys(blockAttributes).length > 0) {
