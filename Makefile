@@ -12,6 +12,15 @@ build: src/version.ts
 	tsc
 .PHONY: build
 
+dist: src/version.ts dist/djot.js doc/djot.1 djot-schema.json
+	npm run build
+	npm publish --dry-run
+.PHONY: dist
+
+publish:
+	npm publish
+.PHONY: publish
+
 bench: build
 	npm run bench
 .PHONY: bench
