@@ -670,7 +670,9 @@ const renderDjot = function(doc : Doc,
   return new DjotRenderer(doc, options).render();
 }
 
-export {
+export type {
   DjotRenderOptions,
+}
+export {
   renderDjot
 }

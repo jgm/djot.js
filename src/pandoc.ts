@@ -968,11 +968,14 @@ const fromPandoc = function(pandoc : Pandoc, options ?: Options) : Doc {
   return new PandocParser(options).fromPandoc(pandoc);
 }
 
-export { PandocRenderOptions,
-         Pandoc,
-         PandocElt,
-         PandocMeta,
-         PandocAttr,
-         toPandoc,
-         fromPandoc
+export type {
+  PandocRenderOptions,
+  Pandoc,
+  PandocElt,
+  PandocMeta,
+  PandocAttr,
+}
+export {
+  toPandoc,
+  fromPandoc
 }

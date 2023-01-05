@@ -5,4 +5,4 @@ interface Event {
 
 }
 
-export { Event }
+export type { Event }

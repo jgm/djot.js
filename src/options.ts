@@ -28,8 +28,10 @@ interface Options {
   warn?: (warning : Warning) => void;
 }
 
+export type {
+  SourceLoc,
+  Options,
+}
 export {
   Warning,
-  SourceLoc,
-  Options
 }

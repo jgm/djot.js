@@ -456,8 +456,10 @@ const renderHTML = function(ast: Doc, options: HTMLRenderOptions = {}): string {
   return renderer.render(ast);
 }
 
+export type {
+  HTMLRenderOptions
+}
 export {
   renderHTML,
-  HTMLRenderer,
-  HTMLRenderOptions
+  HTMLRenderer
 }
