@@ -334,3 +334,14 @@ return {
   }
 }
 ```
+
+## The AST
+
+The most human-readable documentation for the djot AST format
+is the [typescript type
+definitions](https://github.com/jgm/djot.js/blob/main/src/ast.ts).
+
+There is also a [JSON
+schema](https://github.com/jgm/djot.js/blob/main/djot-schema.json)
+which can be used to verify conformity to the AST programatically.
+
