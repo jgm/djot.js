@@ -1,0 +1,3746 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "additionalProperties": false,
+    "definitions": {
+        "Alignment": {
+            "enum": [
+                "center",
+                "default",
+                "left",
+                "right"
+            ],
+            "type": "string"
+        },
+        "Attributes": {
+            "additionalProperties": false,
+            "type": "object"
+        },
+        "Block": {
+            "anyOf": [
+                {
+                    "$ref": "#/definitions/Para"
+                },
+                {
+                    "$ref": "#/definitions/Heading"
+                },
+                {
+                    "$ref": "#/definitions/ThematicBreak"
+                },
+                {
+                    "$ref": "#/definitions/Section"
+                },
+                {
+                    "$ref": "#/definitions/Div"
+                },
+                {
+                    "$ref": "#/definitions/CodeBlock"
+                },
+                {
+                    "$ref": "#/definitions/RawBlock"
+                },
+                {
+                    "$ref": "#/definitions/BlockQuote"
+                },
+                {
+                    "$ref": "#/definitions/OrderedList"
+                },
+                {
+                    "$ref": "#/definitions/BulletList"
+                },
+                {
+                    "$ref": "#/definitions/TaskList"
+                },
+                {
+                    "$ref": "#/definitions/DefinitionList"
+                },
+                {
+                    "$ref": "#/definitions/Table"
+                }
+            ]
+        },
+        "BlockQuote": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "children": {
+                    "items": {
+                        "$ref": "#/definitions/Block"
+                    },
+                    "type": "array"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "block_quote"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "children",
+                "tag"
+            ],
+            "type": "object"
+        },
+        "BulletList": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "children": {
+                    "items": {
+                        "$ref": "#/definitions/ListItem"
+                    },
+                    "type": "array"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "style": {
+                    "$ref": "#/definitions/BulletListStyle"
+                },
+                "tag": {
+                    "enum": [
+                        "bullet_list"
+                    ],
+                    "type": "string"
+                },
+                "tight": {
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "children",
+                "style",
+                "tag",
+                "tight"
+            ],
+            "type": "object"
+        },
+        "BulletListStyle": {
+            "enum": [
+                "*",
+                "+",
+                "-"
+            ],
+            "type": "string"
+        },
+        "Caption": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "children": {
+                    "items": {
+                        "$ref": "#/definitions/Inline"
+                    },
+                    "type": "array"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "caption"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "children",
+                "tag"
+            ],
+            "type": "object"
+        },
+        "Cell": {
+            "additionalProperties": false,
+            "properties": {
+                "align": {
+                    "$ref": "#/definitions/Alignment"
+                },
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "children": {
+                    "items": {
+                        "$ref": "#/definitions/Inline"
+                    },
+                    "type": "array"
+                },
+                "head": {
+                    "type": "boolean"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "cell"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "align",
+                "children",
+                "head",
+                "tag"
+            ],
+            "type": "object"
+        },
+        "CheckboxStatus": {
+            "enum": [
+                "checked",
+                "unchecked"
+            ],
+            "type": "string"
+        },
+        "CodeBlock": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "lang": {
+                    "type": "string"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "code_block"
+                    ],
+                    "type": "string"
+                },
+                "text": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "tag",
+                "text"
+            ],
+            "type": "object"
+        },
+        "Definition": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "children": {
+                    "items": {
+                        "$ref": "#/definitions/Block"
+                    },
+                    "type": "array"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "definition"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "children",
+                "tag"
+            ],
+            "type": "object"
+        },
+        "DefinitionList": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "children": {
+                    "items": {
+                        "$ref": "#/definitions/DefinitionListItem"
+                    },
+                    "type": "array"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "definition_list"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "children",
+                "tag"
+            ],
+            "type": "object"
+        },
+        "DefinitionListItem": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "children": {
+                    "items": [
+                        {
+                            "$ref": "#/definitions/Term"
+                        },
+                        {
+                            "$ref": "#/definitions/Definition"
+                        }
+                    ],
+                    "maxItems": 2,
+                    "minItems": 2,
+                    "type": "array"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "definition_list_item"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "children",
+                "tag"
+            ],
+            "type": "object"
+        },
+        "Delete": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "children": {
+                    "items": {
+                        "$ref": "#/definitions/Inline"
+                    },
+                    "type": "array"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "delete"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "children",
+                "tag"
+            ],
+            "type": "object"
+        },
+        "DisplayMath": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "display_math"
+                    ],
+                    "type": "string"
+                },
+                "text": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "tag",
+                "text"
+            ],
+            "type": "object"
+        },
+        "Div": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "children": {
+                    "items": {
+                        "$ref": "#/definitions/Block"
+                    },
+                    "type": "array"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "div"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "children",
+                "tag"
+            ],
+            "type": "object"
+        },
+        "DoubleQuoted": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "children": {
+                    "items": {
+                        "$ref": "#/definitions/Inline"
+                    },
+                    "type": "array"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "double_quoted"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "children",
+                "tag"
+            ],
+            "type": "object"
+        },
+        "Email": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "email"
+                    ],
+                    "type": "string"
+                },
+                "text": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "tag",
+                "text"
+            ],
+            "type": "object"
+        },
+        "Emph": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "children": {
+                    "items": {
+                        "$ref": "#/definitions/Inline"
+                    },
+                    "type": "array"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "emph"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "children",
+                "tag"
+            ],
+            "type": "object"
+        },
+        "FootnoteReference": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "footnote_reference"
+                    ],
+                    "type": "string"
+                },
+                "text": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "tag",
+                "text"
+            ],
+            "type": "object"
+        },
+        "HardBreak": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "hard_break"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "tag"
+            ],
+            "type": "object"
+        },
+        "Heading": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "children": {
+                    "items": {
+                        "$ref": "#/definitions/Inline"
+                    },
+                    "type": "array"
+                },
+                "level": {
+                    "type": "number"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "heading"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "children",
+                "level",
+                "tag"
+            ],
+            "type": "object"
+        },
+        "Image": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "children": {
+                    "items": {
+                        "$ref": "#/definitions/Inline"
+                    },
+                    "type": "array"
+                },
+                "destination": {
+                    "type": "string"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "reference": {
+                    "type": "string"
+                },
+                "tag": {
+                    "enum": [
+                        "image"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "children",
+                "tag"
+            ],
+            "type": "object"
+        },
+        "Inline": {
+            "anyOf": [
+                {
+                    "$ref": "#/definitions/Str"
+                },
+                {
+                    "$ref": "#/definitions/SoftBreak"
+                },
+                {
+                    "$ref": "#/definitions/HardBreak"
+                },
+                {
+                    "$ref": "#/definitions/NonBreakingSpace"
+                },
+                {
+                    "$ref": "#/definitions/Symb"
+                },
+                {
+                    "$ref": "#/definitions/Verbatim"
+                },
+                {
+                    "$ref": "#/definitions/RawInline"
+                },
+                {
+                    "$ref": "#/definitions/InlineMath"
+                },
+                {
+                    "$ref": "#/definitions/DisplayMath"
+                },
+                {
+                    "$ref": "#/definitions/Url"
+                },
+                {
+                    "$ref": "#/definitions/Email"
+                },
+                {
+                    "$ref": "#/definitions/FootnoteReference"
+                },
+                {
+                    "$ref": "#/definitions/SmartPunctuation"
+                },
+                {
+                    "$ref": "#/definitions/Emph"
+                },
+                {
+                    "$ref": "#/definitions/Strong"
+                },
+                {
+                    "$ref": "#/definitions/Link"
+                },
+                {
+                    "$ref": "#/definitions/Image"
+                },
+                {
+                    "$ref": "#/definitions/Span"
+                },
+                {
+                    "$ref": "#/definitions/Mark"
+                },
+                {
+                    "$ref": "#/definitions/Superscript"
+                },
+                {
+                    "$ref": "#/definitions/Subscript"
+                },
+                {
+                    "$ref": "#/definitions/Insert"
+                },
+                {
+                    "$ref": "#/definitions/Delete"
+                },
+                {
+                    "$ref": "#/definitions/DoubleQuoted"
+                },
+                {
+                    "$ref": "#/definitions/SingleQuoted"
+                }
+            ]
+        },
+        "InlineMath": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "inline_math"
+                    ],
+                    "type": "string"
+                },
+                "text": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "tag",
+                "text"
+            ],
+            "type": "object"
+        },
+        "Insert": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "children": {
+                    "items": {
+                        "$ref": "#/definitions/Inline"
+                    },
+                    "type": "array"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "insert"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "children",
+                "tag"
+            ],
+            "type": "object"
+        },
+        "Link": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "children": {
+                    "items": {
+                        "$ref": "#/definitions/Inline"
+                    },
+                    "type": "array"
+                },
+                "destination": {
+                    "type": "string"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "reference": {
+                    "type": "string"
+                },
+                "tag": {
+                    "enum": [
+                        "link"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "children",
+                "tag"
+            ],
+            "type": "object"
+        },
+        "ListItem": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "children": {
+                    "items": {
+                        "$ref": "#/definitions/Block"
+                    },
+                    "type": "array"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "list_item"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "children",
+                "tag"
+            ],
+            "type": "object"
+        },
+        "Mark": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "children": {
+                    "items": {
+                        "$ref": "#/definitions/Inline"
+                    },
+                    "type": "array"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "mark"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "children",
+                "tag"
+            ],
+            "type": "object"
+        },
+        "NonBreakingSpace": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "non_breaking_space"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "tag"
+            ],
+            "type": "object"
+        },
+        "OrderedList": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "children": {
+                    "items": {
+                        "$ref": "#/definitions/ListItem"
+                    },
+                    "type": "array"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "start": {
+                    "type": "number"
+                },
+                "style": {
+                    "$ref": "#/definitions/OrderedListStyle"
+                },
+                "tag": {
+                    "enum": [
+                        "ordered_list"
+                    ],
+                    "type": "string"
+                },
+                "tight": {
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "children",
+                "style",
+                "tag",
+                "tight"
+            ],
+            "type": "object"
+        },
+        "OrderedListStyle": {
+            "enum": [
+                "(1)",
+                "(A)",
+                "(I)",
+                "(a)",
+                "(i)",
+                "1)",
+                "1.",
+                "A)",
+                "A.",
+                "I)",
+                "I.",
+                "a)",
+                "a.",
+                "i)",
+                "i."
+            ],
+            "type": "string"
+        },
+        "Para": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "children": {
+                    "items": {
+                        "$ref": "#/definitions/Inline"
+                    },
+                    "type": "array"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "para"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "children",
+                "tag"
+            ],
+            "type": "object"
+        },
+        "RawBlock": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "format": {
+                    "type": "string"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "raw_block"
+                    ],
+                    "type": "string"
+                },
+                "text": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "format",
+                "tag",
+                "text"
+            ],
+            "type": "object"
+        },
+        "RawInline": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "format": {
+                    "type": "string"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "raw_inline"
+                    ],
+                    "type": "string"
+                },
+                "text": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "format",
+                "tag",
+                "text"
+            ],
+            "type": "object"
+        },
+        "Record<string,Footnote>": {
+            "additionalProperties": false,
+            "type": "object"
+        },
+        "Record<string,Reference>": {
+            "additionalProperties": false,
+            "type": "object"
+        },
+        "Row": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "children": {
+                    "items": {
+                        "$ref": "#/definitions/Cell"
+                    },
+                    "type": "array"
+                },
+                "head": {
+                    "type": "boolean"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "row"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "children",
+                "head",
+                "tag"
+            ],
+            "type": "object"
+        },
+        "Section": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "children": {
+                    "items": {
+                        "$ref": "#/definitions/Block"
+                    },
+                    "type": "array"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "section"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "children",
+                "tag"
+            ],
+            "type": "object"
+        },
+        "SingleQuoted": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "children": {
+                    "items": {
+                        "$ref": "#/definitions/Inline"
+                    },
+                    "type": "array"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "single_quoted"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "children",
+                "tag"
+            ],
+            "type": "object"
+        },
+        "SmartPunctuation": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "smart_punctuation"
+                    ],
+                    "type": "string"
+                },
+                "text": {
+                    "type": "string"
+                },
+                "type": {
+                    "$ref": "#/definitions/SmartPunctuationType"
+                }
+            },
+            "required": [
+                "tag",
+                "text",
+                "type"
+            ],
+            "type": "object"
+        },
+        "SmartPunctuationType": {
+            "enum": [
+                "ellipses",
+                "em_dash",
+                "en_dash",
+                "left_double_quote",
+                "left_single_quote",
+                "right_double_quote",
+                "right_single_quote"
+            ],
+            "type": "string"
+        },
+        "SoftBreak": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "soft_break"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "tag"
+            ],
+            "type": "object"
+        },
+        "Span": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "children": {
+                    "items": {
+                        "$ref": "#/definitions/Inline"
+                    },
+                    "type": "array"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "span"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "children",
+                "tag"
+            ],
+            "type": "object"
+        },
+        "Str": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "str"
+                    ],
+                    "type": "string"
+                },
+                "text": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "tag",
+                "text"
+            ],
+            "type": "object"
+        },
+        "Strong": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "children": {
+                    "items": {
+                        "$ref": "#/definitions/Inline"
+                    },
+                    "type": "array"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "strong"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "children",
+                "tag"
+            ],
+            "type": "object"
+        },
+        "Subscript": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "children": {
+                    "items": {
+                        "$ref": "#/definitions/Inline"
+                    },
+                    "type": "array"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "subscript"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "children",
+                "tag"
+            ],
+            "type": "object"
+        },
+        "Superscript": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "children": {
+                    "items": {
+                        "$ref": "#/definitions/Inline"
+                    },
+                    "type": "array"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "superscript"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "children",
+                "tag"
+            ],
+            "type": "object"
+        },
+        "Symb": {
+            "additionalProperties": false,
+            "properties": {
+                "alias": {
+                    "type": "string"
+                },
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "symb"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "alias",
+                "tag"
+            ],
+            "type": "object"
+        },
+        "Table": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "children": {
+                    "additionalItems": {
+                        "$ref": "#/definitions/Row"
+                    },
+                    "items": [
+                        {
+                            "$ref": "#/definitions/Caption"
+                        }
+                    ],
+                    "minItems": 1,
+                    "type": "array"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "table"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "children",
+                "tag"
+            ],
+            "type": "object"
+        },
+        "TaskList": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "children": {
+                    "items": {
+                        "$ref": "#/definitions/TaskListItem"
+                    },
+                    "type": "array"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "task_list"
+                    ],
+                    "type": "string"
+                },
+                "tight": {
+                    "type": "boolean"
+                }
+            },
+            "required": [
+                "children",
+                "tag",
+                "tight"
+            ],
+            "type": "object"
+        },
+        "TaskListItem": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "checkbox": {
+                    "$ref": "#/definitions/CheckboxStatus"
+                },
+                "children": {
+                    "items": {
+                        "$ref": "#/definitions/Block"
+                    },
+                    "type": "array"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "task_list_item"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "checkbox",
+                "children",
+                "tag"
+            ],
+            "type": "object"
+        },
+        "Term": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "children": {
+                    "items": {
+                        "$ref": "#/definitions/Inline"
+                    },
+                    "type": "array"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "term"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "children",
+                "tag"
+            ],
+            "type": "object"
+        },
+        "ThematicBreak": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "thematic_break"
+                    ],
+                    "type": "string"
+                }
+            },
+            "required": [
+                "tag"
+            ],
+            "type": "object"
+        },
+        "Url": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "url"
+                    ],
+                    "type": "string"
+                },
+                "text": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "tag",
+                "text"
+            ],
+            "type": "object"
+        },
+        "Verbatim": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "verbatim"
+                    ],
+                    "type": "string"
+                },
+                "text": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "tag",
+                "text"
+            ],
+            "type": "object"
+        }
+    },
+    "properties": {
+        "attributes": {
+            "$ref": "#/definitions/Attributes"
+        },
+        "children": {
+            "items": {
+                "$ref": "#/definitions/Block"
+            },
+            "type": "array"
+        },
+        "footnotes": {
+            "$ref": "#/definitions/Record<string,Footnote>"
+        },
+        "pos": {
+            "additionalProperties": false,
+            "properties": {
+                "end": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "col": {
+                            "type": "number"
+                        },
+                        "line": {
+                            "type": "number"
+                        },
+                        "offset": {
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "col",
+                        "line",
+                        "offset"
+                    ],
+                    "type": "object"
+                },
+                "start": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "col": {
+                            "type": "number"
+                        },
+                        "line": {
+                            "type": "number"
+                        },
+                        "offset": {
+                            "type": "number"
+                        }
+                    },
+                    "required": [
+                        "col",
+                        "line",
+                        "offset"
+                    ],
+                    "type": "object"
+                }
+            },
+            "required": [
+                "end",
+                "start"
+            ],
+            "type": "object"
+        },
+        "references": {
+            "$ref": "#/definitions/Record<string,Reference>"
+        },
+        "tag": {
+            "enum": [
+                "doc"
+            ],
+            "type": "string"
+        }
+    },
+    "required": [
+        "children",
+        "footnotes",
+        "references",
+        "tag"
+    ],
+    "type": "object"
+}
+
