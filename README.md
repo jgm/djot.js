@@ -15,6 +15,7 @@ playground](https://djot.net/playground).
 | `build`          | Compile and bundle sources to `lib` and `dist` |
 | `test`           | Run tests                                      |
 | `bench`          | Run benchmarks                                 |
+| `genversion`     | Regenerate version.ts from package.json        |
 
 ## Installing the command line utility
 

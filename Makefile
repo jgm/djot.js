@@ -1,8 +1,11 @@
 VERSION=$(shell grep '\"version\":' package.json | sed -e 's/.*: \"\([^"]*\)".*/\1/')
 
-test: build
+test: build src/version.ts
 	npm test --noStackTrace
 .PHONY: test
+
+src/version.ts: package.json
+	npm run genversion
 
 build:
 	tsc

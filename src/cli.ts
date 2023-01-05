@@ -9,6 +9,7 @@ import { renderHTML } from "./html";
 import { applyFilter } from "./filter";
 import { PandocRenderer, PandocParser } from "./pandoc";
 import { DjotRenderer } from "./djot-renderer";
+import { version } from "./version";
 
 const warn = function(msg : string, pos ?: number | null) : void {
   process.stderr.write(msg + (pos ? " at " + pos : "") + "\n");
@@ -35,6 +36,7 @@ Options:
   --sourcepos,-p       Include source positions
   --time               Print parse time to stderr
   --quiet,-q           Suppress warnings
+  --version            Print djot version
   --help,-h            This usage message
 `;
 let files = [];
@@ -109,6 +111,10 @@ while (args[i]) {
     case "--help":
     case "-h":
       process.stdout.write(usage);
+      process.exit(0);
+      break;
+    case "--version":
+      process.stdout.write("djot " + version + "\n");
       process.exit(0);
       break;
     default:
