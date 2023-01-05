@@ -8,7 +8,7 @@ import { Doc } from "./ast";
 import { renderHTML } from "./html";
 import { applyFilter } from "./filter";
 import { fromPandoc, toPandoc } from "./pandoc";
-import { DjotRenderer } from "./djot-renderer";
+import { renderDjot } from "./djot-renderer";
 import { version } from "./version";
 import { Options, Warning } from "./options";
 
@@ -198,7 +198,8 @@ try {
         process.stdout.write(renderHTML(ast, options));
         break;
       case "djot":
-        process.stdout.write((new DjotRenderer(ast, width).render()));
+        process.stdout.write((renderDjot(ast,
+                                         {warn: warn, wrapWidth: width})));
         break;
       case "ast":
         process.stdout.write(JSON.stringify(ast, null, compact ? 0 : 2));

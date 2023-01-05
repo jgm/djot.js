@@ -8,6 +8,7 @@ import { Doc, AstNode, HasChildren,
          Inline, Str, InlineMath, DisplayMath, Verbatim, SmartPunctuation,
          isInline,  isBlock, isCaption, isRow } from "./ast";
 import { getStringContent } from "./parse";
+import { Options } from "./options";
 
 const isWhitespace = function(node : Inline) : boolean {
   const tag : string = node.tag;
@@ -88,13 +89,16 @@ const formatNumber = function(num : number, style : string) : string {
   return delimPattern.replace("$", numStr);
 }
 
-class DjotRenderer {
-
-  doc : Doc;
-  wrapWidth : number;
+interface DjotRenderOptions extends Options {
   // wrapWidth == 0 means no wrap but soft_breaks are breaks
   //             -1 means no wrap and soft_breaks are spaces
   //             >0 means wrap to width, with soft_breaks as spaces
+  wrapWidth ?: number;
+}
+
+class DjotRenderer {
+  doc : Doc;
+  wrapWidth : number;
   prefixes : string[] = [];
   buffer : string[] = [];
   startOfLine  = true;
@@ -102,9 +106,9 @@ class DjotRenderer {
   column  = 0;
   needsBlankLine  = false;
 
-  constructor(doc : Doc, wrapWidth ?: number) {
+  constructor(doc : Doc, options : DjotRenderOptions = {}) {
     this.doc = doc;
-    this.wrapWidth = wrapWidth || 0;
+    this.wrapWidth = options?.wrapWidth || 0;
   }
 
   escape (s : string) : string {
@@ -661,4 +665,12 @@ class DjotRenderer {
 
 }
 
-export { DjotRenderer }
+const renderDjot = function(doc : Doc,
+                            options : DjotRenderOptions = {}) : string {
+  return new DjotRenderer(doc, options).render();
+}
+
+export {
+  DjotRenderOptions,
+  renderDjot
+}

@@ -3,12 +3,12 @@ import { EventParser } from "./block";
 import { renderHTML } from "./html";
 import { applyFilter } from "./filter";
 import { fromPandoc, toPandoc } from "./pandoc";
-import { DjotRenderer } from "./djot-renderer";
+import { renderDjot } from "./djot-renderer";
 export { EventParser,
          parse,
          renderHTML,
          renderAST,
+         renderDjot,
          applyFilter,
          toPandoc,
-         fromPandoc,
-         DjotRenderer }
+         fromPandoc }

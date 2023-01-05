@@ -1,5 +1,5 @@
 import { Doc, Block } from "./ast";
-import { DjotRenderer } from "./djot-renderer";
+import { renderDjot } from "./djot-renderer";
 
 const cicero  = "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis superlongunbreakablewordthatwontfitononeline."
 
@@ -16,7 +16,7 @@ describe("DjotRenderer", () => {
         children: [ { tag: "str", text: cicero } ] }]);
 
   it("breaks lines properly", () => {
-    expect(new DjotRenderer(cicero1, 30).render()).toStrictEqual(
+    expect(renderDjot(cicero1, {wrapWidth: 30})).toEqual(
 `Sed ut perspiciatis unde omnis
 iste natus error sit
 voluptatem accusantium
@@ -41,7 +41,7 @@ superlongunbreakablewordthatwontfitononeline.
       ]);
 
   it("handles block quotes properly", () => {
-    expect(new DjotRenderer(cicero2, 40).render()).toStrictEqual(
+    expect(renderDjot(cicero2, {wrapWidth: 40})).toEqual(
 `Quoth Cicero:
 
 > Sed ut perspiciatis unde omnis iste
@@ -109,7 +109,7 @@ Thus Cicero.
           }
         ]
       };
-    expect(new DjotRenderer(fn, 30).render()).toStrictEqual(
+    expect(renderDjot(fn, {wrapWidth: 30})).toEqual(
 `hi[^1]
 
 [^1]: This is the note.
@@ -237,7 +237,7 @@ Thus Cicero.
       "start": 1,
       "tight": false
     }]);
-    expect(new DjotRenderer(lst, 30).render()).toStrictEqual(
+    expect(renderDjot(lst, {wrapWidth: 30})).toEqual(
 `1. one
 
 2. two
@@ -262,7 +262,7 @@ Thus Cicero.
         { tag: "para",
           children: [ { tag: "str", text: "etc." }] }
         ]);
-    expect(new DjotRenderer(cicero3, 30).render()).toStrictEqual(
+    expect(renderDjot(cicero3, {wrapWidth: 30})).toEqual(
 `Test.
 
 ### ed ut perspiciatis unde
@@ -423,7 +423,7 @@ etc.
         }
       ]
     }]);
-    expect(new DjotRenderer(tbl, 30).render()).toStrictEqual(
+    expect(renderDjot(tbl, {wrapWidth: 30})).toEqual(
 `|a|b|
 |:--|--:|
 |c|d|
