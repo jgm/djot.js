@@ -1,8 +1,6 @@
 import { parse, renderAST } from "./parse";
 import { Filter, applyFilter } from "./filter";
 
-const ignoreWarnings = () => { /* do nothing */ };
-
 const capitalizeFilter : Filter = () => {
   return {
            str: (e) => {
@@ -53,7 +51,7 @@ const fancyFilter : Filter = () => {
 
 describe("applyFilter", () => {
   it("capitalizes text", () => {
-    const ast = parse("Hello *there* `code`", { warn: ignoreWarnings });
+    const ast = parse("Hello *there* `code`");
     applyFilter(ast, capitalizeFilter);
     expect(renderAST(ast)).toEqual(
 `doc
@@ -67,7 +65,7 @@ describe("applyFilter", () => {
   });
 
   it("sequences filters", () => {
-    const ast = parse("Hello *there* `code`", { warn: ignoreWarnings });
+    const ast = parse("Hello *there* `code`");
     applyFilter(ast, arrayFilter);
     expect(renderAST(ast)).toEqual(
 `doc
@@ -82,7 +80,7 @@ describe("applyFilter", () => {
 
 
   it("capitalizes text within emphasis only", () => {
-    const ast = parse("Hello _*there*_ `code`[^1]\n\n[^1]: _emph_", { warn: ignoreWarnings });
+    const ast = parse("Hello _*there*_ `code`[^1]\n\n[^1]: _emph_");
     applyFilter(ast, fancyFilter);
     expect(renderAST(ast)).toEqual(
 `doc

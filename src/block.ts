@@ -1,4 +1,5 @@
 import { Event } from "./event";
+import { Options, Warning } from "./options";
 import { AttributeParser } from "./attributes";
 import { pattern, find } from "./find";
 import { InlineParser } from "./inline";
@@ -103,7 +104,8 @@ class Container {
 }
 
 class EventParser {
-  warn: (message: string, pos?: number | null) => void;
+  options: Options;
+  warn: (warning : Warning) => void;
   subject: string;
   maxoffset: number;
   indent: number;
@@ -119,15 +121,15 @@ class EventParser {
   specs: BlockSpec[];
   paraSpec: BlockSpec;
 
-  constructor(subject: string,
-              warn: (message: string, pos?: number | null) => void) {
+  constructor(subject: string, options?: Options) {
     // Ensure the subject ends with a newline character
     if (subject.charAt(subject.length - 1) !== '\n') {
       subject = subject + "\n";
     }
     this.subject = subject;
     this.maxoffset = subject.length - 1;
-    this.warn = warn;
+    this.options = options || {};
+    this.warn = this.options.warn || (() => {});
     this.indent = 0;
     this.startline = 0;
     this.starteol = 0;
@@ -653,7 +655,7 @@ class EventParser {
           // check to make sure the match is in order
           this.addMatch(sp, ep, "-div");
           if (sp === ep) {
-            this.warn("Unclosed div", this.pos);
+            this.warn(new Warning("Unclosed div", this.pos));
           }
           this.containers.pop();
         }
@@ -709,7 +711,7 @@ class EventParser {
           const ep = container.extra.endFenceEndpos || this.pos;
           this.addMatch(sp, ep, "-code_block");
           if (sp === ep) {
-            this.warn("Unclosed code block", this.pos);
+            this.warn(new Warning("Unclosed code block", this.pos));
           }
           this.containers.pop();
         }
@@ -766,7 +768,7 @@ class EventParser {
     }
     if (container.content === ContentType.Inline) {
       container.inlineParser =
-        new InlineParser(this.subject, this.warn);
+        new InlineParser(this.subject, {warn: this.warn});
     }
     this.containers.push(container);
     return container;
@@ -807,7 +809,7 @@ class EventParser {
     endpos: number,
     matches: Event[]
   } {
-    const inlineParser = new InlineParser(this.subject, this.warn);
+    const inlineParser = new InlineParser(this.subject, {warn: this.warn});
     let cellComplete = false;
     const sp = this.pos - 1; // we start on char after |
     let ep = sp; // for now
@@ -1044,7 +1046,8 @@ class EventParser {
                   self.paraSpec.open(self.paraSpec);
                   tip = self.tip();
                   if (tip) {
-                    tip.inlineParser = new InlineParser(self.subject, self.warn);
+                    tip.inlineParser = new InlineParser(self.subject,
+                                                        self.options);
                   }
                 }
               }

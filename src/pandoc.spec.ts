@@ -661,7 +661,7 @@ describe("PandocRenderer", () => {
   list
 `;
     const ast = parse(inp, {});
-    expect(new PandocRenderer(ast, () => {}).toPandoc()).toStrictEqual(
+    expect(new PandocRenderer(ast).toPandoc()).toStrictEqual(
       {
         "pandoc-api-version": [
           1,

@@ -1,12 +1,10 @@
 import { Doc, Reference, Footnote, Link, HasChildren,
          HasAttributes, AstNode } from "./ast";
 import { getStringContent, ParseOptions } from "./parse";
-
-const defaultWarnings = function(message: string, pos?: number | null) {
-}
+import { Options, Warning } from "./options";
 
 class HTMLRenderer {
-  warn: (message: string, pos?: number | null) => void;
+  warn: (warning : Warning) => void;
   options: ParseOptions;
   tight: boolean;
   footnoteIndex: Record<string, number>;
@@ -15,7 +13,7 @@ class HTMLRenderer {
   footnotes: Record<string, Footnote>;
 
   constructor(options : ParseOptions) {
-    this.warn = options.warn || defaultWarnings;
+    this.warn = options.warn || (() => {});
     this.options = options || {};
     this.tight = false;
     this.footnoteIndex = {};
@@ -351,8 +349,7 @@ class HTMLRenderer {
               }
             }
           } else {
-            this.warn(`Reference ${JSON.stringify(node.reference)} not found`,
-              (node.pos && node.pos.end.offset) || 0);
+            this.warn(new Warning(`Reference ${JSON.stringify(node.reference)} not found`, node?.pos?.end));
           }
         }
         else {

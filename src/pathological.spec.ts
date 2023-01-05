@@ -1,8 +1,6 @@
 import { parse } from "./parse";
 import { performance } from "perf_hooks";
 
-const ignoreWarnings = () => { /* do nothing */ };
-
 const n = 500;
 
 const deeplynested : string[] = [];
@@ -55,7 +53,7 @@ describe("Pathological tests", () => {
     it("does not exhibit pathological behavior on " + testname, () => {
       const test : string = tests[testname];
       const start = performance.now();
-      const ast = parse(test, {warn: ignoreWarnings});
+      const ast = parse(test);
       const end = performance.now();
       expect(ast).toBeTruthy();
       expect(end - start).toBeLessThan(1000);

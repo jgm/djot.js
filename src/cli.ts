@@ -10,9 +10,10 @@ import { applyFilter } from "./filter";
 import { PandocRenderer, PandocParser } from "./pandoc";
 import { DjotRenderer } from "./djot-renderer";
 import { version } from "./version";
+import { Options, Warning } from "./options";
 
-const warn = function(msg : string, pos ?: number | null) : void {
-  process.stderr.write(msg + (pos ? " at " + pos : "") + "\n");
+const warn = function(warning: Warning) : void {
+  process.stderr.write(warning.render() + "\n");
 }
 
 let timing = false;
@@ -152,7 +153,7 @@ files.forEach(file => {
 try {
   if (to === "events") {
     let start = true;
-    for (const event of new EventParser(input, warn)) {
+    for (const event of new EventParser(input, {warn: warn})) {
       if (start) {
         process.stdout.write("[");
         start = false;
@@ -168,7 +169,7 @@ try {
     if (from === "djot") {
       ast = parse(input, options);
     } else if (from === "pandoc") {
-      ast = new PandocParser(options.warn).parseJSON(input);
+      ast = new PandocParser(options).parseJSON(input);
     } else if (from === "ast") {
       ast = JSON.parse(input);
     }
@@ -208,7 +209,7 @@ try {
         break;
       case "pandoc":
         process.stdout.write(
-          JSON.stringify(new PandocRenderer(ast, warn).toPandoc(),
+          JSON.stringify(new PandocRenderer(ast, {warn: warn}).toPandoc(),
             null, compact ? 0 : 2));
         process.stdout.write("\n");
         break;

@@ -1,5 +1,6 @@
 import { Event } from "./event";
 import { EventParser } from "./block";
+import { Options, Warning } from "./options";
 import {
   Attributes,
   SourceLoc,
@@ -107,9 +108,8 @@ const getListStart = function(marker: string, style: string): number | undefined
   return undefined;
 }
 
-interface ParseOptions {
+interface ParseOptions extends Options {
   sourcePositions?: boolean;
-  warn?: (message: string, pos?: number | null) => void;
 }
 
 // Parsing ocntext:
@@ -165,10 +165,8 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
   const footnotes: Record<string, Footnote> = {};
   const identifiers: Record<string, boolean> = {}; // identifiers used
   const blockAttributes: Attributes = {}; // accumulated block attributes
-  const defaultWarnings = function(message: string, pos?: number | null) {
-  }
-  const warn = options.warn || defaultWarnings;
-  const parser = new EventParser(input, warn);
+  const parser = new EventParser(input, options);
+  let warn = options.warn || (() => {});
   const addBlockAttributes = function(container: HasAttributes) {
     if (Object.keys(blockAttributes).length > 0) {
       container.attributes = container.attributes || {};
@@ -467,7 +465,9 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
           }
           tip = getTip(); // get new tip, which may be the new element
           if (endsWithSpace) {
-            warn("Ignoring unattached attribute", startpos);
+            warn(new Warning("Ignoring unattached attribute",
+                          options.sourcePositions ?
+                            getSourceLoc(startpos) : startpos));
             return;
           }
           if (!tip.attributes) {
@@ -1035,7 +1035,9 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
             pos: node.pos
           };
         } else {
-          warn("Ignoring footnote without a label.", endpos);
+          warn(new Warning("Ignoring footnote without a label.",
+                          options.sourcePositions ?
+                            getSourceLoc(endpos) : endpos));
         }
       },
 

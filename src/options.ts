@@ -20,7 +20,6 @@ class Warning {
     } else if (this.offset) {
       result += ` at offset ${this.offset}`;
     }
-    result += "\n";
     return result;
   }
 }

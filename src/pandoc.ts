@@ -3,6 +3,7 @@ import { AstNode, Doc, Block, Caption, Row, Cell, Alignment,
          Span, Verbatim, Image, Link,
          Attributes, CodeBlock, Heading, Div, Table, CheckboxStatus,
          DefinitionListItem, Term, Definition, Footnote } from "./ast";
+import { Options, Warning } from "./options";
 
 interface Pandoc {
   ["pandoc-api-version"]: number[],
@@ -69,7 +70,8 @@ const toPandocAttr = function(node : AstNode) : PandocAttr {
 
 class PandocRenderer {
   doc : Doc;
-  warn : (msg : string, pos ?: number | null) => void;
+  options : Options;
+  warn : (warning : Warning) => void;
   smartPunctuationMap : Record<string, string> =
     { non_breaking_space: " ",
       ellipses: "⋯",
@@ -80,9 +82,10 @@ class PandocRenderer {
       left_double_quote: "“",
       right_double_quote: "”" };
 
-  constructor(doc : Doc, warn ?: (msg : string, pos ?: number | null) => void) {
+  constructor(doc : Doc, options ?: Options) {
     this.doc = doc;
-    this.warn = warn || (() => {});
+    this.options = options || {};
+    this.warn = this.options.warn || (() => {});
   }
 
   toPandocChildren (node : AstNode) : PandocElt[] {
@@ -368,7 +371,7 @@ class PandocRenderer {
               }
             }
           } else {
-            this.warn("Reference " + node.reference + " not found.");
+            this.warn(new Warning("Reference " + node.reference + " not found."));
           }
         }
         if (node.attributes) {
@@ -436,7 +439,7 @@ class PandocRenderer {
       }
 
       default:
-        this.warn("Skipping unhandled node " + node.tag);
+        this.warn(new Warning("Skipping unhandled node " + node.tag));
     }
   }
 
@@ -498,10 +501,12 @@ class PandocParser {
 
   footnotes : Record<string, Footnote> = {};
   footnoteIndex  = 0;
-  warn : (msg : string, pos ?: number) => void;
+  options : Options;
+  warn : (warning : Warning) => void;
 
-  constructor(warn ?: (msg : string, pos ?: number) => void) {
-    this.warn = warn || (() => {});
+  constructor(options ?: Options) {
+    this.options = options || {};
+    this.warn = this.options.warn || (() => {});
   }
 
   fromPandocInlines (elts : PandocElt[]) : Inline[] {
@@ -824,7 +829,7 @@ class PandocParser {
         let caption : Caption = { tag: "caption", children: []};
         if (rawcaption.length > 1 ||
             (rawcaption.length === 1 && !isPlainOrPara(rawcaption[0]))) {
-          this.warn("Skipping block-level content in table caption.");
+          this.warn(new Warning("Skipping block-level content in table caption."));
         } else if (rawcaption[0] && "c" in rawcaption[0]) {
           caption.children = this.fromPandocInlines(rawcaption[0].c);
         }
@@ -914,7 +919,7 @@ class PandocParser {
     const rawblocks = rawcell[4];
     if (rawblocks.length > 1 || (rawblocks.length === 1 &&
           !isPlainOrPara(rawblocks[0]))) {
-      this.warn("Skipping table cell with block-level content.");
+      this.warn(new Warning("Skipping table cell with block-level content."));
       cs = [{tag: "str", text: "((content omitted))"}];
     } else if (rawblocks[0]) {
       cs = this.fromPandocInlines(rawblocks[0].c);

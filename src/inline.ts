@@ -1,5 +1,6 @@
 import { Event } from "./event";
 import { AttributeParser } from "./attributes";
+import { Options, Warning } from "./options";
 import { pattern, find, boundedFind } from "./find";
 
 // General note on the parsing strategy:  our objective is to
@@ -550,7 +551,8 @@ const matchers = {
 };
 
 class InlineParser {
-  warn: (message: string, pos?: number | null) => void;
+  options: Options;
+  warn: (warning : Warning) => void;
   subject: string;
   matches: Event[];
   openers: OpenerMap; // map from opener type to Opener[] in reverse order
@@ -566,8 +568,9 @@ class InlineParser {
   matchers: { [codepoint: number]: (self: InlineParser, sp: number, ep: number) => null | number }; // functions to handle different code points
 
   constructor(subject: string,
-              warn: (message: string, pos?: number | null) => void) {
-    this.warn = warn;
+              options?: Options) {
+    this.options = options || {};
+    this.warn = this.options.warn || (() => {});
     this.subject = subject;
     this.matches = [];  // sparse array of matches indexed by startpos
     // We use a sparse array because we sometimes want to replace early,
@@ -655,7 +658,7 @@ class InlineParser {
         sorted[sorted.length - 1].endpos = endpos;
       }
       if (this.verbatim > 0) { // unclosed verbatim
-        this.warn("Unclosed verbatim", endpos);
+        this.warn(new Warning("Unclosed verbatim", endpos));
         sorted.push({
           startpos: endpos,
           endpos: endpos,

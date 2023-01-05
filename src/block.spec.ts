@@ -1,11 +1,9 @@
 import { EventParser } from "./block";
 
-const ignoreWarnings = () => { /* do nothing */ };
-
 describe("EventParser", () => {
   it("parses paragraphs", () => {
     const events = [];
-    for (const event of new EventParser("hello *world*\n\nfoo", ignoreWarnings)) {
+    for (const event of new EventParser("hello *world*\n\nfoo")) {
       events.push(event);
     }
     expect(events).toStrictEqual([
@@ -24,7 +22,7 @@ describe("EventParser", () => {
 
   it("parses block quotes", () => {
     const events = [];
-    for (const event of new EventParser("> hello\n> there\nlazy\n>\n> hi\n", ignoreWarnings)) {
+    for (const event of new EventParser("> hello\n> there\nlazy\n>\n> hi\n")) {
       //                            01234567 89012345 67890 12 345678
       events.push(event);
     }
@@ -47,7 +45,7 @@ describe("EventParser", () => {
 
   it("parses headings", () => {
     const events = [];
-    for (const event of new EventParser("## hello\n## there\nlazy\n", ignoreWarnings)) {
+    for (const event of new EventParser("## hello\n## there\nlazy\n")) {
       //                            012345678 901234567 89012
       events.push(event);
     }
@@ -64,7 +62,7 @@ describe("EventParser", () => {
 
   it("parses reference definitions", () => {
     const events = [];
-    for (const event of new EventParser("[foo]: bar\n baz\n", ignoreWarnings)) {
+    for (const event of new EventParser("[foo]: bar\n baz\n")) {
       //                            0123456789 01234 5
       events.push(event);
     }
@@ -79,7 +77,7 @@ describe("EventParser", () => {
 
   it("parses tables", () => {
     const events = [];
-    for (const event of new EventParser("| a | b |\n|--|--:|\n|33|2| ", ignoreWarnings)) {
+    for (const event of new EventParser("| a | b |\n|--|--:|\n|33|2| ")) {
       //                            012345678 901234567 8901234
       events.push(event);
     }
@@ -112,7 +110,7 @@ describe("EventParser", () => {
 
   it("parses code blocks", () => {
     const events = [];
-    for (const event of new EventParser("```` python\nif x == 3:\n  y = 4\n````\n", ignoreWarnings)) {
+    for (const event of new EventParser("```` python\nif x == 3:\n  y = 4\n````\n")) {
       //                            01234567890 12345678901 23456789 01234 5
       events.push(event);
     }
@@ -127,7 +125,7 @@ describe("EventParser", () => {
 
   it("parses list items", () => {
     const events = [];
-    for (const event of new EventParser("- one\n- two\n1. three\n(iv) four\n\n - sub\n\n   two\n", ignoreWarnings)) {
+    for (const event of new EventParser("- one\n- two\n1. three\n(iv) four\n\n - sub\n\n   two\n")) {
       //                            01234 5678901 23456789012 3456789 0 1234567 890
       events.push(event);
     }
@@ -174,7 +172,7 @@ describe("EventParser", () => {
 
   it("parses captions", () => {
     const events = [];
-    for (const event of new EventParser(" ^ This is a\n*capt*\n\n", ignoreWarnings)) {
+    for (const event of new EventParser(" ^ This is a\n*capt*\n\n")) {
       //                            012345678901 2345678 9 0
       events.push(event);
     }
@@ -192,7 +190,7 @@ describe("EventParser", () => {
 
   it("parses thematic breaks", () => {
     const events = [];
-    for (const event of new EventParser(" - - - -\n", ignoreWarnings)) {
+    for (const event of new EventParser(" - - - -\n")) {
       //                            012345678901 2345678 9 0
       events.push(event);
     }
@@ -203,7 +201,7 @@ describe("EventParser", () => {
 
   it("parses fenced divs", () => {
     const events = [];
-    for (const event of new EventParser(":::: foo \nhello\n\nhi\n::::", ignoreWarnings)) {
+    for (const event of new EventParser(":::: foo \nhello\n\nhi\n::::")) {
       //                            012345678 901234 5 6789 01234 56789
       events.push(event);
     }
@@ -225,7 +223,7 @@ describe("EventParser", () => {
   it("parses footnotes", () => {
     const events = [];
     for (const event of new EventParser(
-          "[^note]: This is a\nnote\n\n  second par\n\nafter note\n", ignoreWarnings)) {
+          "[^note]: This is a\nnote\n\n  second par\n\nafter note\n")) {
       //   012345678901234567 89012 3 4567890123456 7 89012345678 9
       events.push(event);
     }
@@ -252,7 +250,7 @@ describe("EventParser", () => {
   it("parses block attributes", () => {
     const events = [];
     for (const event of new EventParser(
-          "{.foo}\n{#bar\n .baz}\nHello", ignoreWarnings)) {
+          "{.foo}\n{#bar\n .baz}\nHello")) {
       //   012345 678901 2345678 901234
       events.push(event);
     }
@@ -272,8 +270,7 @@ describe("EventParser", () => {
 
   it("parses failed block attributes as para", () => {
     const events = [];
-    for (const event of new EventParser(
-          "{.foo\nbar *baz*\n\n", ignoreWarnings)) {
+    for (const event of new EventParser("{.foo\nbar *baz*\n\n")) {
       //   012345 678901234 5 6
       events.push(event);
     }
