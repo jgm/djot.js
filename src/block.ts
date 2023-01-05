@@ -107,17 +107,17 @@ class EventParser {
   options: Options;
   warn: (warning : Warning) => void;
   subject: string;
-  private maxoffset: number;
-  private indent: number;
-  private startline: number;
-  private starteol: number;
-  private endeol: number;
-  private matches: Event[];
-  private containers: Container[];
-  private pos: number;
-  private lastMatchedContainer: number;
-  private finishedLine: boolean;
-  private returned: number;
+  maxoffset: number;
+  indent: number;
+  startline: number;
+  starteol: number;
+  endeol: number;
+  matches: Event[];
+  containers: Container[];
+  pos: number;
+  lastMatchedContainer: number;
+  finishedLine: boolean;
+  returned: number;
   specs: BlockSpec[];
   paraSpec: BlockSpec;
 
@@ -1090,4 +1090,8 @@ class EventParser {
 
 }
 
-export { EventParser }
+const parseEvents = function(input : string, options : Options = {}) {
+  return new EventParser(input, options);
+}
+
+export { parseEvents }

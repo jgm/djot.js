@@ -2,7 +2,7 @@
 
 import fs from "fs";
 import { performance } from "perf_hooks";
-import { EventParser } from "./block";
+import { parseEvents } from "./block";
 import { parse, renderAST } from "./parse";
 import { Doc } from "./ast";
 import { renderHTML } from "./html";
@@ -153,7 +153,7 @@ files.forEach(file => {
 try {
   if (to === "events") {
     let start = true;
-    for (const event of new EventParser(input, {warn: warn})) {
+    for (const event of parseEvents(input, {warn: warn})) {
       if (start) {
         process.stdout.write("[");
         start = false;
