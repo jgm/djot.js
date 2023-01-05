@@ -163,7 +163,7 @@ console.log(djot.renderDjot(djot.parse("_Hello_ world"), {wrapWidth: 64}));
 `PandocRenderOptions` extends `Options` with
 `smartPunctuationMap`, which has the form and default values:
 
-``` json
+``` js
 { non_breaking_space: " ",
   ellipses: "⋯",
   em_dash: "-",
