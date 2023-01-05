@@ -298,10 +298,14 @@ class PandocRenderer {
         elts.push({ t: "Code", c: [toPandocAttr(node), node.text] });
         break;
 
-      case "math":
+      case "inline_math":
         elts.push({ t: "Math",
-                    c: [{t: node.display ? "DisplayMath" : "InlineMath"},
-                         node.text] });
+                    c: [{t: "InlineMath"}, node.text] });
+        break;
+
+      case "display_math":
+        elts.push({ t: "Math",
+                    c: [{t: "DisplayMath"}, node.text] });
         break;
 
       case "non_breaking_space":
@@ -560,7 +564,8 @@ class PandocParser {
             break;
 
           case "Math":
-            inlines.push({tag: "math", display: elt.c[0].t === "DisplayMath",
+            inlines.push({tag: elt.c[0].t === "DisplayMath"
+                               ? "display_math" : "inline_math",
                           text: elt.c[1]});
             break;
 

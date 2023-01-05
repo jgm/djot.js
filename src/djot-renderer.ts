@@ -4,7 +4,7 @@ import { Doc, AstNode, HasChildren,
          BlockQuote, Section, CodeBlock, RawBlock,
          Term, Definition, Footnote, Reference, Symb,
          Link, Image, HasText, RawInline, FootnoteReference,
-         Inline, Str, Math, Verbatim, SmartPunctuation,
+         Inline, Str, InlineMath, DisplayMath, Verbatim, SmartPunctuation,
          isInline,  isBlock, isCaption, isRow } from "./ast";
 import { getStringContent } from "./parse";
 
@@ -533,12 +533,12 @@ class DjotRenderer {
     verbatim: (node : Verbatim) => {
       this.verbatimNode(node);
     },
-    math:  (node : Math) => {
-      if (node.display) {
-        this.lit("$$");
-      } else {
-        this.lit("$");
-      }
+    inline_math:  (node : InlineMath) => {
+      this.lit("$");
+      this.verbatimNode(node);
+    },
+    display_math:  (node : DisplayMath) => {
+      this.lit("$$");
       this.verbatimNode(node);
     }
   }

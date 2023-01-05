@@ -663,7 +663,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
       ["-display_math"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         addChildToTip({
-          tag: "math", display: true,
+          tag: "display_math",
           text: trimVerbatim(accumulatedText.join(""))
         },
           node.pos);
@@ -674,7 +674,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
       ["-inline_math"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         addChildToTip({
-          tag: "math", display: false,
+          tag: "inline_math",
           text: trimVerbatim(accumulatedText.join(""))
         },
           node.pos);

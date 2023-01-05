@@ -115,7 +115,8 @@ type Inline =
   | Symb
   | Verbatim
   | RawInline
-  | Math
+  | InlineMath
+  | DisplayMath
   | Url
   | Email
   | FootnoteReference
@@ -189,9 +190,13 @@ interface RawInline extends HasAttributes {
   text: string;
 }
 
-interface Math extends HasAttributes {
-  tag: "math";
-  display: boolean;
+interface InlineMath extends HasAttributes {
+  tag: "inline_math";
+  text: string;
+}
+
+interface DisplayMath extends HasAttributes {
+  tag: "display_math";
   text: string;
 }
 
@@ -373,7 +378,8 @@ const inlineTags : Record<string, boolean> = {
   symb: true,
   verbatim: true,
   raw_inline: true,
-  math: true,
+  inline_math: true,
+  display_math: true,
   url: true,
   email: true,
   footnote_reference: true,
@@ -441,7 +447,8 @@ export {
   Symb,
   Verbatim,
   RawInline,
-  Math,
+  InlineMath,
+  DisplayMath,
   Url,
   Email,
   FootnoteReference,

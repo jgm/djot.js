@@ -296,20 +296,15 @@ class HTMLRenderer {
       case "symb":
         return this.escape(`:${node.alias}:`);
 
-      case "math":
-        result += this.renderTag("span", node,
-          { class: "math " + (node.display ? "display" : "inline") });
-        if (node.display) {
-          result += this.escape("\\[");
-        } else {
-          result += this.escape("\\(");
-        }
-        result += this.escape(node.text);
-        if (node.display) {
-          result += this.escape("\\]");
-        } else {
-          result += this.escape("\\)");
-        }
+      case "inline_math":
+        result += this.renderTag("span", node, { class: "math inline" });
+        result += `\\(${this.escape(node.text)}\\)`;
+        result += this.renderCloseTag("span");
+        return result;
+
+      case "display_math":
+        result += this.renderTag("span", node, { class: "math display" });
+        result += `\\[${this.escape(node.text)}\\]`;
         result += this.renderCloseTag("span");
         return result;
 
