@@ -1,22 +1,22 @@
 import { Doc, Reference, Footnote, Link, HasChildren,
          HasAttributes, AstNode, Visitor } from "./ast";
-import { getStringContent, ParseOptions } from "./parse";
+import { getStringContent } from "./parse";
 import { Options, Warning } from "./options";
 
-interface HTMLOptions extends ParseOptions {
+interface HTMLRenderOptions extends Options {
   overrides?: Visitor<HTMLRenderer, string>;
 }
 
 class HTMLRenderer {
   warn: (warning : Warning) => void;
-  options: HTMLOptions;
+  options: HTMLRenderOptions;
   tight: boolean;
   footnoteIndex: Record<string, number>;
   nextFootnoteIndex: number;
   references: Record<string, Reference>;
   footnotes: Record<string, Footnote>;
 
-  constructor(options : HTMLOptions) {
+  constructor(options : HTMLRenderOptions) {
     this.warn = options.warn || (() => {});
     this.options = options || {};
     this.tight = false;
@@ -72,7 +72,7 @@ class HTMLRenderer {
         }
       }
     }
-    if (this.options.sourcePositions && node.pos) {
+    if (node.pos) {
       const sp = node.pos.start;
       const ep = node.pos.end;
       result += ` data-startpos="${sp.line}:${sp.col}:${sp.offset}" data-endpos="${ep.line}:${ep.col}:${ep.offset}"`;
@@ -451,9 +451,13 @@ class HTMLRenderer {
   }
 }
 
-const renderHTML = function(ast: Doc, options: HTMLOptions = {}): string {
+const renderHTML = function(ast: Doc, options: HTMLRenderOptions = {}): string {
   const renderer = new HTMLRenderer(options);
   return renderer.render(ast);
 }
 
-export { renderHTML, HTMLRenderer }
+export {
+  renderHTML,
+  HTMLRenderer,
+  HTMLRenderOptions
+}
