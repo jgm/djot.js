@@ -35,7 +35,8 @@
   "files": [
     "./dist/djot.js",
     "./lib/*.js",
-    "./types/*.d.ts"
+    "./types/*.d.ts",
+    "./doc/djot.1"
   ],
   "dependencies": {
   },
