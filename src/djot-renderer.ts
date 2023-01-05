@@ -1,5 +1,6 @@
 import { Doc, AstNode, HasChildren,
-         HasAttributes, Block, Para, Heading, Div, List,
+         HasAttributes, Block, Para, Heading, Div, BulletList,
+         OrderedList, TaskList,
          DefinitionList, Table, Caption, Row,
          BlockQuote, Section, CodeBlock, RawBlock,
          Term, Definition, Footnote, Reference, Symb,
@@ -377,7 +378,7 @@ class DjotRenderer {
         this.prefixes.pop();
       }
     },
-    list: (node : List)  => {
+    ordered_list: (node : OrderedList)  => {
       const style = node.style;
       const start = node.start || 1;
       const items = node.children;
@@ -390,22 +391,56 @@ class DjotRenderer {
             this.newline();
           }
         }
-        let marker : string;
-        if (/[().]/.test(style)) {
-          marker = formatNumber(start + i, style);
-        } else if (style === "X") {
-          marker = "-";
-        } else {
-          marker = style;
-        }
+        let marker : string = formatNumber(start + i, style);
         this.lit(marker);
         this.needsBlankLine = false;
         this.space();
-        if ("checkbox" in item && item.checkbox) {
-          this.lit(item.checkbox === "checked" ? "[X]" : "[ ]");
-          this.space();
-        }
         this.prefixes.push(" ".repeat(marker.length + 1));
+        this.renderChildren<Block>(item.children);
+        this.prefixes.pop();
+      }
+      if (tight) { // otherwise we already have a blankline
+        this.blankline();
+      }
+    },
+    bullet_list: (node : BulletList)  => {
+      const items = node.children;
+      const tight = node.tight;
+      for (let i=0; i < items.length; i++) {
+        const item = items[i];
+        if (i > 0) {
+          this.cr();
+          if (!tight) {
+            this.newline();
+          }
+        }
+        let marker : string = node.style;
+        this.lit(marker);
+        this.needsBlankLine = false;
+        this.space();
+        this.prefixes.push(" ".repeat(marker.length + 1));
+        this.renderChildren<Block>(item.children);
+        this.prefixes.pop();
+      }
+      if (tight) { // otherwise we already have a blankline
+        this.blankline();
+      }
+    },
+    task_list: (node : TaskList)  => {
+      const items = node.children;
+      const tight = node.tight;
+      for (let i=0; i < items.length; i++) {
+        const item = items[i];
+        if (i > 0) {
+          this.cr();
+          if (!tight) {
+            this.newline();
+          }
+        }
+        this.needsBlankLine = false;
+        this.lit(`- [${item.checkbox === "checked" ? "X" : " "}]`);
+        this.space();
+        this.prefixes.push(" ".repeat(2));
         this.renderChildren<Block>(item.children);
         this.prefixes.pop();
       }

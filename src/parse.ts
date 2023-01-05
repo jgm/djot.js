@@ -801,9 +801,25 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
             children: node.children,
             attributes: node.attributes
           }, node.pos);
+        } else if (listStyle === "X") {
+          addChildToTip({
+            tag: "task_list",
+            tight: node.data.tight,
+            children: node.children,
+            attributes: node.attributes
+          }, node.pos);
+        } else if (listStyle === "+" || listStyle === "*" ||
+                   listStyle === "-") {
+          addChildToTip({
+            tag: "bullet_list",
+            tight: node.data.tight,
+            style: listStyle,
+            children: node.children,
+            attributes: node.attributes
+          }, node.pos);
         } else {
           addChildToTip({
-            tag: "list",
+            tag: "ordered_list",
             style: listStyle,
             children: node.children,
             start: listStart,
@@ -861,12 +877,18 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
               attributes: node.attributes
             }, node.pos);
           }
+        } else if (node.data.checkbox) {
+          addChildToTip({
+            tag: "task_list_item",
+            children: node.children,
+            attributes: node.attributes,
+            checkbox: node.data.checkbox,
+          }, node.pos);
         } else {
           addChildToTip({
             tag: "list_item",
             children: node.children,
-            attributes: node.attributes,
-            checkbox: node.data.checkbox,
+            attributes: node.attributes
           }, node.pos);
         }
       },

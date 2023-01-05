@@ -1,5 +1,6 @@
 import { AstNode, Doc, Block, Caption, Row, Cell, Alignment,
-         ListItem, Inline, Span, Verbatim, Image, Link, ListStyle,
+         TaskListItem, OrderedListStyle, ListItem, Inline,
+         Span, Verbatim, Image, Link,
          Attributes, CodeBlock, Heading, Div, Table, CheckboxStatus,
          DefinitionListItem, Term, Definition, Footnote } from "./ast";
 
@@ -18,7 +19,7 @@ interface PandocElt {
 
 type PandocAttr = [ id : string, classes : string[], kvs: (string[])[] ];
 
-const styleMap : Record<string,Record<string,ListStyle>> =
+const styleMap : Record<string,Record<string,OrderedListStyle>> =
   { Decimal:    { Period: "1.",
                   OneParen: "1)",
                   TwoParens: "(1)" },
@@ -152,7 +153,9 @@ class PandocRenderer {
         break;
       }
 
-      case "list": {
+      case "task_list":
+      case "ordered_list":
+      case "bullet_list": {
         let items : PandocElt[][];
         if (node.style &&
             node.style === "-" || node.style === "+" || node.style === "*" ||
@@ -169,6 +172,7 @@ class PandocRenderer {
         break;
       }
 
+      case "task_list_item": // should be handled at "list" above
       case "list_item": // should be handled at "list" above
         break;
 
@@ -763,6 +767,7 @@ class PandocParser {
       case "OrderedList":
       case "BulletList": {
         const items : ListItem[] = [];
+        const taskListItems : TaskListItem[] = [];
         let tight = false;
         let rawitems;
         if (block.t === "BulletList") {
@@ -772,30 +777,44 @@ class PandocParser {
         }
         for (let i=0; i<rawitems.length; i++) {
           const checkbox = hasCheckbox(rawitems[i]);
-          const listItem : ListItem =
-                  {tag: "list_item",
-                   children: rawitems[i].map((b : PandocElt) => {
+          const children = rawitems[i].map((b : PandocElt) => {
                                    if (b.t === "Plain") {
                                      tight = true;
                                    } else if (b.t === "Para") {
                                      tight = false;
-                                   }
+                                   };
                                    return this.fromPandocBlock(b);
-                              })};
+                                });
           if (checkbox !== null) {
-            listItem.checkbox = checkbox;
+            taskListItems.push( { tag: "task_list_item",
+                                  checkbox: checkbox,
+                                  children: children });
+          } else {
+            items.push( { tag: "list_item",
+                          children: children });
           }
-          items.push(listItem);
         }
         if (block.t === "BulletList") {
-          return {tag: "list", style: "-", tight: tight, children: items};
+          if (taskListItems.length > 0) {
+            return {tag: "task_list",
+                    tight: tight,
+                    children: taskListItems};
+          } else {
+            return {tag: "bullet_list",
+                    style: "-",
+                    tight: tight,
+                    children: items};
+          }
         } else if (block.t === "OrderedList") {
           const start = block.c[0][0];
           let pandocStyle = block.c[0][1].t;
           let pandocDelim = block.c[0][2].t;
-          let style : ListStyle = styleMap[pandocStyle][pandocDelim];
-          return {tag: "list", style: style, start: start,
-                  tight: tight, children: items};
+          let style : OrderedListStyle = styleMap[pandocStyle][pandocDelim];
+          return {tag: "ordered_list",
+                  style: style,
+                  start: start,
+                  tight: tight,
+                  children: items};
         }
       }
 

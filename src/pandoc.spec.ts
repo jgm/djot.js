@@ -551,7 +551,7 @@ describe("PandocParser", () => {
                 ]
               },
               {
-                "tag": "list",
+                "tag": "ordered_list",
                 "style": "1.",
                 "children": [
                   {
@@ -567,7 +567,7 @@ describe("PandocParser", () => {
                         ]
                       },
                       {
-                        "tag": "list",
+                        "tag": "ordered_list",
                         "style": "i.",
                         "children": [
                           {

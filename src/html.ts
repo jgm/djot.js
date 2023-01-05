@@ -163,13 +163,12 @@ class HTMLRenderer {
         return this.inTags("section", node, 2);
 
       case "list_item":
-        extraAttr = {};
-        if (node.checkbox) {
-          extraAttr.class = node.checkbox === "checked"
-            ? "checked"
-            : "unchecked";
-        }
-        return this.inTags("li", node, 2, extraAttr);
+        return this.inTags("li", node, 2);
+
+      case "task_list_item":
+        return this.inTags("li", node, 2,
+                           { class: node.checkbox === "checked"
+                               ? "checked" : "unchecked" });
 
       case "definition_list_item":
         return this.renderChildren(node);
@@ -183,22 +182,22 @@ class HTMLRenderer {
       case "definition_list":
         return this.inTags("dl", node, 2);
 
-      case "list":
-        if (node.style === "-" || node.style === "*" || node.style === "+") {
-          result += this.inTags("ul", node, 2);
-        } else if (node.style === "X") {
-          result += this.inTags("ul", node, 2, { class: "task-list" });
-        } else {
-          extraAttr = {};
-          if (node.start && node.start !== 1) {
-            extraAttr.start = node.start.toString();
-          }
-          if (node.style && !/1/.test(node.style)) {
-            extraAttr.type = node.style.replace(/[().]/g, "");
-          }
-          result += this.inTags("ol", node, 2, extraAttr);
+      case "bullet_list":
+        return this.inTags("ul", node, 2);
+
+      case "task_list":
+        return this.inTags("ul", node, 2, { class: "task-list" });
+
+      case "ordered_list": {
+        let extraAttr : Record<string,string> = {};
+        if (node.start && node.start !== 1) {
+          extraAttr.start = node.start.toString();
         }
-        return result;
+        if (node.style && !/1/.test(node.style)) {
+          extraAttr.type = node.style.replace(/[().]/g, "");
+        }
+        return this.inTags("ol", node, 2, extraAttr);
+      }
 
       case "heading":
         return this.inTags(`h${node.level}`, node, 1);

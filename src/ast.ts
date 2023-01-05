@@ -34,7 +34,9 @@ type Block =
   | CodeBlock
   | RawBlock
   | BlockQuote
-  | List
+  | OrderedList
+  | BulletList
+  | TaskList
   | DefinitionList
   | Table
   ;
@@ -81,22 +83,49 @@ interface RawBlock extends HasAttributes {
   text: string;
 }
 
-type ListStyle =
-    "-"  | "+"  | "*"
-  | "X"
+interface BulletList extends HasAttributes {
+  tag: "bullet_list";
+  tight: boolean;
+  style: BulletListStyle;
+  children: ListItem[];
+}
+
+type BulletListStyle =
+  "+" | "-" | "*" ;
+
+interface ListItem extends HasAttributes {
+  tag: "list_item";
+  children: Block[];
+}
+
+interface TaskList extends HasAttributes {
+  tag: "task_list";
+  tight: boolean;
+  children: TaskListItem[];
+}
+
+interface TaskListItem extends HasAttributes {
+  tag: "task_list_item";
+  checkbox: CheckboxStatus;
+  children: Block[];
+}
+
+type CheckboxStatus = "checked" | "unchecked";
+
+interface OrderedList extends HasAttributes {
+  tag: "ordered_list";
+  style: OrderedListStyle;
+  tight: boolean;
+  start?: number;
+  children: ListItem[];
+}
+
+type OrderedListStyle =
   | "1." | "1)" | "(1)"
   | "a." | "a)" | "(a)"
   | "A." | "A)" | "(A)"
   | "i." | "i)" | "(i)"
   | "I." | "I)" | "(I)";
-
-interface List extends HasAttributes {
-  tag: "list";
-  style: ListStyle;
-  tight: boolean;
-  start?: number;
-  children: ListItem[];
-}
 
 interface Caption extends HasAttributes {
   tag: "caption";
@@ -275,14 +304,6 @@ interface SingleQuoted extends HasAttributes {
   children: Inline[];
 }
 
-type CheckboxStatus = "checked" | "unchecked";
-
-interface ListItem extends HasAttributes {
-  tag: "list_item";
-  checkbox?: CheckboxStatus;
-  children: Block[];
-}
-
 interface DefinitionList extends HasAttributes {
   tag: "definition_list";
   children: DefinitionListItem[];
@@ -345,6 +366,7 @@ type AstNode = Doc
   | Block
   | Inline
   | ListItem
+  | TaskListItem
   | DefinitionListItem
   | Term
   | Definition
@@ -366,7 +388,9 @@ const blockTags : Record<string, boolean> = {
   div: true,
   code_block: true,
   raw_block: true,
-  list: true,
+  bullet_list: true,
+  ordered_list: true,
+  task_list: true,
   definition_list: true,
   table: true,
   reference: true,
@@ -434,10 +458,14 @@ export {
   CodeBlock,
   RawBlock,
   BlockQuote,
-  List,
-  CheckboxStatus,
+  BulletList,
+  BulletListStyle,
+  OrderedList,
+  OrderedListStyle,
   ListItem,
-  ListStyle,
+  TaskList,
+  TaskListItem,
+  CheckboxStatus,
   DefinitionList,
   DefinitionListItem,
   Term,

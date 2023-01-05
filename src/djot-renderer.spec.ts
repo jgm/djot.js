@@ -122,7 +122,7 @@ Thus Cicero.
   it("handles lists properly", () => {
     const lst : Doc = mkdoc([
     {
-      "tag": "list",
+      "tag": "ordered_list",
       "style": "1.",
       "children": [
         {
@@ -152,7 +152,7 @@ Thus Cicero.
               ]
             },
             {
-              "tag": "list",
+              "tag": "bullet_list",
               "style": "-",
               "children": [
                 {
@@ -201,7 +201,7 @@ Thus Cicero.
               ]
             },
             {
-              "tag": "list",
+              "tag": "ordered_list",
               "style": "(i)",
               "children": [
                 {
