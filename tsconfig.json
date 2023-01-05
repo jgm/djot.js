@@ -25,7 +25,8 @@
     "src/pandoc.ts",
     "src/djot-renderer.ts",
     "src/index.ts",
-    "src/cli.ts",
-    "src/version.ts"
+    "src/version.ts",
+    "src/options.ts",
+    "src/cli.ts"
   ]
 }

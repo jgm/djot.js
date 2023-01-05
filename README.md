@@ -117,6 +117,7 @@ Example of usage:
 ``` js
 ```
 
+TODO should we just expose a function?
 
 ### Pandoc interoperability
 
@@ -124,6 +125,7 @@ Example of usage:
 
 Example of usage:
 
+TODO should we just expose functions?
 TODO fromPandoc, parseJSON, toPandoc
 TODO get  rid of parseJSON
 TODO regularize options for these
