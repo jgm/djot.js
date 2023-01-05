@@ -97,8 +97,6 @@ for (let event in new djot.EventParser("Hi _there_")) {
 The `Options` object has a `warn` property as described for `parse`,
 above.
 
-TODO make non-public methods private or just export a function?
-
 [###](###) Pretty-printing the djot AST
 
 `renderAST(doc : Doc) : string`
@@ -113,7 +111,9 @@ console.log(djot.renderAST(djot.parse("hi _there_")));
 
 `renderHTML(ast : Doc, options : HTMLRenderOptions = {})`
 
-TODO document HTMLRenderOptions and overrides
+`HTMLRenderOptions` extends `Options` with an `overrides`
+field, which maps node tags to overrides for their renderers.
+(TODO example and more explanation)
 
 Example of usage:
 
@@ -123,32 +123,56 @@ console.log(djot.renderHTML(djot.parse("- _hi_",{sourcePositions:true})));
 
 ### Rendering djot
 
-`renderDjot(doc : Doc, options : DjotRenderOptions) : string`
+`renderDjot(doc : Doc, options : DjotRenderOptions = {}) : string`
+
+`DjotRenderOptions` extends `Options` with a `wrapWidth : number` field.
+Its effect is as follows:
+
+- `wrapWidth > 0`: Output is wrapped to fit in the width, with `soft_break'
+  acting like a space.
+- `wrapWidth = 0`: Output is not wrapped; `soft_break` renders
+  as a line break.
+- `wrapWidth = -1`: Output is not wrapped; `soft_break` renders
+  as a space.
 
 Example of usage:
 
 ``` js
+console.log(djot.renderDjot(djot.parse("_Hello_ world"), {wrapWidth: 64}));
 ```
 
-TODO should we just expose a function?
 
 ### Pandoc interoperability
 
 `toPandoc(doc : Doc, options : PandocRenderOptions) : Pandoc`
 
-TODO
+`PandocRenderOptions` extends `Options` with
+`smartPunctuationMap`, which has the form and default values:
+
+``` json
+{ non_breaking_space: " ",
+  ellipses: "⋯",
+  em_dash: "-",
+  en_dash: "-",
+  left_single_quote: "‘",
+  right_single_quote: "’",
+  left_double_quote: "“",
+  right_double_quote: "”" };
+```
+
+Example of usage:
 
 ``` js
+console.log(JSON.stringify(djot.toPandoc(djot.parse("- one\n- two\n"))));
 ```
 
 
 `fromPandoc(pandoc : Pandoc, options : Options) : Doc`
 
-TODO
-
 Example of usage:
 
 ``` js
+let ast = djot.fromPandoc(JSON.parse(pandocJSON));
 ```
 
 ### Filters
