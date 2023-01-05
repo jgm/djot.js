@@ -38,47 +38,63 @@ type Block =
   | Table
   ;
 
-interface Para extends HasAttributes, HasChildren<Inline> {
+interface Para extends HasAttributes {
   tag: "para";
+  children: Inline[];
 }
 
-interface Heading extends HasAttributes, HasChildren<Inline> {
+interface Heading extends HasAttributes {
   tag: "heading";
   level: number;
+  children: Inline[];
 }
 
 interface ThematicBreak extends HasAttributes {
   tag: "thematic_break";
 }
 
-interface Section extends HasAttributes, HasChildren<Block> {
+interface Section extends HasAttributes {
   tag: "section";
+  children: Block[];
 }
 
-interface Div extends HasAttributes, HasChildren<Block> {
+interface Div extends HasAttributes {
   tag: "div";
+  children: Block[];
 }
 
-interface BlockQuote extends HasAttributes, HasChildren<Block> {
+interface BlockQuote extends HasAttributes {
   tag: "block_quote";
+  children: Block[];
 }
 
-interface CodeBlock extends HasAttributes, HasText {
+interface CodeBlock extends HasAttributes {
   tag: "code_block";
   lang?: string;
+  text: string;
 }
 
-interface RawBlock extends HasAttributes, HasText {
+interface RawBlock extends HasAttributes {
   tag: "raw_block";
   format: string;
+  text: string;
 }
+
+type ListStyle =
+    "-"  | "+"  | "*"
+  | "X"  | ":"
+  | "1." | "1)" | "(1)"
+  | "a." | "a)" | "(a)"
+  | "A." | "A)" | "(A)"
+  | "i." | "i)" | "(i)"
+  | "I." | "I)" | "(I)";
 
 interface List extends HasAttributes {
   tag: "list";
-  children: (ListItem | DefinitionListItem)[];
-  style: string;
+  style: ListStyle;
   tight: boolean;
   start?: number;
+  children: (ListItem | DefinitionListItem)[];
 }
 
 interface Caption extends HasAttributes {
@@ -119,27 +135,30 @@ type Inline =
   ;
 
 
-interface Str extends HasAttributes, HasText {
+interface Str extends HasAttributes {
   tag: "str";
+  text: string;
 }
 
-interface FootnoteReference extends HasAttributes, HasText {
+interface FootnoteReference extends HasAttributes {
   tag: "footnote_reference";
+  text: string;
 }
 
 
 type SmartPunctuationType =
-  "left_single_quote" |
-  "right_single_quote" |
-  "left_double_quote" |
-  "right_double_quote" |
-  "ellipses" |
-  "em_dash" |
-  "en_dash";
+    "left_single_quote"
+  |  "right_single_quote"
+  | "left_double_quote"
+  | "right_double_quote"
+  | "ellipses"
+  | "em_dash"
+  | "en_dash";
 
-interface SmartPunctuation extends HasAttributes, HasText {
+interface SmartPunctuation extends HasAttributes {
   tag: "smart_punctuation";
   type: SmartPunctuationType;
+  text: string;
 }
 
 interface SoftBreak extends HasAttributes {
@@ -159,85 +178,103 @@ interface Symb extends HasAttributes {
   alias: string;
 }
 
-interface Verbatim extends HasAttributes, HasText {
+interface Verbatim extends HasAttributes {
   tag: "verbatim";
+  text: string;
 }
 
-interface RawInline extends HasAttributes, HasText {
+interface RawInline extends HasAttributes {
   tag: "raw_inline";
   format: string;
+  text: string;
 }
 
-interface Math extends HasAttributes, HasText {
+interface Math extends HasAttributes {
   tag: "math";
   display: boolean;
+  text: string;
 }
 
-interface Url extends HasAttributes, HasText {
+interface Url extends HasAttributes {
   tag: "url";
+  text: string;
 }
 
-interface Email extends HasAttributes, HasText {
+interface Email extends HasAttributes {
   tag: "email";
+  text: string;
 }
 
-interface Link extends HasAttributes, HasChildren<Inline> {
+interface Link extends HasAttributes {
   tag: "link";
   destination?: string;
   reference?: string;
+  children: Inline[];
 }
 
-interface Image extends HasAttributes, HasChildren<Inline> {
+interface Image extends HasAttributes {
   tag: "image";
   destination?: string;
   reference?: string;
+  children: Inline[];
 }
 
-interface Emph extends HasAttributes, HasChildren<Inline> {
+interface Emph extends HasAttributes {
   tag: "emph";
+  children: Inline[];
 }
 
-interface Strong extends HasAttributes, HasChildren<Inline> {
+interface Strong extends HasAttributes {
   tag: "strong";
+  children: Inline[];
 }
 
-interface Span extends HasAttributes, HasChildren<Inline> {
+interface Span extends HasAttributes {
   tag: "span";
+  children: Inline[];
 }
 
-interface Mark extends HasAttributes, HasChildren<Inline> {
+interface Mark extends HasAttributes {
   tag: "mark";
+  children: Inline[];
 }
 
-interface Superscript extends HasAttributes, HasChildren<Inline> {
+interface Superscript extends HasAttributes {
   tag: "superscript";
+  children: Inline[];
 }
 
-interface Subscript extends HasAttributes, HasChildren<Inline> {
+interface Subscript extends HasAttributes {
   tag: "subscript";
+  children: Inline[];
 }
 
-interface Delete extends HasAttributes, HasChildren<Inline> {
+interface Delete extends HasAttributes {
   tag: "delete";
+  children: Inline[];
 }
 
-interface Insert extends HasAttributes, HasChildren<Inline> {
+interface Insert extends HasAttributes {
   tag: "insert";
+  children: Inline[];
 }
 
-interface DoubleQuoted extends HasAttributes, HasChildren<Inline> {
+interface DoubleQuoted extends HasAttributes {
   tag: "double_quoted";
+  children: Inline[];
 }
 
-interface SingleQuoted extends HasAttributes, HasChildren<Inline> {
+interface SingleQuoted extends HasAttributes {
   tag: "single_quoted";
+  children: Inline[];
 }
 
 type CheckboxStatus = "checked" | "unchecked";
 
-interface ListItem extends HasAttributes, HasChildren<Block> {
+interface ListItem extends HasAttributes {
   tag: "list_item";
   checkbox?: CheckboxStatus;
+  children: Block[];
 }
 
 interface DefinitionListItem extends HasAttributes {
@@ -245,31 +282,34 @@ interface DefinitionListItem extends HasAttributes {
   children: [Term, Definition];
 }
 
-interface Term extends HasAttributes, HasChildren<Inline> {
+interface Term extends HasAttributes {
   tag: "term";
+  children: Inline[];
 }
 
-interface Definition extends HasAttributes, HasChildren<Block> {
+interface Definition extends HasAttributes {
   tag: "definition";
+  children: Block[];
 }
 
 interface Row extends HasAttributes {
   tag: "row";
+  head: boolean;
   children: Cell[];
-  head: boolean;
 }
 
-interface Cell extends HasAttributes, HasChildren<Inline> {
+interface Cell extends HasAttributes {
   tag: "cell";
-  align: Alignment;
   head: boolean;
+  align: Alignment;
+  children: Inline[];
 }
 
-type Alignment = "default" | "left" | "right" | "center";
-
-type AstNode = Doc | Block | Inline | ListItem
-  | DefinitionListItem | Term | Definition
-  | Row | Cell | Caption | Footnote | Reference ;
+type Alignment =
+    "default"
+  | "left"
+  | "right"
+  | "center";
 
 interface Reference extends HasAttributes {
   tag: "reference";
@@ -277,16 +317,32 @@ interface Reference extends HasAttributes {
   destination: string;
 }
 
-interface Footnote extends HasAttributes, HasChildren<Block> {
+interface Footnote extends HasAttributes {
   tag: "footnote";
   label: string;
+  children: Block[];
 }
 
-interface Doc extends HasChildren<Block>, HasAttributes {
+interface Doc extends HasAttributes {
   tag: "doc";
   references: Record<string, Reference>;
   footnotes: Record<string, Footnote>;
+  children: Block[];
 }
+
+type AstNode = Doc
+  | Block
+  | Inline
+  | ListItem
+  | DefinitionListItem
+  | Term
+  | Definition
+  | Row
+  | Cell
+  | Caption
+  | Footnote
+  | Reference ;
+
 
 /* Type predicates */
 
@@ -349,7 +405,6 @@ function isCaption(node : Row | Caption) : node is Caption {
 }
 
 
-
 export {
   Attributes,
   SourceLoc,
@@ -367,9 +422,17 @@ export {
   RawBlock,
   BlockQuote,
   List,
+  CheckboxStatus,
+  ListItem,
+  ListStyle,
+  DefinitionListItem,
+  Term,
+  Definition,
   Table,
   Caption,
   Row,
+  Cell,
+  Alignment,
   Inline,
   Str,
   SoftBreak,
@@ -396,13 +459,6 @@ export {
   Delete,
   DoubleQuoted,
   SingleQuoted,
-  CheckboxStatus,
-  ListItem,
-  DefinitionListItem,
-  Term,
-  Definition,
-  Cell,
-  Alignment,
   AstNode,
   Doc,
   Reference,

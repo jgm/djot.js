@@ -1,5 +1,5 @@
 import { AstNode, Doc, Block, Caption, Row, Cell, Alignment,
-         ListItem, Inline, Span, Verbatim, Image, Link,
+         ListItem, Inline, Span, Verbatim, Image, Link, ListStyle,
          Attributes, CodeBlock, Heading, Div, Table, CheckboxStatus,
          DefinitionListItem, Term, Definition, Footnote } from "./ast";
 
@@ -17,6 +17,30 @@ interface PandocElt {
 }
 
 type PandocAttr = [ id : string, classes : string[], kvs: (string[])[] ];
+
+const styleMap : Record<string,Record<string,ListStyle>> =
+  { Decimal:    { Period: "1.",
+                  OneParen: "1)",
+                  TwoParens: "(1)" },
+    LowerAlpha: { Period: "a.",
+                  OneParen: "a)",
+                  TwoParens: "(a)" },
+    UpperAlpha: { Period: "A.",
+                  OneParen: "A)",
+                  TwoParens: "(A)" },
+    LowerRoman: { Period: "i.",
+                  OneParen: "i)",
+                  TwoParens: "(i)" },
+    UpperRoman: { Period: "I.",
+                  OneParen: "I)",
+                  TwoParens: "(I)" } };
+
+let reverseStyleMap : Record<string, [string,string]> = {};
+for (let i in styleMap) {
+  for (let j in styleMap[i]) {
+    reverseStyleMap[styleMap[i][j]] = [i,j];
+  }
+}
 
 const paraToPlain = function(elt : PandocElt) : PandocElt {
   if (elt.t === "Para") {
@@ -133,29 +157,7 @@ class PandocRenderer {
           elts.push({ t: "DefinitionList", c: items } );
         } else {
           items = node.children.map(this.toPandocListItem(node));
-          const number = node.style.replace(/[().]/g,"");
-          let style : string;
-          if (number === "1") {
-            style = "Decimal";
-          } else if (number === "a") {
-            style = "LowerAlpha";
-          } else if (number === "A") {
-            style = "UpperAlpha";
-          } else if (number === "i") {
-            style = "LowerRoman";
-          } else if (number === "I") {
-            style = "UpperRoman";
-          } else {
-            style = "DefaultStyle";
-          }
-          let delim : string;
-          const hasLeftParen = /^[(]/.test(node.style);
-          const hasRightParen = /[)]$/.test(node.style);
-          if (hasRightParen) {
-            delim = hasLeftParen ? "TwoParens" : "OneParen";
-          } else {
-            delim = "Period";
-          }
+          let [style, delim] = reverseStyleMap[node.style as string];
           const start : number = node.start || 1;
           elts.push({ t: "OrderedList", c: [[start, {t: style}, {t: delim}],
                                             items] } );
@@ -780,21 +782,9 @@ class PandocParser {
           return {tag: "list", style: "-", tight: tight, children: items};
         } else if (block.t === "OrderedList") {
           const start = block.c[0][0];
-          let style : string;
-          switch (block.c[0][1].t) {
-            case "Decimal": style = "1"; break;
-            case "LowerAlpha": style = "a"; break;
-            case "UpperAlpha": style = "A"; break;
-            case "LowerRoman": style = "i"; break;
-            case "UpperRoman": style = "I"; break;
-            default: style = "1";
-          }
-          switch (block.c[0][2].t) {
-            case "Period": style = style + "."; break;
-            case "OneParen": style = style + ")"; break;
-            case "TwoParens": style = "(" + style + ")"; break;
-            default: style = style + ".";
-          }
+          let pandocStyle = block.c[0][1].t;
+          let pandocDelim = block.c[0][2].t;
+          let style : ListStyle = styleMap[pandocStyle][pandocDelim];
           return {tag: "list", style: style, start: start,
                   tight: tight, children: items};
         }
