@@ -376,6 +376,57 @@ type AstNode = Doc
   | Footnote
   | Reference ;
 
+type Visitor<C, R> = {
+  doc?: (node: Doc, context: C) => R;
+  para?: (node: Para, context: C) => R;
+  heading?: (node: Heading, context: C) => R;
+  thematic_break?: (node: ThematicBreak, context: C) => R;
+  section?: (node: Section, context: C) => R;
+  div?: (node: Div, context: C) => R;
+  code_block?: (node: CodeBlock, context: C) => R;
+  raw_block?: (node: RawBlock, context: C) => R;
+  block_quote?: (node: BlockQuote, context: C) => R;
+  ordered_list?: (node: OrderedList, context: C) => R;
+  bullet_list?: (node: BulletList, context: C) => R;
+  task_list?: (node: TaskList, context: C) => R;
+  definition_list?: (node: DefinitionList, context: C) => R;
+  table?: (node: Table, context: C) => R;
+  str?: (node: Str, context: C) => R;
+  soft_break?: (node: SoftBreak, context: C) => R;
+  hard_break?: (node: HardBreak, context: C) => R;
+  non_breaking_space?: (node: NonBreakingSpace, context: C) => R;
+  symb?: (node: Symb, context: C) => R;
+  verbatim?: (node: Verbatim, context: C) => R;
+  raw_inline?: (node: RawInline, context: C) => R;
+  inline_math?: (node: InlineMath, context: C) => R;
+  display_math?: (node: DisplayMath, context: C) => R;
+  url?: (node: Url, context: C) => R;
+  email?: (node: Email, context: C) => R;
+  footnote_reference?: (node: FootnoteReference, context: C) => R;
+  smart_punctuation?: (node: SmartPunctuation, context: C) => R;
+  emph?: (node: Emph, context: C) => R;
+  strong?: (node: Strong, context: C) => R;
+  link?: (node: Link, context: C) => R;
+  image?: (node: Image, context: C) => R;
+  span?: (node: Span, context: C) => R;
+  mark?: (node: Mark, context: C) => R;
+  superscript?: (node: Superscript, context: C) => R;
+  subscript?: (node: Subscript, context: C) => R;
+  insert?: (node: Insert, context: C) => R;
+  delete?: (node: Delete, context: C) => R;
+  double_quoted?: (node: DoubleQuoted, context: C) => R;
+  single_quoted?: (node: SingleQuoted, context: C) => R;
+  list_item?: (node: ListItem, context: C) => R;
+  task_list_item?: (node: TaskListItem, context: C) => R;
+  definition_list_item?: (node: DefinitionListItem, context: C) => R;
+  term?: (node: Term, context: C) => R;
+  definition?: (node: Definition, context: C) => R;
+  row?: (node: Row, context: C) => R;
+  cell?: (node: Cell, context: C) => R;
+  caption?: (node: Caption, context: C) => R;
+  footnote?: (node: Footnote, context: C) => R;
+  reference?: (node: Reference, context: C) => R;
+};
 
 /* Type predicates */
 
@@ -506,6 +557,7 @@ export {
   Doc,
   Reference,
   Footnote,
+  Visitor,
   isInline,
   isBlock,
   isRow,
