@@ -111,7 +111,9 @@ console.log(djot.renderAST(djot.parse("hi _there_")));
 
 ### Rendering the djot AST to HTML
 
-`renderHTML(ast : Doc, options : Options = {})`
+`renderHTML(ast : Doc, options : HTMLRenderOptions = {})`
+
+TODO document HTMLRenderOptions and overrides
 
 Example of usage:
 
