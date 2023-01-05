@@ -132,20 +132,17 @@ TODO should we just expose a function?
 
 ### Pandoc interoperability
 
-`PandocRenderer`
+`toPandoc(doc : Doc, options : PandocRenderOptions) : Pandoc`
 
-Example of usage:
-
-TODO should we just expose functions?
-TODO fromPandoc, parseJSON, toPandoc
-TODO get  rid of parseJSON
-TODO regularize options for these
+TODO
 
 ``` js
 ```
 
 
-`PandocParser`
+`fromPandoc(pandoc : Pandoc, options : Options) : Doc`
+
+TODO
 
 Example of usage:
 

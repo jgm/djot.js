@@ -7,7 +7,7 @@ import { parse, renderAST } from "./parse";
 import { Doc } from "./ast";
 import { renderHTML } from "./html";
 import { applyFilter } from "./filter";
-import { PandocRenderer, PandocParser } from "./pandoc";
+import { fromPandoc, toPandoc } from "./pandoc";
 import { DjotRenderer } from "./djot-renderer";
 import { version } from "./version";
 import { Options, Warning } from "./options";
@@ -169,7 +169,7 @@ try {
     if (from === "djot") {
       ast = parse(input, options);
     } else if (from === "pandoc") {
-      ast = new PandocParser(options).parseJSON(input);
+      ast = fromPandoc(JSON.parse(input));
     } else if (from === "ast") {
       ast = JSON.parse(input);
     }
@@ -209,7 +209,7 @@ try {
         break;
       case "pandoc":
         process.stdout.write(
-          JSON.stringify(new PandocRenderer({warn: warn}).toPandoc(ast),
+          JSON.stringify(toPandoc(ast, {warn: warn}),
             null, compact ? 0 : 2));
         process.stdout.write("\n");
         break;

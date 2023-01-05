@@ -1,5 +1,5 @@
 import { parse } from "./parse";
-import { PandocRenderer, PandocParser } from "./pandoc";
+import { fromPandoc, toPandoc } from "./pandoc";
 
 describe("PandocParser", () => {
   it("parses some things", () => {
@@ -406,7 +406,7 @@ describe("PandocParser", () => {
           }
         ]
       };
-    const ast = new PandocParser().fromPandoc(json);
+    const ast = fromPandoc(json);
     expect(ast).toStrictEqual(
       {
         "tag": "doc",
@@ -661,7 +661,7 @@ describe("PandocRenderer", () => {
   list
 `;
     const ast = parse(inp, {});
-    expect(new PandocRenderer().toPandoc(ast)).toStrictEqual(
+    expect(toPandoc(ast)).toStrictEqual(
       {
         "pandoc-api-version": [
           1,

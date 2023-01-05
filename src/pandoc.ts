@@ -68,24 +68,29 @@ const toPandocAttr = function(node : AstNode) : PandocAttr {
   }
 }
 
+interface PandocRenderOptions extends Options {
+  smartPunctuationMap ?: Record<string, string>;
+}
+
 class PandocRenderer {
   references : Record<string, Reference> = {};
   footnotes : Record<string, Footnote> = {};
-  options : Options;
+  options : PandocRenderOptions;
   warn : (warning : Warning) => void;
-  smartPunctuationMap : Record<string, string> =
-    { non_breaking_space: " ",
-      ellipses: "⋯",
-      em_dash: "-",
-      en_dash: "-",
-      left_single_quote: "‘",
-      right_single_quote: "’",
-      left_double_quote: "“",
-      right_double_quote: "”" };
+  smartPunctuationMap : Record<string, string>
 
   constructor(options : Options = {}) {
     this.options = options;
-    this.warn = options.warn || (() => {});
+    this.smartPunctuationMap = this.options.smartPunctuationMap ||
+      { non_breaking_space: " ",
+        ellipses: "⋯",
+        em_dash: "-",
+        en_dash: "-",
+        left_single_quote: "‘",
+        right_single_quote: "’",
+        left_double_quote: "“",
+        right_double_quote: "”" };
+    this.warn ||= (() => {});
   }
 
   toPandocChildren (node : AstNode) : PandocElt[] {
@@ -933,9 +938,15 @@ class PandocParser {
     return cell;
   }
 
-  fromPandoc (pandoc : Pandoc) : Doc | null {
-    if (!pandoc) {
-      return null;
+  fromPandoc (pandoc : Pandoc) : Doc {
+    if (typeof pandoc !== "object") {
+      throw(Error("Pandoc document must be an object"));
+    } else if (!pandoc["pandoc-api-version"]) {
+      throw(Error("Pandoc document lacks pandoc-api-version"));
+    } else if (!pandoc.blocks) {
+      throw(Error("Pandoc document lacks blocks"));
+    } else if (!pandoc.meta) {
+      throw(Error("Pandoc document lacks meta"));
     }
     const blocks = pandoc.blocks;
     const docblocks : Block[] = blocks.map((b : PandocElt) => {
@@ -947,11 +958,21 @@ class PandocParser {
             footnotes: this.footnotes,
             references: {} };
   }
-
-  parseJSON (json : string) : Doc | null {
-    const pandoc = JSON.parse(json);
-    return this.fromPandoc(pandoc);
-  }
 }
 
-export { PandocRenderer, PandocParser };
+const toPandoc = function(doc : Doc, options ?: PandocRenderOptions) : Pandoc {
+  return new PandocRenderer(options).toPandoc(doc);
+}
+
+const fromPandoc = function(pandoc : Pandoc, options ?: Options) : Doc {
+  return new PandocParser(options).fromPandoc(pandoc);
+}
+
+export { PandocRenderOptions,
+         Pandoc,
+         PandocElt,
+         PandocMeta,
+         PandocAttr,
+         toPandoc,
+         fromPandoc
+}
