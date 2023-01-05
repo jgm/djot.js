@@ -121,7 +121,7 @@ console.log(djot.renderHTML(djot.parse("- _hi_",{sourcePositions:true})));
 
 ### Rendering djot
 
-`DjotRenderer`
+`renderDjot(doc : Doc, options : DjotRenderOptions) : string`
 
 Example of usage:
 
