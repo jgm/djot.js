@@ -1,5 +1,5 @@
 # Changelog for djot.js
 
-## 0.1.0
+## 0.2.0
 
-Initial release.
+Initial public release.
