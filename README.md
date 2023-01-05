@@ -15,14 +15,13 @@ playground](https://djot.net/playground).
 | `build`          | Compile and bundle sources to `lib` and `dist` |
 | `test`           | Run tests                                      |
 | `bench`          | Run benchmarks                                 |
-| `genversion`     | Regenerate version.ts from package.json        |
 
 ## Installing the command line utility
 
 You can install the command-line utility `djot` via
 
 ```
-npm install -g https://github.com/jgm/djot.js
+npm install -g djot
 ```
 
 `djot --help` will give a summary of options. For more
