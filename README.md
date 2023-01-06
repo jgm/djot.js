@@ -96,7 +96,7 @@ for (let event in new djot.EventParser("Hi _there_")) {
 The `Options` object has a `warn` property as described for `parse`,
 above.
 
-[###](###) Pretty-printing the djot AST
+### Pretty-printing the djot AST
 
 `renderAST(doc : Doc) : string`
 
