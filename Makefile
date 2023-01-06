@@ -9,7 +9,7 @@ src/version.ts: package.json
 	  sed 's/^ *"version": "*\([^"]*\)",/export const version = "\1";/' > $@
 
 build: src/version.ts
-	tsc
+	npx tsc
 .PHONY: build
 
 dist: src/version.ts dist/djot.js doc/djot.1 djot-schema.json

@@ -28,9 +28,9 @@
   ],
   "types": "./types/index.d.ts",
   "scripts": {
-    "test": "jest",
-    "build": "tsc && webpack",
-    "bench": "tsc && node ./bench/bench.js"
+    "test": "npx jest",
+    "build": "npx tsc && npx webpack",
+    "bench": "npx tsc && node ./bench/bench.js"
   },
   "files": [
     "./dist/djot.js",
