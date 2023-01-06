@@ -25,6 +25,7 @@ import { pattern, find, boundedFind } from "./find";
 // annot       "explicit_link"
 
 type Opener = {
+  matchIndex: number,
   startpos: number,
   endpos: number,
   annot: null | string,
@@ -142,7 +143,7 @@ const betweenMatched = function(
     let can_open = find(subject, pattNonspace, pos + 1) !== null &&
       opentest(self, pos);
     let can_close = find(subject, pattNonspace, pos - 1) !== null;
-    const has_open_marker = matchesPattern(self.matches[pos - 1],
+    const has_open_marker = matchesPattern(self.matches[self.matches.length - 1],
       pattern("open_marker"));
     const has_close_marker = pos + 1 <= endpos &&
       subject.codePointAt(pos + 1) === C_RIGHT_BRACE;
@@ -190,11 +191,7 @@ const betweenMatched = function(
       if (has_open_marker) {
         e = "{" + e;
       }
-      self.addOpener(e, {
-        startpos: startopener, endpos: pos,
-        annot: null, substartpos: null, subendpos: null
-      });
-      self.addMatch(startopener, pos, defaultmatch);
+      self.addOpener(e, startopener, pos, defaultmatch);
       return pos + 1;
     } else {
       self.addMatch(pos, endcloser, defaultmatch);
@@ -214,12 +211,12 @@ const matchers = {
     const endchar = m.endpos;
     if (find(subject, pattDoubleDollars, pos - 2) &&
       !find(subject, pattBackslash, pos - 3)) {
-      delete self.matches[pos - 2];
-      delete self.matches[pos - 1];
+      self.matches.pop(); // remove first $
+      self.matches.pop(); // remove second $
       self.addMatch(pos - 2, endchar, "+display_math");
       self.verbatimType = "display_math"
     } else if (find(subject, pattSingleDollar, pos - 1)) {
-      delete self.matches[pos - 1];
+      self.matches.pop(); // remove $
       self.addMatch(pos - 1, endchar, "+inline_math");
       self.verbatimType = "inline_math";
     } else {
@@ -246,7 +243,7 @@ const matchers = {
             ep = ep - 1;
           }
           if (ep < sp) {
-            delete self.matches[self.matches.length - 1];
+            self.matches.pop();
           } else {
             self.addMatch(sp, ep, "str");
           }
@@ -370,11 +367,7 @@ const matchers = {
       self.addMatch(pos, m.endpos, "footnote_reference");
       return m.endpos + 1;
     } else {
-      self.addOpener("[", {
-        startpos: pos, endpos: pos, annot: null,
-        substartpos: null, subendpos: null
-      });
-      self.addMatch(pos, pos, "str");
+      self.addOpener("[", pos, pos, "str");
       return pos + 1;
     }
   },
@@ -386,6 +379,8 @@ const matchers = {
       const opener = openers[openers.length - 1];
       if (opener.annot === "reference_link") {
         // found a reference link
+        // convert all matches inside reference to str
+        self.strMatches((opener.subendpos || opener.endpos) + 1, pos - 1);
         // add the matches
         const isImage =
           subject.codePointAt(opener.startpos - 1) === C_BANG &&
@@ -404,8 +399,6 @@ const matchers = {
         self.addMatch(opener.subendpos || opener.endpos,
           opener.subendpos || opener.endpos, "+reference");
         self.addMatch(pos, pos, "-reference");
-        // convert all matches to str
-        self.strMatches((opener.subendpos || opener.endpos) + 1, pos - 1);
         // remove from openers
         self.clearOpeners(opener.startpos, pos);
         return pos + 1;
@@ -446,11 +439,7 @@ const matchers = {
     if (!self.destination) {
       return null;
     }
-    self.addOpener("(", {
-      startpos: pos, endpos: pos, annot: null,
-      substartpos: null, subendpos: null
-    });
-    self.addMatch(pos, pos, "str");
+    self.addOpener("(", pos, pos, "str");
     return pos + 1;
   },
 
@@ -469,6 +458,8 @@ const matchers = {
       const opener = openers[openers.length - 1];
       if (openers && openers.length > 0 && opener.annot === "explicit_link") {
         // we have inline link
+        // convert all matches inside destination to str
+        self.strMatches((opener.subendpos || opener.endpos) + 1, pos - 1);
         const isImage =
           subject.codePointAt(opener.startpos - 1) === C_BANG &&
           subject.codePointAt(opener.startpos - 2) !== C_BACKSLASH;
@@ -486,8 +477,6 @@ const matchers = {
           opener.subendpos || opener.endpos, "+destination");
         self.addMatch(pos, pos, "-destination");
         self.destination = false;
-        // convert all matches to str
-        self.strMatches((opener.subendpos || opener.endpos) + 1, pos - 1);
         // remove from openers
         self.clearOpeners(opener.startpos, pos);
         return pos + 1;
@@ -572,9 +561,7 @@ class InlineParser {
     this.options = options;
     this.warn = options.warn || (() => {});
     this.subject = subject;
-    this.matches = [];  // sparse array of matches indexed by startpos
-    // We use a sparse array because we sometimes want to replace early,
-    // provisional matches with new ones.
+    this.matches = [];  // array of matches
     this.openers = {};
     this.verbatim = 0;
     this.verbatimType = "";
@@ -589,7 +576,7 @@ class InlineParser {
   }
 
   addMatch(startpos: number, endpos: number, annot: string): void {
-    this.matches[startpos] = { startpos: startpos, endpos: endpos, annot: annot };
+    this.matches.push({ startpos: startpos, endpos: endpos, annot: annot });
   }
 
   inVerbatim(): boolean {
@@ -620,60 +607,76 @@ class InlineParser {
   }
 
   getMatches(): Event[] {
-    const sorted = [];
     const subject = this.subject;
     if (this.attributeParser) {
       // we're still in an attribute parse
       this.reparseAttributes();
     }
-    for (let i = this.firstpos; i <= this.lastpos; i++) {
-      if (this.matches[i]) {
-        const { startpos: sp, endpos: ep, annot: annot } = this.matches[i];
-        const lastsorted = sorted[sorted.length - 1];
-        if (lastsorted && annot === "str" && lastsorted.annot === "str" &&
-          lastsorted.endpos === sp - 1) {
-          // consolidate adjacent strs
-          lastsorted.endpos = ep;
-        } else {
-          sorted.push(this.matches[i]);
+    this.matches.sort((a,b) => a.startpos - b.startpos);
+    let i = this.matches.length - 1;
+    // remove trailing softbreak and any spaces
+    if (this.matches[i] && this.matches[i].annot === "soft_break") {
+      this.matches.pop();
+      let match = this.matches[this.matches.length - 1];
+      if (match && match.annot === "str" &&
+          subject.codePointAt(match.endpos) === 32) {
+        while (match.endpos >= match.startpos &&
+               subject.codePointAt(match.endpos) === 32) {
+          match.endpos = match.endpos - 1;
+        }
+        if (match.endpos < match.startpos) {
+          this.matches.pop();
         }
       }
     }
-    if (sorted.length > 0) {
-      let last = sorted[sorted.length - 1];
-      let { startpos, endpos, annot } = last;
-      // remove final soft_break
-      if (annot === "soft_break") {
-        sorted.pop();
-        last = sorted[sorted.length - 1];
-        startpos = last.startpos;
-        endpos = last.endpos;
-        annot = last.annot;
+    i = this.matches.length - 1;
+    while (this.matches[i]) {
+      let match = this.matches[i];
+      let last = this.matches[i - 1];
+      while (last && last.startpos === match.startpos) {
+        // the default match has been superseded by a later match
+        last.annot = "";
+        i--;
+        last = this.matches[i - 1];
       }
-      // remove trailing spaces
-      if (annot === "str" && subject.codePointAt(endpos) === 32) {
-        while (endpos > startpos && subject.codePointAt(endpos) === 32) {
-          endpos = endpos - 1;
-        }
-        sorted[sorted.length - 1].endpos = endpos;
+      if (last && last.annot === "str" &&
+                  match.annot === "str" &&
+                  last.endpos === match.startpos - 1) {
+        // consolidate adjacent strs
+        last.endpos = match.endpos;
+        match.annot = "";
       }
-      if (this.verbatim > 0) { // unclosed verbatim
-        this.warn(new Warning("Unclosed verbatim", endpos));
-        sorted.push({
-          startpos: endpos,
-          endpos: endpos,
-          annot: "-" + this.verbatimType
-        });
-      }
+      i--;
+    }
+    let sorted = this.matches.filter((m) => m.annot !== "");
+    // add -verbatim if needed
+    if (sorted.length > 0 && this.verbatim > 0) { // unclosed verbatim
+      const last = sorted[sorted.length - 1];
+      this.warn(new Warning("Unclosed verbatim", last.endpos));
+      sorted.push({
+        startpos: last.endpos,
+        endpos: last.endpos,
+        annot: "-" + this.verbatimType
+      });
     }
     return sorted;
   }
 
-  addOpener(name: string, opener: Opener): void {
+  addOpener(name: string,
+            startpos: number,
+            endpos: number,
+            defaultAnnot: string) : void {
     if (!this.openers[name]) {
       this.openers[name] = [];
     }
-    this.openers[name].push(opener);
+    this.openers[name].push({ matchIndex: this.matches.length,
+                              startpos: startpos,
+                              endpos: endpos,
+                              annot: null,
+                              substartpos: null,
+                              subendpos: null });
+    // add default match (to be used if we don't match the opener)
+    this.addMatch(startpos, endpos, defaultAnnot);
   }
 
   clearOpeners(startpos: number, endpos: number): void {
@@ -700,11 +703,20 @@ class InlineParser {
 
   strMatches(startpos: number, endpos: number): void {
     // convert matches between startpos and endpos to str
-    for (let i = startpos; i <= endpos; i++) {
+    let i = this.matches.length - 1;
+    // backup to startpos
+    while (i > 0 && this.matches[i].startpos >= startpos) {
+      i--;
+    }
+    if (this.matches[i].startpos < startpos) {
+      i++
+    }
+    while (this.matches[i] && this.matches[i].endpos <= endpos) {
       const m = this.matches[i];
-      if (m && m.annot !== "escape" && m.annot !== "str") {
+      if (m.annot !== "escape" && m.annot !== "str") {
         m.annot = "str";
       }
+      i++;
     }
   }
 
