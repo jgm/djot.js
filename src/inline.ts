@@ -631,11 +631,6 @@ class InlineParser {
     while (this.matches[i]) {
       let match = this.matches[i];
       let last = this.matches[i - 1];
-      while (last && last.startpos === match.startpos) {
-        // the default match has been superseded by a later match
-        i--;
-        last = this.matches[i - 1];
-      }
       if (last && last.annot === "str" &&
                   match.annot === "str" &&
                   last.endpos === match.startpos - 1) {
