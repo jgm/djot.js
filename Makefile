@@ -24,8 +24,8 @@ publish:
 	npm publish
 .PHONY: publish
 
-bench: build
-	npm run bench
+bench:
+	npm run build && npm run bench
 .PHONY: bench
 
 dist/djot.js: build

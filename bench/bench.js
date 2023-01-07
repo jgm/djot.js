@@ -1,6 +1,6 @@
 "use strict";
 
-const djot = require("../lib/index.js");
+const djot = require("../dist/djot.js");
 const benchmark = require("benchmark");
 const fs = require("fs");
 
