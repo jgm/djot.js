@@ -26,7 +26,7 @@ interface HasText {
 }
 
 type Block =
-    Para
+  | Para
   | Heading
   | ThematicBreak
   | Section
@@ -138,7 +138,7 @@ interface Table extends HasAttributes {
 }
 
 type Inline =
-    Str
+  | Str
   | SoftBreak
   | HardBreak
   | NonBreakingSpace
@@ -178,13 +178,14 @@ interface FootnoteReference extends HasAttributes {
 
 
 type SmartPunctuationType =
-    "left_single_quote"
+  | "left_single_quote"
   |  "right_single_quote"
   | "left_double_quote"
   | "right_double_quote"
   | "ellipses"
   | "em_dash"
-  | "en_dash";
+  | "en_dash"
+  ;
 
 interface SmartPunctuation extends HasAttributes {
   tag: "smart_punctuation";
@@ -338,10 +339,11 @@ interface Cell extends HasAttributes {
 }
 
 type Alignment =
-    "default"
+  | "default"
   | "left"
   | "right"
-  | "center";
+  | "center"
+  ;
 
 interface Reference extends HasAttributes {
   tag: "reference";
@@ -374,7 +376,8 @@ type AstNode = Doc
   | Cell
   | Caption
   | Footnote
-  | Reference ;
+  | Reference 
+  ;
 
 type Visitor<C, R> = {
   doc?: (node: Doc, context: C) => R;
