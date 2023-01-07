@@ -1,5 +1,5 @@
 {
-  "name": "djot-js",
+  "name": "@djot/djot",
   "sideEffects": false,
   "version": "0.2.0",
   "engines": {
