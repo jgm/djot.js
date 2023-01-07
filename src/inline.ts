@@ -63,41 +63,16 @@ const C_LEFT_BRACE = 123;
 const C_RIGHT_BRACE = 125;
 const C_TILDE = 126;
 
-const isSpecial = function(cp: number) {
-  return (cp === C_LF ||
-    cp === C_CR ||
-    cp === C_DOUBLE_QUOTE ||
-    cp === C_SINGLE_QUOTE ||
-    cp === C_LEFT_PAREN ||
-    cp === C_RIGHT_PAREN ||
-    cp === C_ASTERISK ||
-    cp === C_PLUS ||
-    cp === C_HYPHEN ||
-    cp === C_PERIOD ||
-    cp === C_COLON ||
-    cp === C_LESSTHAN ||
-    cp === C_EQUALS ||
-    cp === C_LEFT_BRACKET ||
-    cp === C_BACKSLASH ||
-    cp === C_RIGHT_BRACKET ||
-    cp === C_HAT ||
-    cp === C_UNDERSCORE ||
-    cp === C_BACKTICK ||
-    cp === C_DOLLARS ||
-    cp === C_LEFT_BRACE ||
-    cp === C_RIGHT_BRACE ||
-    cp === C_TILDE);
-}
-
-const reSpecial = /[\r\n"'()*+.:<=[\\\]^_`${}~-]/;
+const reSpecial = /[\r\n"'()*+.:<=[\\\]^_`${}~-]/g;
 
 // find first special character starting from startpos, and not
 // going beyond endpos, or null if none found.
 const findSpecial = function(s: string, startpos: number, endpos: number)
                           : number | null {
-  const result = reSpecial.exec(s.substring(startpos, endpos + 1));
-  if (result) {
-    return result.index + startpos;
+  reSpecial.lastIndex = startpos;
+  const result = reSpecial.exec(s);
+  if (result && result.index <= endpos) {
+    return result.index;
   } else {
     return null;
   }
