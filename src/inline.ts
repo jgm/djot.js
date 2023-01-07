@@ -29,6 +29,7 @@ type Opener = {
   startpos: number,
   endpos: number,
   annot: null | string,
+  subMatchIndex: number,
   substartpos: null | number,
   subendpos: null | number
 }
@@ -150,7 +151,8 @@ const betweenMatched = function(
       const opener = openers[openers.length - 1];
       if (opener.endpos !== pos - 1) { // exclude empty emph
         self.clearOpeners(opener.startpos, pos);
-        self.addMatch(opener.startpos, opener.endpos, "+" + annotation);
+        self.addMatch(opener.startpos, opener.endpos, "+" + annotation,
+                      opener.matchIndex);
         self.addMatch(pos, endcloser, "-" + annotation);
         return endcloser + 1;
       }
@@ -358,17 +360,22 @@ const matchers = {
           subject.codePointAt(opener.startpos - 2) !== C_BACKSLASH;
         if (isImage) {
           self.addMatch(opener.startpos - 1, opener.startpos - 1,
-            "image_marker");
-          self.addMatch(opener.startpos, opener.endpos, "+imagetext");
+            "image_marker", opener.matchIndex);
+          self.addMatch(opener.startpos, opener.endpos, "+imagetext",
+                        opener.matchIndex);
           self.addMatch(opener.substartpos || opener.startpos,
-            opener.substartpos || opener.startpos, "-imagetext");
+            opener.substartpos || opener.startpos, "-imagetext",
+            opener.subMatchIndex);
         } else {
-          self.addMatch(opener.startpos, opener.endpos, "+linktext");
+          self.addMatch(opener.startpos, opener.endpos, "+linktext",
+                        opener.matchIndex);
           self.addMatch(opener.substartpos || opener.startpos,
-            opener.substartpos || opener.startpos, "-linktext");
+            opener.substartpos || opener.startpos, "-linktext",
+            opener.subMatchIndex);
         }
         self.addMatch(opener.subendpos || opener.endpos,
-          opener.subendpos || opener.endpos, "+reference");
+          opener.subendpos || opener.endpos, "+reference",
+          opener.subMatchIndex + 1);
         self.addMatch(pos, pos, "-reference");
         // remove from openers
         self.clearOpeners(opener.startpos, pos);
@@ -376,9 +383,11 @@ const matchers = {
       } else if (pos + 1 <= endpos &&
         subject.codePointAt(pos + 1) === C_LEFT_BRACKET) {
         opener.annot = "reference_link";
+        self.addMatch(pos, pos, "str");
+        opener.subMatchIndex = self.matches.length - 1;
+        self.addMatch(pos + 1, pos + 1, "str");
         opener.substartpos = pos;  // intermediate ]
         opener.subendpos = pos + 1;  // intermediate [
-        self.addMatch(pos, pos + 1, "str");
         // remove any openers between [ and ]
         self.clearOpeners(opener.startpos + 1, pos - 1);
         return pos + 2;
@@ -386,17 +395,20 @@ const matchers = {
         subject.codePointAt(pos + 1) === C_LEFT_PAREN) {
         self.openers["("] = []; // clear ( openers
         opener.annot = "explicit_link";
+        self.addMatch(pos, pos, "str"); // ]
+        opener.subMatchIndex = self.matches.length - 1;
+        self.addMatch(pos + 1, pos + 1, "str"); // (
         opener.substartpos = pos;  // intermediate ]
         opener.subendpos = pos + 1;  // intermediate (
         self.destination = true;
-        self.addMatch(pos, pos + 1, "str");
         // remove any openers between [ and ]
         self.clearOpeners(opener.startpos + 1, pos - 1);
         return pos + 2;
       } else if (pos + 1 <= endpos &&
         subject.codePointAt(pos + 1) === C_LEFT_BRACE) {
         // assume this is attributes, bracketed span
-        self.addMatch(opener.startpos, opener.endpos, "+span");
+        self.addMatch(opener.startpos, opener.endpos, "+span",
+                      opener.matchIndex);
         self.addMatch(pos, pos, "-span");
         // remove any openers between [ and ]
         self.clearOpeners(opener.startpos, pos);
@@ -435,17 +447,23 @@ const matchers = {
           subject.codePointAt(opener.startpos - 1) === C_BANG &&
           subject.codePointAt(opener.startpos - 2) !== C_BACKSLASH;
         if (isImage) {
-          self.addMatch(opener.startpos - 1, opener.startpos - 1, "image_marker");
-          self.addMatch(opener.startpos, opener.endpos, "+imagetext");
+          self.addMatch(opener.startpos - 1, opener.startpos - 1,
+                        "image_marker", opener.matchIndex);
+          self.addMatch(opener.startpos, opener.endpos, "+imagetext",
+                        opener.matchIndex);
           self.addMatch(opener.substartpos || opener.startpos,
-            opener.substartpos || opener.startpos, "-imagetext");
+            opener.substartpos || opener.startpos, "-imagetext",
+            opener.subMatchIndex);
         } else {
-          self.addMatch(opener.startpos, opener.endpos, "+linktext");
+          self.addMatch(opener.startpos, opener.endpos, "+linktext",
+                        opener.matchIndex);
           self.addMatch(opener.substartpos || opener.startpos,
-            opener.substartpos || opener.startpos, "-linktext");
+            opener.substartpos || opener.startpos, "-linktext",
+            opener.subMatchIndex);
         }
         self.addMatch(opener.subendpos || opener.endpos,
-          opener.subendpos || opener.endpos, "+destination");
+          opener.subendpos || opener.endpos, "+destination",
+          opener.subMatchIndex + 1);
         self.addMatch(pos, pos, "-destination");
         self.destination = false;
         // remove from openers
@@ -546,8 +564,18 @@ class InlineParser {
     this.matchers = matchers;
   }
 
-  addMatch(startpos: number, endpos: number, annot: string): void {
-    this.matches.push({ startpos: startpos, endpos: endpos, annot: annot });
+  addMatch(startpos: number, endpos: number,
+           annot: string, matchIndex?: number): void {
+    let match = { startpos: startpos, endpos: endpos, annot: annot };
+    if (matchIndex !== undefined) {
+      // insert into the proper place, replacing placeholder
+      while (this.matches[matchIndex].startpos > startpos && matchIndex > 0) {
+        matchIndex--;
+      }
+      this.matches.splice(matchIndex, 1, match);
+    } else {
+      this.matches.push(match);
+    }
   }
 
   inVerbatim(): boolean {
@@ -583,7 +611,6 @@ class InlineParser {
       // we're still in an attribute parse
       this.reparseAttributes();
     }
-    this.matches.sort((a,b) => a.startpos - b.startpos);
     let i = this.matches.length - 1;
     // remove trailing softbreak and any spaces
     if (this.matches[i] && this.matches[i].annot === "soft_break") {
@@ -644,6 +671,7 @@ class InlineParser {
                               startpos: startpos,
                               endpos: endpos,
                               annot: null,
+                              subMatchIndex: this.matches.length,
                               substartpos: null,
                               subendpos: null });
     // add default match (to be used if we don't match the opener)
@@ -720,13 +748,13 @@ class InlineParser {
           // add attribute matches
           if (attributeStart !== null) {
             this.addMatch(attributeStart, attributeStart, "+attributes");
-            this.addMatch(ep, ep, "-attributes");
           }
           const attrMatches = this.attributeParser.matches;
           // add attribute matches
           for (const match of attrMatches) {
             this.addMatch(match.startpos, match.endpos, match.annot);
           }
+          this.addMatch(ep, ep, "-attributes");
           // restore state to prior to adding attribute parser
           this.attributeParser = null;
           this.attributeStart = null;
