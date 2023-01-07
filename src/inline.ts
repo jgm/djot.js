@@ -91,7 +91,8 @@ const isSpecial = function(cp: number) {
 
 // find first special character starting from startpos, and not
 // going beyond endpos, or null if none found.
-const findSpecial = function(s: string, startpos: number, endpos: number) {
+const findSpecial = function(s: string, startpos: number, endpos: number)
+                          : number | null {
   let i = startpos;
   while (i <= endpos) {
     let cp = s.codePointAt(i);
@@ -102,7 +103,6 @@ const findSpecial = function(s: string, startpos: number, endpos: number) {
       return i;
     }
     i++;
-    cp = s.codePointAt(i);
   }
   return null;
 }
