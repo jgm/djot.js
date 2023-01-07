@@ -45,6 +45,9 @@ check-optimization: pm.dj
 	open ./v8-deopt-viewer/index.html
 .PHONY: check-optimization
 
+test-playground:
+	cd playground && python3 -m http.server
+
 update-playground: playground/djot.js
 	rsync -a --delete playground website:djot.net/
 	ssh website 'sed -i.bkp -e "s/__DATE__/$$(date -Iseconds)/" djot.net/playground/index.html'

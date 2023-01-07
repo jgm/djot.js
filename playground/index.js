@@ -59,8 +59,22 @@ return {
 }`
   };
 
+function initializeFromURL() {
+  if (window.location.search.length > 0) {
+    const query = new URLSearchParams(window.location.search);
+    const input = query.get("text") || "";
+    const filter = query.get("filter") || "";
+    const mode = query.get("mode") || "preview";
+    const sourcepos = query.get("sourcepos") !== "false";
+    document.getElementById("input").value = input;
+    document.getElementById("filter").value = filter;
+    document.getElementById("mode").value = mode;
+    document.getElementById("sourcepos").checked = sourcepos;
+  }
+}
 
 window.onload = () => {
+  initializeFromURL();
   const input = document.getElementById("input");
   input.onkeyup = debounce(parse_and_render, 200);
   input.onscroll = syncScroll;
@@ -173,6 +187,7 @@ function parse_and_render() {
 
 function render() {
   const text = document.getElementById("input").value;
+  const filter = document.getElementById("filter").value;
   const mode = document.getElementById("mode").value;
   const iframe = document.getElementById("preview");
   document.getElementById("result").innerHTML = "";
@@ -197,4 +212,20 @@ function render() {
   }
   iframe.style.display = mode == "preview" ? "block" : "none";
   result.style.display = mode == "preview" ? "none" : "block";
+
+  // update permalink
+  let href = window.location.href;
+  const paramslist = [["text", text]];
+  if (mode !== "preview") {
+    paramslist.push(["mode",mode]);
+  }
+  if (!sourcepos) {
+    paramslist.push(["sourcepos","false"]);
+  }
+  if (filter) {
+    paramslist.push(["filter",filter]);
+  }
+  const urlparams = new URLSearchParams(paramslist);
+  let permalink = href.replace(/([?].*)?$/,"?" + urlparams);
+  document.getElementById("permalink").href = permalink;
 }
