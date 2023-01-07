@@ -76,6 +76,7 @@ describe("InlineParser", () => {
       { annot: "str", startpos: 11, endpos: 11 },
       { annot: "-superscript", startpos: 12, endpos: 12 },
       { annot: "str", startpos: 13, endpos: 17 },
+      { annot: "open_marker", startpos: 18, endpos: 18 },
       { annot: "+superscript", startpos: 18, endpos: 19 },
       { annot: "str", startpos: 20, endpos: 28 },
       { annot: "-superscript", startpos: 29, endpos: 30 }
@@ -102,6 +103,7 @@ describe("InlineParser", () => {
     //                             012345678
     parser.feed(0,8);
     expect(parser.getMatches()).toStrictEqual([
+      { annot: "open_marker", startpos: 0, endpos: 0 },
       { annot: "+mark", startpos: 0, endpos: 1 },
       { annot: "str", startpos: 2, endpos: 6 },
       { annot: "-mark", startpos: 7, endpos: 8 },
@@ -113,6 +115,7 @@ describe("InlineParser", () => {
     //                             012345678
     parser.feed(0,8);
     expect(parser.getMatches()).toStrictEqual([
+      { annot: "open_marker", startpos: 0, endpos: 0 },
       { annot: "+insert", startpos: 0, endpos: 1 },
       { annot: "str", startpos: 2, endpos: 6 },
       { annot: "-insert", startpos: 7, endpos: 8 },
