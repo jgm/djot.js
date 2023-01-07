@@ -218,7 +218,7 @@ const matchers = {
           if (ep < sp) {
             self.matches.pop();
           } else {
-            self.addMatch(sp, ep, "str");
+            lastmatch.endpos = ep;
           }
         }
       }
@@ -633,7 +633,6 @@ class InlineParser {
       let last = this.matches[i - 1];
       while (last && last.startpos === match.startpos) {
         // the default match has been superseded by a later match
-        last.annot = "";
         i--;
         last = this.matches[i - 1];
       }
