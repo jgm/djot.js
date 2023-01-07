@@ -4,11 +4,14 @@ test: build
 	npm test --noStackTrace
 .PHONY: test
 
+node_modules:
+	npm install
+
 src/version.ts: package.json
 	grep '^ *"version":' $< | \
 	  sed 's/^ *"version": "*\([^"]*\)",/export const version = "\1";/' > $@
 
-build: src/version.ts
+build: src/version.ts node_modules
 	npx tsc
 .PHONY: build
 
