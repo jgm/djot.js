@@ -43,9 +43,9 @@ const addStringContent = function(node: (AstNode | Container),
     (node.tag === "soft_break" || node.tag === "hard_break")) {
     buffer.push("\n");
   } else if ("children" in node) {
-    node.children.forEach((child: AstNode) => {
+    for (const child of node.children) {
       addStringContent(child, buffer);
-    });
+    }
   }
 }
 
@@ -1291,9 +1291,9 @@ const renderAstNode = function(node: Record<string, any>, buff: string[], indent
   }
   buff.push("\n");
   if (node.children) {
-    node.children.forEach((child: AstNode) => {
+    for (const child of node.children) {
       renderAstNode(child, buff, indent + 2);
-    });
+    }
   }
 }
 

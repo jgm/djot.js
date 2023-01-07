@@ -384,11 +384,11 @@ class EventParser {
 
             const styles = getListStyles(marker);
             const newstyles: string[] = [];
-            container.extra.styles.forEach((style: string) => {
+            for (const style of container.extra.styles) {
               if (styles.includes(style)) {
                 newstyles.push(style);
               }
-            });
+            }
             if (newstyles.length > 0) {
               // narrow styles
               container.extra.styles = newstyles;
@@ -420,9 +420,9 @@ class EventParser {
           // adding container will close others
           this.addContainer(new Container(spec, data));
           let annot = "+list";
-          styles.forEach(style => {
+          for (const style of styles) {
             annot = annot + "|" + style;
-          });
+          }
           this.addMatch(sp, ep - 1, annot);
           return true;
         },
@@ -465,9 +465,9 @@ class EventParser {
           // adding container will close others
           this.addContainer(new Container(spec, data));
           let annot = "+list_item";
-          styles.forEach(style => {
+          for (const style of styles) {
             annot = annot + "|" + style;
-          });
+          }
           this.addMatch(sp, ep - 1, annot);
           this.pos = ep;
 
@@ -598,9 +598,9 @@ class EventParser {
             "+block_attributes");
           if (container.attributeParser) { // should always be true
             const attrMatches = container.attributeParser.matches;
-            attrMatches.forEach(match => {
+            for (const match of attrMatches) {
               this.matches.push(match);
-            });
+            }
           }
           this.addMatch(this.pos, this.pos, "-block_attributes");
           this.containers.pop();
@@ -743,7 +743,9 @@ class EventParser {
     const tip = this.tip();
     const ilparser = tip && tip.inlineParser;
     if (ilparser) {
-      ilparser.getMatches().forEach(match => this.matches.push(match));
+      for (const match of ilparser.getMatches()) {
+        this.matches.push(match);
+      }
     }
   }
 

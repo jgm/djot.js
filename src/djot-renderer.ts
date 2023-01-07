@@ -252,10 +252,10 @@ class DjotRenderer {
     if (lns[lns.length - 1] === "") {
       lns.pop();
     }
-    lns.forEach((ln : string) => {
+    for (const ln of lns) {
       this.lit(ln);
       this.cr();
-    });
+    }
   }
 
   verbatimNode (node : HasText) : void {

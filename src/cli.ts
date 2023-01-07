@@ -124,9 +124,9 @@ while (args[i]) {
           args.push("-" + arg.substring(i,i+1));
         }
       } else if (/=/.test(arg)) { // --width=10
-        arg.split(/=/).forEach(arg => {
-          args.push(arg);
-        });
+        for (const argpart in arg.split(/=/)) {
+          args.push(argpart);
+        }
       } else if (/^-/.test(arg)) {
         process.stderr.write("Unknown option " + arg + "\n");
         process.exit(1);
@@ -141,14 +141,14 @@ let input = "";
 if (files.length === 0) {
   files = ["/dev/stdin"];
 }
-files.forEach(file => {
+for (const file of files) {
   try {
     input = input + fs.readFileSync(file, "utf8");
   } catch(err) {
     console.error(err);
     process.exit(1);
   }
-});
+}
 
 try {
   if (to === "events") {
@@ -181,14 +181,14 @@ try {
     }
 
     startTime = performance.now();
-    filters.forEach(filter => {
+    for (const filter of filters) {
       if (ast) {
         applyFilter(ast, filter);
         if (!ast) {
           throw(new Error("Filter destroyed AST."));
         }
       }
-    });
+    }
     endTime = performance.now();
     const filterTime = (endTime - startTime).toFixed(1);
 

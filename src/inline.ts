@@ -598,9 +598,9 @@ class InlineParser {
     this.attributeParser = null;
     this.attributeStart = null;
     if (slices !== null) {
-      slices.forEach((slice) => {
+      for (const slice of slices) {
         this.feed(slice.startpos, slice.endpos);
-      });
+      }
     }
     this.allowAttributes = true;
     this.attributeSlices = null;
@@ -753,9 +753,9 @@ class InlineParser {
           }
           const attrMatches = this.attributeParser.matches;
           // add attribute matches
-          attrMatches.forEach((match) => {
+          for (const match of attrMatches) {
             this.addMatch(match.startpos, match.endpos, match.annot);
-          });
+          }
           // restore state to prior to adding attribute parser
           this.attributeParser = null;
           this.attributeStart = null;
