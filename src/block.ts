@@ -880,8 +880,7 @@ class EventParser {
       }
     }
     if (sepfound) {
-      for (const k in seps) {
-        const match = seps[k];
+      for (const match of seps) {
         this.addMatch(match.startpos, match.endpos, match.annot);
       }
       this.addMatch(this.starteol - 1, this.starteol - 1, "-row");
