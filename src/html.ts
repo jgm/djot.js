@@ -133,9 +133,9 @@ class HTMLRenderer {
     if ("tight" in node) {
       this.tight = !!node.tight;
     }
-    node.children.forEach((child) => {
+    for (let child of node.children) {
       result += this.renderAstNode(child);
-    });
+    }
     if ("tight" in node) {
       this.tight = oldtight;
     }
