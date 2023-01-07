@@ -89,22 +89,18 @@ const isSpecial = function(cp: number) {
     cp === C_TILDE);
 }
 
+const reSpecial = /[\r\n"'()*+.:<=[\\\]^_`${}~-]/;
+
 // find first special character starting from startpos, and not
 // going beyond endpos, or null if none found.
 const findSpecial = function(s: string, startpos: number, endpos: number)
                           : number | null {
-  let i = startpos;
-  while (i <= endpos) {
-    let cp = s.codePointAt(i);
-    if (!cp) {
-      return null;
-    }
-    if (isSpecial(cp)) {
-      return i;
-    }
-    i++;
+  const result = reSpecial.exec(s.substring(startpos, endpos + 1));
+  if (result) {
+    return result.index + startpos;
+  } else {
+    return null;
   }
-  return null;
 }
 
 const matchesPattern = function(match: Event, patt: RegExp): boolean {
