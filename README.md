@@ -10,6 +10,9 @@ playground](https://djot.net/playground).
 
 ## Script API
 
+These are available after you run `npm install`, which will
+install the library's build dependencies:
+
 | `npm run ...`    | Description                                    |
 | ---------------- | -----------                                    |
 | `build`          | Compile and bundle sources to `lib` and `dist` |
