@@ -360,7 +360,7 @@ const matchers = {
           subject.codePointAt(opener.startpos - 2) !== C_BACKSLASH;
         if (isImage) {
           self.addMatch(opener.startpos - 1, opener.startpos - 1,
-            "image_marker", opener.matchIndex);
+            "image_marker", opener.matchIndex - 1);
           self.addMatch(opener.startpos, opener.endpos, "+imagetext",
                         opener.matchIndex);
           self.addMatch(opener.substartpos || opener.startpos,
@@ -448,7 +448,7 @@ const matchers = {
           subject.codePointAt(opener.startpos - 2) !== C_BACKSLASH;
         if (isImage) {
           self.addMatch(opener.startpos - 1, opener.startpos - 1,
-                        "image_marker", opener.matchIndex);
+                        "image_marker", opener.matchIndex - 1);
           self.addMatch(opener.startpos, opener.endpos, "+imagetext",
                         opener.matchIndex);
           self.addMatch(opener.substartpos || opener.startpos,
@@ -569,9 +569,6 @@ class InlineParser {
     let match = { startpos: startpos, endpos: endpos, annot: annot };
     if (matchIndex !== undefined) {
       // insert into the proper place, replacing placeholder
-      while (this.matches[matchIndex].startpos > startpos && matchIndex > 0) {
-        matchIndex--;
-      }
       this.matches.splice(matchIndex, 1, match);
     } else {
       this.matches.push(match);
