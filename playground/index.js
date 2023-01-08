@@ -139,7 +139,10 @@ const inject = (iframe, html) => {
   const doc = iframe.contentDocument;
   if (doc) {
     const body = doc.querySelector("#htmlbody");
-    if (body) body.innerHTML = html;
+    if (body) {
+      body.innerHTML = html;
+      iframe.contentWindow.MathJax.typeset();
+    }
   }
 }
 
