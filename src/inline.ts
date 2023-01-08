@@ -1,7 +1,7 @@
 import { Event } from "./event";
 import { AttributeParser } from "./attributes";
 import { Options, Warning } from "./options";
-import { pattern, find, boundedFind } from "./find";
+import { pattern, find } from "./find";
 
 // General note on the parsing strategy:  our objective is to
 // parse without backtracking. To that end, we keep a stack of
@@ -177,7 +177,7 @@ const betweenMatched = function(
 const matchers = {
   [C_BACKTICK]: function(self: InlineParser, pos: number, endpos: number): number | null {
     const subject = self.subject;
-    const m = boundedFind(subject, pattBackticks0, pos, endpos);
+    const m = find(subject, pattBackticks0, pos, endpos);
     if (m === null) {
       return null;
     }
@@ -202,7 +202,7 @@ const matchers = {
 
   [C_BACKSLASH]: function(self: InlineParser, pos: number, endpos: number): number | null {
     const subject = self.subject;
-    const mLineEnd = boundedFind(subject, pattLineEnd, pos + 1, endpos);
+    const mLineEnd = find(subject, pattLineEnd, pos + 1, endpos);
     if (mLineEnd !== null) {
       // see if there were preceding spaces and remove them
       if (self.matches.length > 0) {
@@ -226,7 +226,7 @@ const matchers = {
       self.addMatch(pos + 1, mLineEnd.endpos, "hard_break");
       return mLineEnd.endpos + 1;
     } else {
-      const mPunct = boundedFind(subject, pattPunctuation, pos + 1, endpos);
+      const mPunct = find(subject, pattPunctuation, pos + 1, endpos);
       if (mPunct !== null) {
         self.addMatch(pos, pos, "escape");
         self.addMatch(mPunct.startpos, mPunct.endpos, "str");
@@ -245,7 +245,7 @@ const matchers = {
 
   [C_LESSTHAN]: function(self: InlineParser, pos: number, endpos: number): number | null {
     const subject = self.subject;
-    const m = boundedFind(subject, pattAutolink, pos, endpos);
+    const m = find(subject, pattAutolink, pos, endpos);
     if (m === null) {
       return null;
     }
@@ -300,7 +300,7 @@ const matchers = {
     alwaysTrue),
 
   [C_LEFT_BRACE]: function(self: InlineParser, pos: number, endpos: number): number | null {
-    if (boundedFind(self.subject, pattDelim, pos + 1, endpos)) {
+    if (find(self.subject, pattDelim, pos + 1, endpos)) {
       self.addMatch(pos, pos, "open_marker");
       return pos + 1;
     } else if (self.allowAttributes) {
@@ -315,7 +315,7 @@ const matchers = {
   },
 
   [C_COLON]: function(self: InlineParser, pos: number, endpos: number): number | null {
-    const m = boundedFind(self.subject, pattSymbol, pos, endpos)
+    const m = find(self.subject, pattSymbol, pos, endpos)
     if (m) {
       self.addMatch(m.startpos, m.endpos, "symb");
       return m.endpos + 1;
@@ -326,7 +326,7 @@ const matchers = {
   },
 
   [C_PERIOD]: function(self: InlineParser, pos: number, endpos: number): number | null {
-    if (boundedFind(self.subject, pattTwoPeriods, pos + 1, endpos)) {
+    if (find(self.subject, pattTwoPeriods, pos + 1, endpos)) {
       self.addMatch(pos, pos + 2, "ellipses");
       return pos + 3;
     } else {
@@ -335,7 +335,7 @@ const matchers = {
   },
 
   [C_LEFT_BRACKET]: function(self: InlineParser, pos: number, endpos: number): number {
-    const m = boundedFind(self.subject, pattNoteReference, pos + 1, endpos);
+    const m = find(self.subject, pattNoteReference, pos + 1, endpos);
     if (m) { // footnote ref
       self.addMatch(pos, m.endpos, "footnote_reference");
       return m.endpos + 1;
@@ -799,12 +799,12 @@ class InlineParser {
           }
         } else if (this.verbatim > 0) {
           if (c === 96) {
-            const m = boundedFind(subject, pattBackticks1, pos, endpos);
+            const m = find(subject, pattBackticks1, pos, endpos);
             if (m) {
               const endchar = m.endpos;
               if (m.endpos - pos + 1 === this.verbatim) {
                 // check for raw attribute
-                const m2 = boundedFind(subject, pattRawAttribute, endchar + 1, endpos);
+                const m2 = find(subject, pattRawAttribute, endchar + 1, endpos);
                 if (m2 && this.verbatimType === "verbatim") { // raw
                   this.addMatch(pos, endchar, "-" + this.verbatimType);
                   this.addMatch(m2.startpos, m2.endpos, "raw_format");

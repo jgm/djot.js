@@ -6,8 +6,19 @@ const pattern = function(patt : string) : RegExp {
   return new RegExp(patt, 'yd');
 }
 
-const find = function(subj : string, patt : RegExp, startpos : number) : null | { startpos : number, endpos : number, captures : string[] } {
+const find = function(subject : string,
+                      patt : RegExp,
+                      startpos : number,
+                      endpos ?: number) : null | { startpos : number,
+                                                   endpos : number,
+                                                   captures : string[] } {
   patt.lastIndex = startpos;
+  let subj : string;
+  if (endpos !== undefined) {
+    subj = subject.substring(0, endpos + 1);
+  } else {
+    subj = subject;
+  }
   const result = (patt.exec(subj) as null | RegExpMatchArrayWithIndices);
   if (result !== null) {
     let idx = 1;
@@ -22,13 +33,4 @@ const find = function(subj : string, patt : RegExp, startpos : number) : null | 
   }
 }
 
-const boundedFind = function(subj : string, patt : RegExp, startpos : number, endpos : number) : null | { startpos : number, endpos : number, captures : string[] } {
-  const result = find(subj, patt, startpos);
-  if (result !== null && result.endpos <= endpos) {
-    return result;
-  } else {
-    return null;
-  }
-}
-
-export { pattern, find, boundedFind };
+export { pattern, find };
