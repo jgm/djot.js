@@ -30,7 +30,7 @@ const getListStyles = function(marker: string): string[] {
   }
 }
 
-const isSpaceOrTab = function(cp: number) {
+const isSpaceOrTab = function(cp?: number) {
   return (cp === 32 || cp === 9);
 }
 
@@ -780,14 +780,7 @@ class EventParser {
   skipSpace(): void {
     const subject = this.subject;
     let newpos = this.pos;
-    while (true) {
-      const cp = subject.codePointAt(newpos);
-      if (cp && isSpaceOrTab(cp)) {
-        newpos++;
-      } else {
-        break;
-      }
-    }
+    while (isSpaceOrTab(subject.codePointAt(newpos))) newpos++;
     this.indent = newpos - this.startline;
     this.pos = newpos;
   }
