@@ -30,11 +30,11 @@ const getListStyles = function(marker: string): string[] {
   }
 }
 
-const isSpaceOrTab = function(cp?: number) {
+const isSpaceOrTab = function(cp?: number) : boolean {
   return (cp === 32 || cp === 9);
 }
 
-const isEolChar = function(cp?: number) {
+const isEolChar = function(cp?: number) : boolean {
   return (cp === 10 || cp === 13);
 }
 
