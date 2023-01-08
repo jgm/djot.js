@@ -34,8 +34,9 @@ const isSpaceOrTab = function(cp?: number) {
   return (cp === 32 || cp === 9);
 }
 
+const reNewline = /[\r\n]/g;
+
 const pattEndline = pattern("[ \\t]*\\r?\\n");
-const pattNonNewlines = pattern("[^\\n\\r]*");
 const pattWord = pattern("^\\w+\\s");
 const pattWhitespace = pattern("[ \\t\\r\\n]");
 const pattNonWhitespace = pattern("[^ \\t\\r\\n]+");
@@ -787,9 +788,10 @@ class EventParser {
 
   // set this.starteol, this.endeol
   getEol(): void {
-    const m = find(this.subject, pattNonNewlines, this.pos);
-    if (m) {
-      this.starteol = m.endpos + 1;
+    reNewline.lastIndex = this.pos;
+    const result = reNewline.exec(this.subject);
+    if (result) {
+      this.starteol = result.index;
       if (this.subject.codePointAt(this.starteol) === 13 &&
         this.subject.codePointAt(this.starteol + 1) === 10) { // CR
         this.endeol = this.starteol + 1;
