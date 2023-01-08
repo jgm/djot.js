@@ -9,6 +9,20 @@ const capitalizeFilter : Filter = () => {
   };
 };
 
+const tmFilter : Filter = () => {
+  return {
+           symb: (e) => {
+             if (e.alias === "TM") {
+               return [{tag: "str", text: "trade"},
+                       {tag: "superscript", children: [
+                         {tag: "str", text: "mark"}
+                       ]}];
+             }
+           }
+  };
+};
+
+
 const arrayFilter : Filter = () => {
   return [
     { str: (e) => {
@@ -41,8 +55,8 @@ const fancyFilter : Filter = () => {
              }
           },
           footnote: {
-            enter: () => {
-              return true; // stop traversal (don't process inside notes)
+            enter: (e) => {
+              return {stop: e}; // stop traversal (don't process inside notes)
             },
             exit: () => {}
           }
@@ -63,6 +77,20 @@ describe("applyFilter", () => {
     verbatim text="code"
 `);
   });
+
+  it("splices in text for symbols", () => {
+    const ast = parse("Hello:TM:");
+    applyFilter(ast, tmFilter);
+    expect(renderAST(ast)).toEqual(
+`doc
+  para
+    str text="Hello"
+    str text="trade"
+    superscript
+      str text="mark"
+`);
+  });
+
 
   it("handles deeply-nested documents without stack overflow", () => {
     const ast = parse("*a _b ".repeat(60000) + " _c d*".repeat(60000));
@@ -86,7 +114,7 @@ describe("applyFilter", () => {
 
 
   it("capitalizes text within emphasis only", () => {
-    const ast = parse("Hello _*there*_ `code`[^1]\n\n[^1]: _emph_");
+    const ast = parse("Hello _*there*_ `code`[^1] and _more_\n\n[^1]: _emph_");
     applyFilter(ast, fancyFilter);
     expect(renderAST(ast)).toEqual(
 `doc
@@ -98,6 +126,9 @@ describe("applyFilter", () => {
     str text=" "
     verbatim text="code"
     footnote_reference text="1"
+    str text=" and "
+    emph
+      str text="MORE"
 footnotes
   ["1"] =
     footnote label="1"

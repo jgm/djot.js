@@ -166,40 +166,6 @@ return {
 }
 ```
 
-It is possible to inhibit traversal into the children of a node,
-by having the `enter` function return the value true (or any truish
-value, say `"stop"`).  This can be used, for example, to prevent
-the contents of a footnote from being processed:
-
-``` js
-return {
- footnote: {
-   enter: (e) => {
-     return true
-    }
-  }
-}
-```
-
-A single filter may return a table with multiple tables, which will be
-applied sequentially:
-
-``` js
-// This filter includes two sub-filters, run in sequence
-return [
-  { // first filter changes (TM) to trademark symbol
-    str: (e) => {
-      e.text = e.text.replace(/\\(TM\\)/, "™");
-    }
-  },
-  { // second filter changes '[]' to '()' in text
-    str: (e) => {
-      e.text = e.text.replace(/\\(/,"[").replace(/\\)/,"]");
-    }
-  }
-]
-```
-
 Here is a simple filter that changes letter enumerated lists
 to roman-numbered:
 
@@ -215,6 +181,81 @@ return {
   }
 }
 ```
+
+A single filter may return a table with multiple tables, which will be
+applied sequentially:
+
+```js
+// This filter includes two sub-filters, run in sequence
+return [
+  { // first filter changes (TM) to trademark symbol
+    str: (e) => {
+      e.text = e.text.replace(/\\(TM\\)/, "™");
+    }
+  },
+  { // second filter changes '[]' to '()' in text
+    str: (e) => {
+      e.text = e.text.replace(/\\(/,"[").replace(/\\)/,"]");
+    }
+  }
+]
+```
+
+The filters we've looked at so far modify nodes in place by
+changing one of their properties (`text`).
+Sometimes we'll want to replace a node with a different kind of
+node, or with several nodes, or to delete a node.  In these
+cases we can end the filter function with a `return`.
+If a single AST node is returned, it will replace the element
+the filter is processing.  If an array of AST nodes is returned,
+they will be spliced in to replace the element.  If an empty
+array is returned, the element will be deleted.
+
+```js
+// This filter replaces certain Symb nodes with
+// formatted text.
+const substitutions = {
+  mycorp: [ { tag: "str", text: "My Corp" },
+            { tag: "superscript",
+              [ { tag: "str", text: "(TM)" } ] } ],
+  myloc: { tag: "str", text: "Coyote, NM" }
+  };
+return {
+  symb: (e) => {
+    const found = substitutions[e.alias];
+    if (found) {
+      return found;
+    }
+  }
+}
+```
+
+```js
+// This filter replaces all Image nodes with their descriptions.
+return {
+  image: (e) => {
+    return e.children;
+  }
+}
+```
+
+It is possible to inhibit traversal into the children of a node,
+by having the `enter` function return an object with the
+property `stop`. The contents of `stop` will be used as the regular
+return value. This can be used, for example, to prevent
+the contents of a footnote from being processed:
+
+```js
+return {
+ footnote: {
+   enter: (e) => {
+     return {stop: [e]};
+    }
+  }
+}
+```
+
+
 
 # AUTHORS
 

@@ -58,20 +58,6 @@ import { Doc, AstNode, HasChildren } from "./ast";
  *    }
  * }
  *
- * It is possible to inhibit traversal into the children of a node,
- * by having the `enter` function return the value true (or any truish
- * value, say `"stop"`).  This can be used, for example, to prevent
- * the contents of a footnote from being processed:
- *
- *
- * return {
- *  footnote: {
- *    enter: (e) => {
- *      return true
- *     }
- *   }
- * }
- *
  * A single filter may return a table with multiple tables, which will be
  * applied sequentially:
  *
@@ -88,9 +74,62 @@ import { Doc, AstNode, HasChildren } from "./ast";
  *     }
  *   }
  * ]
+ *
+ * The filters we've looked at so far modify nodes in place by
+ * changing one of their properties (`text`).
+ * Sometimes we'll want to replace a node with a different kind of
+ * node, or with several nodes, or to delete a node.  In these
+ * cases we can end the filter function with a `return`.
+ * If a single AST node is returned, it will replace the element
+ * the filter is processing.  If an array of AST nodes is returned,
+ * they will be spliced in to replace the element.  If an empty
+ * array is returned, the element will be deleted.
+ *
+ * // This filter replaces certain Symb nodes with
+ * // formatted text.
+ * const substitutions = {
+ *   mycorp: [ { tag: "str", text: "My Corp" },
+ *             { tag: "superscript",
+ *               [ { tag: "str", text: "(TM)" } ] } ],
+ *   myloc: { tag: "str", text: "Coyote, NM" }
+ *   };
+ * return {
+ *   symb: (e) => {
+ *     const found = substitutions[e.alias];
+ *     if (found) {
+ *       return found;
+ *     }
+ *   }
+ * }
+ *
+ * // This filter replaces all Image nodes with their descriptions.
+ * return {
+ *   image: (e) => {
+ *     return e.children;
+ *   }
+ * }
+ * It is possible to inhibit traversal into the children of a node,
+ * by having the `enter` function return an object with the
+ * property `stop`. The contents of `stop` will be used as the regular
+ * return value. This can be used, for example, to prevent
+ * the contents of a footnote from being processed:
+ *
+ *
+ * return {
+ *  footnote: {
+ *    enter: (e) => {
+ *      return {stop: [e]};
+ *     }
+ *   }
+ * }
+ *
  */
 
-type Transform = (node : any) => void | boolean;
+type Transform = (node : any) =>
+                   void
+                  | AstNode
+                  | AstNode[]
+                  | {stop: void | AstNode | AstNode[]};
 type Action = Transform | { enter ?: Transform, exit : Transform };
 type FilterPart = Record<string, Action>;
 type Filter = () => (FilterPart | FilterPart[]);
@@ -170,9 +209,8 @@ class Walker {
 }
 
 // returns true to stop traverse
-const handleAstNode = function(visit : Visit, filterpart : FilterPart) : boolean {
+const handleAstNode = function(visit : Visit, filterpart : FilterPart) {
   const node = visit.node;
-  const parent = visit.parent;
   if (!node || !node.tag) {
     throw(new Error("Filter called on a non-node."));
   }
@@ -185,7 +223,7 @@ const handleAstNode = function(visit : Visit, filterpart : FilterPart) : boolean
     if (!transform) {
       return false;
     }
-    return (transform(node) === true);
+    return transform(node);
   } else {
     let transform;
     if ("exit" in trans) {
@@ -196,20 +234,54 @@ const handleAstNode = function(visit : Visit, filterpart : FilterPart) : boolean
     if (!transform) {
       return false;
     }
-    return (transform(node) === true);
+    return transform(node);
   }
 }
 
 // Returns the node for convenience (but modifies it in place).
 const traverse = function(node : AstNode, filterpart : FilterPart) : AstNode {
-  for (const visit of new Walker(node)) {
-    let stopTraverse = handleAstNode(visit, filterpart);
-    if (stopTraverse) {
-      break;
-    };
+  let walker = new Walker(node);
+  for (const visit of walker) {
+    let result = handleAstNode(visit, filterpart);
+    let stopTraversal = false;
+    if (result && "stop" in result) {
+      stopTraversal = true;
+      result = result.stop;
+    }
+    if (result) {
+      if (Array.isArray(result)) {
+        if (visit.parent) {
+          visit.parent.node.children.splice(visit.parent.childIndex, 1,
+                                          ...result);
+        } else {
+          throw(Error("Cannot replace top node with multiple nodes"));
+        }
+      } else {
+        if (visit.parent) {
+          visit.parent.node.children[visit.parent.childIndex] = result;
+        } else {
+          return result;
+        }
+      }
+    }
+    if (stopTraversal && walker.enter) {
+      if (visit.node !== walker.current) {
+        // find our original node and revert current to that...
+        let stackTop = walker.stack.pop();
+        if (stackTop) {
+          walker.current = stackTop.node as AstNode;
+          walker.enter = false;
+        } else {
+          break;
+        }
+      } else if (walker.enter) {
+        walker.enter = false;
+      }
+    }
   }
   return node;
 }
+
 
 // Apply a filter to a document.
 const applyFilter = function(doc : Doc, filter : Filter) : void {
