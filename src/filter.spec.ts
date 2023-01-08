@@ -64,6 +64,12 @@ describe("applyFilter", () => {
 `);
   });
 
+  it("handles deeply-nested documents without stack overflow", () => {
+    const ast = parse("*a _b ".repeat(60000) + " _c d*".repeat(60000));
+    applyFilter(ast, capitalizeFilter);
+    expect(renderAST(ast)).not.toThrow;
+  });
+
   it("sequences filters", () => {
     const ast = parse("Hello *there* `code`");
     applyFilter(ast, arrayFilter);
