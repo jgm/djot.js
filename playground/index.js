@@ -45,8 +45,8 @@ return [
       e.text = e.text.replace(/\\(/,"[").replace(/\\)/,"]");
     }
   }
-]`,
-  "letter_enumerated_lists_to_roman":
+]`
+ , "letter_enumerated_lists_to_roman":
 `// Changes letter-enumerated lists to roman-numbered
 return {
   list: (e) => {
@@ -57,6 +57,15 @@ return {
     }
   }
 }`
+
+ , "replace_images_with_descriptions":
+`// This filter replaces all Image nodes with their descriptions.
+return {
+  image: (e) => {
+    return e.children;
+  }
+}`
+
   };
 
 function initializeFromURL() {

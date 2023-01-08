@@ -38,6 +38,12 @@ const arrayFilter : Filter = () => {
   ];
 }
 
+const imagesToDescriptions : Filter = () => {
+  return {
+    image: (e) => e.children
+  }
+}
+
 const fancyFilter : Filter = () => {
   let capitalize = 0;
   return {
@@ -77,6 +83,21 @@ describe("applyFilter", () => {
     verbatim text="code"
 `);
   });
+
+  it("replaces images with descriptions", () => {
+    const ast = parse("![Hello *there* `code`](url.jpg)");
+    applyFilter(ast, imagesToDescriptions);
+    expect(renderAST(ast)).toEqual(
+`doc
+  para
+    str text="Hello "
+    strong
+      str text="there"
+    str text=" "
+    verbatim text="code"
+`);
+  });
+
 
   it("splices in text for symbols", () => {
     const ast = parse("Hello:TM:");
