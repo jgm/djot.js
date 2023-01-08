@@ -1,4 +1,4 @@
-import { Doc, AstNode } from "./ast";
+import { Doc, AstNode, HasChildren } from "./ast";
 
 /* Support filters that walk the AST and transform a
  * document between parsing and rendering, like pandoc Lua filters.
@@ -95,62 +95,139 @@ type Action = Transform | { enter ?: Transform, exit : Transform };
 type FilterPart = Record<string, Action>;
 type Filter = () => (FilterPart | FilterPart[]);
 
-const handleAstNode = function(node : any, filterpart : FilterPart) : void {
-  if (!node || !node.tag) {
-    throw(new Error("Filter caled on a non-node."));
+type Visit = {
+  node: AstNode;
+  enter: boolean;
+  parent?: { node: HasChildren<AstNode>, childIndex: number};
+}
+
+type NodeIterator = {
+  next: () => { value: Visit, done: boolean };
+}
+
+
+class Walker {
+  finished : boolean = false;
+  top: AstNode;
+  current: AstNode;
+  stack: {node : HasChildren<AstNode>, childIndex: number}[] = [];
+  enter: boolean = true;
+
+  constructor(node : AstNode) {
+    this.top = node;
+    this.current = node;
   }
-  let transformIn : Transform | undefined;
-  let transformOut : Transform | undefined;
-  const transform = filterpart[node.tag];
-  if (transform) {
-    if ("exit" in transform && transform.exit) {
-      transformOut = transform.exit;
-      transformIn = transform.enter;
-    } else if (typeof transform === "function") {
-      transformOut = transform;
-    } else {
-      throw(new Error("Transform has wrong type."));
-    }
-    if (transformIn) {
-      const stopTraversal = transformIn(node);
-      if (stopTraversal) {
-        return;
+
+  [Symbol.iterator](): NodeIterator {
+    let walker : Walker = this;
+    return {
+      next() {
+        const topStack =
+                   walker.stack && walker.stack[walker.stack.length - 1];
+        const current = walker.current;
+        const parent = topStack ? { node: topStack.node,
+                                    childIndex: topStack.childIndex }
+                                 : undefined;
+        if (walker.finished) {
+          return { value: { node: walker.current, enter: false,
+                            parent: parent },
+                   done: true };
+        }
+        walker.enter = walker.enter && "children" in current;
+        if (walker.enter) {
+          if ("children" in current && current.children.length > 0) {
+            walker.stack.push({ node: current, childIndex: 0 });
+            walker.current = current.children[0];
+            walker.enter = true;
+          } else {
+            walker.enter = false;
+          }
+          return { value: { node: current, enter: true,
+                            parent: parent }, done: false };
+        } else { // exit
+          if (topStack) {
+            // try next sibling
+            topStack.childIndex++;
+            let nextChild = topStack.node.children[topStack.childIndex];
+            if (nextChild) {
+              walker.current = nextChild;
+              walker.enter = true;
+            } else {
+              walker.stack.pop();
+              // go up to parent
+              walker.current = topStack.node as AstNode;
+              walker.enter = false;
+            }
+          } else {
+            walker.finished = true;
+          }
+          return { value: { node: current, enter: false, parent: parent },
+                     done: false } ;
+        }
       }
     }
   }
-  if ("children" in node && node.children) {
-    node.children.forEach((child : AstNode) => {
-      handleAstNode(child, filterpart);
-    });
+}
+
+// returns true to stop traverse
+const handleAstNode = function(visit : Visit, filterpart : FilterPart) : boolean {
+  const node = visit.node;
+  const parent = visit.parent;
+  if (!node || !node.tag) {
+    throw(new Error("Filter called on a non-node."));
   }
-  if ("footnotes" in node && node.footnotes) {
-    for (const key in node.footnotes) {
-      const note = node.footnotes[key];
-      handleAstNode(note, filterpart);
+  const trans = filterpart[node.tag];
+  if (!trans) {
+    return false;
+  }
+  if (visit.enter && "enter" in trans) {
+    let transform = trans.enter;
+    if (!transform) {
+      return false;
     }
-  }
-  if (transformOut) {
-    transformOut(node);
+    return (transform(node) === true);
+  } else {
+    let transform;
+    if ("exit" in trans) {
+      transform = trans.exit;
+    } else {
+      transform = trans;
+    }
+    if (!transform) {
+      return false;
+    }
+    return (transform(node) === true);
   }
 }
 
 // Returns the node for convenience (but modifies it in place).
 const traverse = function(node : AstNode, filterpart : FilterPart) : AstNode {
-  handleAstNode(node, filterpart);
+  for (const visit of new Walker(node)) {
+    let stopTraverse = handleAstNode(visit, filterpart);
+    if (stopTraverse) {
+      break;
+    };
+  }
   return node;
 }
 
 // Apply a filter to a document.
-const applyFilter = function(node : Doc, filter : Filter) : void {
+const applyFilter = function(doc : Doc, filter : Filter) : void {
   const f : FilterPart | FilterPart[] = filter();
+  let filterparts;
   if (Array.isArray(f)) {
-    for (let i=0; i<f.length; i++) {
-      traverse(node, f[i]);
-    }
-  } else if (typeof f === "object") {
-    traverse(node, f);
+    filterparts = f;
   } else {
-    throw(new Error("Filter returned wrong type: " + typeof f));
+    filterparts = [f];
+  }
+  for (const f of filterparts) {
+    traverse(doc, f);
+    for (const i in doc.footnotes) {
+      traverse(doc.footnotes[i], f);
+    }
+    for (const i in doc.references) {
+      traverse(doc.references[i], f);
+    }
   }
 }
 
