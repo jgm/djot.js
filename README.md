@@ -126,14 +126,14 @@ Simple example of an override:
 
 ``` js
 djot.renderHTML(
-  djot.parse("_hi_"),
-  { sourcePositions: true,
+  djot.parse("_hi_", { sourcePositions: true }),
+  { 
     overrides: {
       emph: (node, renderer) => {
-        return
-          `<span class="emphasized">${renderer.renderChildren(node)}</span>`;
+        return `<span class="emphasized">${renderer.renderChildren(node)}</span>`;
       }
-    } });
+    } 
+  });
 ```
 
 This yields: `<span class="emphasized">hi</span>`.
