@@ -13,25 +13,25 @@ const djotrenderer = (ast) => djot.renderHTML(ast, {warn: () => {}});
 const convert = (contents) => djot.renderHTML(djot.parse(contents, options), options);
 
 const files = [
-  "block-list-flat.dj",
   "block-bq-flat.dj",
-  "block-list-nested.dj",
-  "inline-escape.dj",
   "block-bq-nested.dj",
-  "block-ref-flat.dj",
   "block-code.dj",
-  "block-ref-nested.dj",
-  "inline-links-flat.dj",
   "block-fences.dj",
-  "inline-autolink.dj",
-  "inline-links-nested.dj",
   "block-heading.dj",
-  "inline-backticks.dj",
   "block-hr.dj",
+  "block-list-flat.dj",
+  "block-list-nested.dj",
+  "block-ref-flat.dj",
+  "block-ref-nested.dj",
+  "inline-autolink.dj",
+  "inline-backticks.dj",
   "inline-em-flat.dj",
-  "lorem1.dj",
   "inline-em-nested.dj",
   "inline-em-worst.dj",
+  "inline-escape.dj",
+  "inline-links-flat.dj",
+  "inline-links-nested.dj",
+  "lorem1.dj",
   "readme.dj" ];
 
 var pattern = process.argv[2];

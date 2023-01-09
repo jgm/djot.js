@@ -1,7 +1,7 @@
 import { Event } from "./event";
 import { AttributeParser } from "./attributes";
 import { Options, Warning } from "./options";
-import { pattern, find, boundedFind } from "./find";
+import { pattern, find } from "./find";
 
 // General note on the parsing strategy:  our objective is to
 // parse without backtracking. To that end, we keep a stack of
@@ -29,6 +29,7 @@ type Opener = {
   startpos: number,
   endpos: number,
   annot: null | string,
+  subMatchIndex: number,
   substartpos: null | number,
   subendpos: null | number
 }
@@ -150,7 +151,8 @@ const betweenMatched = function(
       const opener = openers[openers.length - 1];
       if (opener.endpos !== pos - 1) { // exclude empty emph
         self.clearOpeners(opener.startpos, pos);
-        self.addMatch(opener.startpos, opener.endpos, "+" + annotation);
+        self.addMatch(opener.startpos, opener.endpos, "+" + annotation,
+                      opener.matchIndex);
         self.addMatch(pos, endcloser, "-" + annotation);
         return endcloser + 1;
       }
@@ -175,7 +177,7 @@ const betweenMatched = function(
 const matchers = {
   [C_BACKTICK]: function(self: InlineParser, pos: number, endpos: number): number | null {
     const subject = self.subject;
-    const m = boundedFind(subject, pattBackticks0, pos, endpos);
+    const m = find(subject, pattBackticks0, pos, endpos);
     if (m === null) {
       return null;
     }
@@ -200,7 +202,7 @@ const matchers = {
 
   [C_BACKSLASH]: function(self: InlineParser, pos: number, endpos: number): number | null {
     const subject = self.subject;
-    const mLineEnd = boundedFind(subject, pattLineEnd, pos + 1, endpos);
+    const mLineEnd = find(subject, pattLineEnd, pos + 1, endpos);
     if (mLineEnd !== null) {
       // see if there were preceding spaces and remove them
       if (self.matches.length > 0) {
@@ -216,7 +218,7 @@ const matchers = {
           if (ep < sp) {
             self.matches.pop();
           } else {
-            self.addMatch(sp, ep, "str");
+            lastmatch.endpos = ep;
           }
         }
       }
@@ -224,7 +226,7 @@ const matchers = {
       self.addMatch(pos + 1, mLineEnd.endpos, "hard_break");
       return mLineEnd.endpos + 1;
     } else {
-      const mPunct = boundedFind(subject, pattPunctuation, pos + 1, endpos);
+      const mPunct = find(subject, pattPunctuation, pos + 1, endpos);
       if (mPunct !== null) {
         self.addMatch(pos, pos, "escape");
         self.addMatch(mPunct.startpos, mPunct.endpos, "str");
@@ -243,7 +245,7 @@ const matchers = {
 
   [C_LESSTHAN]: function(self: InlineParser, pos: number, endpos: number): number | null {
     const subject = self.subject;
-    const m = boundedFind(subject, pattAutolink, pos, endpos);
+    const m = find(subject, pattAutolink, pos, endpos);
     if (m === null) {
       return null;
     }
@@ -298,7 +300,7 @@ const matchers = {
     alwaysTrue),
 
   [C_LEFT_BRACE]: function(self: InlineParser, pos: number, endpos: number): number | null {
-    if (boundedFind(self.subject, pattDelim, pos + 1, endpos)) {
+    if (find(self.subject, pattDelim, pos + 1, endpos)) {
       self.addMatch(pos, pos, "open_marker");
       return pos + 1;
     } else if (self.allowAttributes) {
@@ -313,7 +315,7 @@ const matchers = {
   },
 
   [C_COLON]: function(self: InlineParser, pos: number, endpos: number): number | null {
-    const m = boundedFind(self.subject, pattSymbol, pos, endpos)
+    const m = find(self.subject, pattSymbol, pos, endpos)
     if (m) {
       self.addMatch(m.startpos, m.endpos, "symb");
       return m.endpos + 1;
@@ -324,7 +326,7 @@ const matchers = {
   },
 
   [C_PERIOD]: function(self: InlineParser, pos: number, endpos: number): number | null {
-    if (boundedFind(self.subject, pattTwoPeriods, pos + 1, endpos)) {
+    if (find(self.subject, pattTwoPeriods, pos + 1, endpos)) {
       self.addMatch(pos, pos + 2, "ellipses");
       return pos + 3;
     } else {
@@ -333,7 +335,7 @@ const matchers = {
   },
 
   [C_LEFT_BRACKET]: function(self: InlineParser, pos: number, endpos: number): number {
-    const m = boundedFind(self.subject, pattNoteReference, pos + 1, endpos);
+    const m = find(self.subject, pattNoteReference, pos + 1, endpos);
     if (m) { // footnote ref
       self.addMatch(pos, m.endpos, "footnote_reference");
       return m.endpos + 1;
@@ -358,17 +360,22 @@ const matchers = {
           subject.codePointAt(opener.startpos - 2) !== C_BACKSLASH;
         if (isImage) {
           self.addMatch(opener.startpos - 1, opener.startpos - 1,
-            "image_marker");
-          self.addMatch(opener.startpos, opener.endpos, "+imagetext");
+            "image_marker", opener.matchIndex - 1);
+          self.addMatch(opener.startpos, opener.endpos, "+imagetext",
+                        opener.matchIndex);
           self.addMatch(opener.substartpos || opener.startpos,
-            opener.substartpos || opener.startpos, "-imagetext");
+            opener.substartpos || opener.startpos, "-imagetext",
+            opener.subMatchIndex);
         } else {
-          self.addMatch(opener.startpos, opener.endpos, "+linktext");
+          self.addMatch(opener.startpos, opener.endpos, "+linktext",
+                        opener.matchIndex);
           self.addMatch(opener.substartpos || opener.startpos,
-            opener.substartpos || opener.startpos, "-linktext");
+            opener.substartpos || opener.startpos, "-linktext",
+            opener.subMatchIndex);
         }
         self.addMatch(opener.subendpos || opener.endpos,
-          opener.subendpos || opener.endpos, "+reference");
+          opener.subendpos || opener.endpos, "+reference",
+          opener.subMatchIndex + 1);
         self.addMatch(pos, pos, "-reference");
         // remove from openers
         self.clearOpeners(opener.startpos, pos);
@@ -376,9 +383,11 @@ const matchers = {
       } else if (pos + 1 <= endpos &&
         subject.codePointAt(pos + 1) === C_LEFT_BRACKET) {
         opener.annot = "reference_link";
+        self.addMatch(pos, pos, "str");
+        opener.subMatchIndex = self.matches.length - 1;
+        self.addMatch(pos + 1, pos + 1, "str");
         opener.substartpos = pos;  // intermediate ]
         opener.subendpos = pos + 1;  // intermediate [
-        self.addMatch(pos, pos + 1, "str");
         // remove any openers between [ and ]
         self.clearOpeners(opener.startpos + 1, pos - 1);
         return pos + 2;
@@ -386,17 +395,20 @@ const matchers = {
         subject.codePointAt(pos + 1) === C_LEFT_PAREN) {
         self.openers["("] = []; // clear ( openers
         opener.annot = "explicit_link";
+        self.addMatch(pos, pos, "str"); // ]
+        opener.subMatchIndex = self.matches.length - 1;
+        self.addMatch(pos + 1, pos + 1, "str"); // (
         opener.substartpos = pos;  // intermediate ]
         opener.subendpos = pos + 1;  // intermediate (
         self.destination = true;
-        self.addMatch(pos, pos + 1, "str");
         // remove any openers between [ and ]
         self.clearOpeners(opener.startpos + 1, pos - 1);
         return pos + 2;
       } else if (pos + 1 <= endpos &&
         subject.codePointAt(pos + 1) === C_LEFT_BRACE) {
         // assume this is attributes, bracketed span
-        self.addMatch(opener.startpos, opener.endpos, "+span");
+        self.addMatch(opener.startpos, opener.endpos, "+span",
+                      opener.matchIndex);
         self.addMatch(pos, pos, "-span");
         // remove any openers between [ and ]
         self.clearOpeners(opener.startpos, pos);
@@ -435,17 +447,23 @@ const matchers = {
           subject.codePointAt(opener.startpos - 1) === C_BANG &&
           subject.codePointAt(opener.startpos - 2) !== C_BACKSLASH;
         if (isImage) {
-          self.addMatch(opener.startpos - 1, opener.startpos - 1, "image_marker");
-          self.addMatch(opener.startpos, opener.endpos, "+imagetext");
+          self.addMatch(opener.startpos - 1, opener.startpos - 1,
+                        "image_marker", opener.matchIndex - 1);
+          self.addMatch(opener.startpos, opener.endpos, "+imagetext",
+                        opener.matchIndex);
           self.addMatch(opener.substartpos || opener.startpos,
-            opener.substartpos || opener.startpos, "-imagetext");
+            opener.substartpos || opener.startpos, "-imagetext",
+            opener.subMatchIndex);
         } else {
-          self.addMatch(opener.startpos, opener.endpos, "+linktext");
+          self.addMatch(opener.startpos, opener.endpos, "+linktext",
+                        opener.matchIndex);
           self.addMatch(opener.substartpos || opener.startpos,
-            opener.substartpos || opener.startpos, "-linktext");
+            opener.substartpos || opener.startpos, "-linktext",
+            opener.subMatchIndex);
         }
         self.addMatch(opener.subendpos || opener.endpos,
-          opener.subendpos || opener.endpos, "+destination");
+          opener.subendpos || opener.endpos, "+destination",
+          opener.subMatchIndex + 1);
         self.addMatch(pos, pos, "-destination");
         self.destination = false;
         // remove from openers
@@ -546,8 +564,15 @@ class InlineParser {
     this.matchers = matchers;
   }
 
-  addMatch(startpos: number, endpos: number, annot: string): void {
-    this.matches.push({ startpos: startpos, endpos: endpos, annot: annot });
+  addMatch(startpos: number, endpos: number,
+           annot: string, matchIndex?: number): void {
+    let match = { startpos: startpos, endpos: endpos, annot: annot };
+    if (matchIndex !== undefined) {
+      // insert into the proper place, replacing placeholder
+      this.matches.splice(matchIndex, 1, match);
+    } else {
+      this.matches.push(match);
+    }
   }
 
   inVerbatim(): boolean {
@@ -583,7 +608,6 @@ class InlineParser {
       // we're still in an attribute parse
       this.reparseAttributes();
     }
-    this.matches.sort((a,b) => a.startpos - b.startpos);
     let i = this.matches.length - 1;
     // remove trailing softbreak and any spaces
     if (this.matches[i] && this.matches[i].annot === "soft_break") {
@@ -604,12 +628,6 @@ class InlineParser {
     while (this.matches[i]) {
       let match = this.matches[i];
       let last = this.matches[i - 1];
-      while (last && last.startpos === match.startpos) {
-        // the default match has been superseded by a later match
-        last.annot = "";
-        i--;
-        last = this.matches[i - 1];
-      }
       if (last && last.annot === "str" &&
                   match.annot === "str" &&
                   last.endpos === match.startpos - 1) {
@@ -644,6 +662,7 @@ class InlineParser {
                               startpos: startpos,
                               endpos: endpos,
                               annot: null,
+                              subMatchIndex: this.matches.length,
                               substartpos: null,
                               subendpos: null });
     // add default match (to be used if we don't match the opener)
@@ -720,13 +739,13 @@ class InlineParser {
           // add attribute matches
           if (attributeStart !== null) {
             this.addMatch(attributeStart, attributeStart, "+attributes");
-            this.addMatch(ep, ep, "-attributes");
           }
           const attrMatches = this.attributeParser.matches;
           // add attribute matches
           for (const match of attrMatches) {
             this.addMatch(match.startpos, match.endpos, match.annot);
           }
+          this.addMatch(ep, ep, "-attributes");
           // restore state to prior to adding attribute parser
           this.attributeParser = null;
           this.attributeStart = null;
@@ -777,12 +796,12 @@ class InlineParser {
           }
         } else if (this.verbatim > 0) {
           if (c === 96) {
-            const m = boundedFind(subject, pattBackticks1, pos, endpos);
+            const m = find(subject, pattBackticks1, pos, endpos);
             if (m) {
               const endchar = m.endpos;
               if (m.endpos - pos + 1 === this.verbatim) {
                 // check for raw attribute
-                const m2 = boundedFind(subject, pattRawAttribute, endchar + 1, endpos);
+                const m2 = find(subject, pattRawAttribute, endchar + 1, endpos);
                 if (m2 && this.verbatimType === "verbatim") { // raw
                   this.addMatch(pos, endchar, "-" + this.verbatimType);
                   this.addMatch(m2.startpos, m2.endpos, "raw_format");

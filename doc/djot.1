@@ -190,18 +190,18 @@ return {
 \f[R]
 .fi
 .PP
-It is possible to inhibit traversal into the children of a node, by
-having the \f[V]enter\f[R] function return the value true (or any truish
-value, say \f[V]\[dq]stop\[dq]\f[R]).
-This can be used, for example, to prevent the contents of a footnote
-from being processed:
+Here is a simple filter that changes letter enumerated lists to
+roman-numbered:
 .IP
 .nf
 \f[C]
+// Changes letter-enumerated lists to roman-numbered
 return {
- footnote: {
-   enter: (e) => {
-     return true
+  list: (e) => {
+    if (e.style === \[aq]a.\[aq]) {
+      e.style = \[aq]i.\[aq];
+    } else if (e.style === \[aq]A.\[aq]) {
+      e.style = \[aq]I.\[aq];
     }
   }
 }
@@ -229,18 +229,62 @@ return [
 \f[R]
 .fi
 .PP
-Here is a simple filter that changes letter enumerated lists to
-roman-numbered:
+The filters we\[cq]ve looked at so far modify nodes in place by changing
+one of their properties (\f[V]text\f[R]).
+Sometimes we\[cq]ll want to replace a node with a different kind of
+node, or with several nodes, or to delete a node.
+In these cases we can end the filter function with a \f[V]return\f[R].
+If a single AST node is returned, it will replace the element the filter
+is processing.
+If an array of AST nodes is returned, they will be spliced in to replace
+the element.
+If an empty array is returned, the element will be deleted.
 .IP
 .nf
 \f[C]
-// Changes letter-enumerated lists to roman-numbered
+// This filter replaces certain Symb nodes with
+// formatted text.
+const substitutions = {
+  mycorp: [ { tag: \[dq]str\[dq], text: \[dq]My Corp\[dq] },
+            { tag: \[dq]superscript\[dq],
+              [ { tag: \[dq]str\[dq], text: \[dq](TM)\[dq] } ] } ],
+  myloc: { tag: \[dq]str\[dq], text: \[dq]Coyote, NM\[dq] }
+  };
 return {
-  list: (e) => {
-    if (e.style === \[aq]a.\[aq]) {
-      e.style = \[aq]i.\[aq];
-    } else if (e.style === \[aq]A.\[aq]) {
-      e.style = \[aq]I.\[aq];
+  symb: (e) => {
+    const found = substitutions[e.alias];
+    if (found) {
+      return found;
+    }
+  }
+}
+\f[R]
+.fi
+.IP
+.nf
+\f[C]
+// This filter replaces all Image nodes with their descriptions.
+return {
+  image: (e) => {
+    return e.children;
+  }
+}
+\f[R]
+.fi
+.PP
+It is possible to inhibit traversal into the children of a node, by
+having the \f[V]enter\f[R] function return an object with the property
+\f[V]stop\f[R].
+The contents of \f[V]stop\f[R] will be used as the regular return value.
+This can be used, for example, to prevent the contents of a footnote
+from being processed:
+.IP
+.nf
+\f[C]
+return {
+ footnote: {
+   enter: (e) => {
+     return {stop: [e]};
     }
   }
 }

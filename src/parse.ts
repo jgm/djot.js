@@ -193,11 +193,10 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
   const pushContainer = function(pos?: Pos) {
     const container: Container = {
       children: [],
-      data: {}
+      data: {},
+      pos: pos,
+      attributes: undefined
     };
-    if (pos) {
-      container.pos = { start: pos.start, end: pos.start };
-    }
     addBlockAttributes(container);
     containers.push(container);
   };

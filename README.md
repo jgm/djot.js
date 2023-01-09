@@ -24,7 +24,7 @@ install the library's build dependencies:
 You can install the command-line utility `djot` via
 
 ```
-npm install -g djot-js
+npm install -g @djot/djot
 ```
 
 `djot --help` will give a summary of options. For more
@@ -210,11 +210,13 @@ let ast = djot.parse("Hi there `verbatim`");
 djot.applyFilter(ast, capitalizeFilter);
 ```
 
-Filters are JavaScript programs that modify the parsed document
-prior to rendering.  Here is an example of a filter that
+Filters are JavaScript programs that alter the AST between
+parsing and rendering. They can be used for customization.
+
+Here is an example of a filter that
 capitalizes all the content text in a document:
 
-```
+```js
 // This filter capitalizes regular text, leaving code and URLs unaffected
 return {
   str: (el) => {
@@ -223,32 +225,17 @@ return {
 }
 ```
 
-Save this as `caps.js` use tell djot to use it using
-
-```
-djot --filter caps input.js
-```
-
-Note: never run a filter from a source you don't trust,
-without inspecting the code carefully. Filters are programs,
-and like any programs they can do bad things on your system.
-
 Here's a filter that prints a list of all the URLs you
 link to in a document.  This filter doesn't alter the
 document at all; it just prints the list to stderr.
 
-```
+```js
 return {
   link: (el) => {
     process.stderr:write(el.destination + "\n")
   }
 }
 ```
-
-A filter walks the document's abstract syntax tree, applying
-functions to like-tagged nodes, so you will want to get familiar
-with how djot's AST is designed. The easiest way to do this is
-to use `djot --ast` or `djot --astpretty`.
 
 By default filters do a bottom-up traversal; that is, the
 filter for a node is run after its children have been processed.
@@ -266,7 +253,7 @@ first example above, it is treated as an `exit' function.
 The following filter will capitalize text
 that is nested inside emphasis, but not other text:
 
-``` js
+```js
 // This filter capitalizes the contents of emph
 // nodes instead of italicizing them.
 let capitalize = 0;
@@ -288,25 +275,10 @@ return {
 }
 ```
 
-It is possible to inhibit traversal into the children of a node,
-by having the `enter` function return the value true (or any truish
-value, say `"stop"`).  This can be used, for example, to prevent
-the contents of a footnote from being processed:
-
-``` js
-return {
- footnote: {
-   enter: (e) => {
-     return true
-    }
-  }
-}
-```
-
 A single filter may return a table with multiple tables, which will be
 applied sequentially:
 
-``` js
+```js
 // This filter includes two sub-filters, run in sequence
 return [
   { // first filter changes (TM) to trademark symbol
@@ -322,21 +294,60 @@ return [
 ]
 ```
 
-Here is a simple filter that changes letter enumerated lists
-to roman-numbered:
+The filters we've looked at so far modify nodes in place by
+changing one of their properties (`text`).
+Sometimes we'll want to replace a node with a different kind of
+node, or with several nodes, or to delete a node.  In these
+cases we can end the filter function with a `return`.
+If a single AST node is returned, it will replace the element
+the filter is processing.  If an array of AST nodes is returned,
+they will be spliced in to replace the element.  If an empty
+array is returned, the element will be deleted.
 
-``` js
-// Changes letter-enumerated lists to roman-numbered
+```js
+// This filter replaces certain Symb nodes with
+// formatted text.
+const substitutions = {
+  mycorp: [ { tag: "str", text: "My Corp" },
+            { tag: "superscript",
+              [ { tag: "str", text: "(TM)" } ] } ],
+  myloc: { tag: "str", text: "Coyote, NM" }
+  };
 return {
-  list: (e) => {
-    if (e.style === 'a.') {
-      e.style = 'i.';
-    } else if (e.style === 'A.') {
-      e.style = 'I.';
+  symb: (e) => {
+    const found = substitutions[e.alias];
+    if (found) {
+      return found;
     }
   }
 }
 ```
+
+```js
+// This filter replaces all Image nodes with their descriptions.
+return {
+  image: (e) => {
+    return e.children;
+  }
+}
+```
+
+It is possible to inhibit traversal into the children of a node,
+by having the `enter` function return an object with the
+property `stop`. The contents of `stop` will be used as the regular
+return value. This can be used, for example, to prevent
+the contents of a footnote from being processed:
+
+```js
+return {
+ footnote: {
+   enter: (e) => {
+     return {stop: [e]};
+    }
+  }
+}
+```
+
 
 ## The AST
 

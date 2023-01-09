@@ -1,4 +1,4 @@
-import { Doc, AstNode } from "./ast";
+import { Doc, AstNode, HasChildren } from "./ast";
 
 /* Support filters that walk the AST and transform a
  * document between parsing and rendering, like pandoc Lua filters.
@@ -58,20 +58,6 @@ import { Doc, AstNode } from "./ast";
  *    }
  * }
  *
- * It is possible to inhibit traversal into the children of a node,
- * by having the `enter` function return the value true (or any truish
- * value, say `"stop"`).  This can be used, for example, to prevent
- * the contents of a footnote from being processed:
- *
- *
- * return {
- *  footnote: {
- *    enter: (e) => {
- *      return true
- *     }
- *   }
- * }
- *
  * A single filter may return a table with multiple tables, which will be
  * applied sequentially:
  *
@@ -88,69 +74,196 @@ import { Doc, AstNode } from "./ast";
  *     }
  *   }
  * ]
+ *
+ * The filters we've looked at so far modify nodes in place by
+ * changing one of their properties (`text`).
+ * Sometimes we'll want to replace a node with a different kind of
+ * node, or with several nodes, or to delete a node.  In these
+ * cases we can end the filter function with a `return`.
+ * If a single AST node is returned, it will replace the element
+ * the filter is processing.  If an array of AST nodes is returned,
+ * they will be spliced in to replace the element.  If an empty
+ * array is returned, the element will be deleted.
+ *
+ * // This filter replaces certain Symb nodes with
+ * // formatted text.
+ * const substitutions = {
+ *   mycorp: [ { tag: "str", text: "My Corp" },
+ *             { tag: "superscript",
+ *               [ { tag: "str", text: "(TM)" } ] } ],
+ *   myloc: { tag: "str", text: "Coyote, NM" }
+ *   };
+ * return {
+ *   symb: (e) => {
+ *     const found = substitutions[e.alias];
+ *     if (found) {
+ *       return found;
+ *     }
+ *   }
+ * }
+ *
+ * // This filter replaces all Image nodes with their descriptions.
+ * return {
+ *   image: (e) => {
+ *     return e.children;
+ *   }
+ * }
+ * It is possible to inhibit traversal into the children of a node,
+ * by having the `enter` function return an object with the
+ * property `stop`. The contents of `stop` will be used as the regular
+ * return value. This can be used, for example, to prevent
+ * the contents of a footnote from being processed:
+ *
+ *
+ * return {
+ *  footnote: {
+ *    enter: (e) => {
+ *      return {stop: [e]};
+ *     }
+ *   }
+ * }
+ *
  */
 
-type Transform = (node : any) => void | boolean;
-type Action = Transform | { enter ?: Transform, exit : Transform };
+type Transform = (node : any) =>
+                   void
+                  | AstNode
+                  | AstNode[]
+                  | {stop: void | AstNode | AstNode[]};
+type Action = Transform | { enter : Transform, exit ?: Transform };
 type FilterPart = Record<string, Action>;
 type Filter = () => (FilterPart | FilterPart[]);
 
-const handleAstNode = function(node : any, filterpart : FilterPart) : void {
-  if (!node || !node.tag) {
-    throw(new Error("Filter caled on a non-node."));
+class Walker {
+  finished  = false;
+  top: AstNode;
+  current: AstNode;
+  stack: {node : HasChildren<AstNode>, childIndex: number}[] = [];
+  enter = true;
+
+  constructor(node : AstNode) {
+    this.top = node;
+    this.current = node;
   }
-  let transformIn : Transform | undefined;
-  let transformOut : Transform | undefined;
-  const transform = filterpart[node.tag];
-  if (transform) {
-    if ("exit" in transform && transform.exit) {
-      transformOut = transform.exit;
-      transformIn = transform.enter;
-    } else if (typeof transform === "function") {
-      transformOut = transform;
-    } else {
-      throw(new Error("Transform has wrong type."));
-    }
-    if (transformIn) {
-      const stopTraversal = transformIn(node);
-      if (stopTraversal) {
-        return;
+
+  walk(callback : (walker : Walker) => void) {
+    while (!this.finished) {
+      callback(this); // apply the action to current this state
+      const topStack = this.stack && this.stack[this.stack.length - 1];
+      this.enter = this.enter && "children" in this.current;
+      if (this.enter) {
+        if ("children" in this.current &&
+            this.current.children.length > 0) {
+          // move to first child
+          this.stack.push({ node: this.current, childIndex: 0 });
+          this.current = this.current.children[0];
+          this.enter = true;
+        } else {
+          // no children, set to exit
+          this.enter = false;
+        }
+      } else { // exit
+        if (topStack) {
+          // try next sibling
+          topStack.childIndex++;
+          const nextChild = topStack.node.children[topStack.childIndex];
+          if (nextChild) {
+            this.current = nextChild;
+            this.enter = true;
+          } else {
+            this.stack.pop();
+            // go up to parent
+            this.current = topStack.node as AstNode;
+            this.enter = false;
+          }
+        } else {
+          this.finished = true;
+        }
       }
     }
   }
-  if ("children" in node && node.children) {
-    node.children.forEach((child : AstNode) => {
-      handleAstNode(child, filterpart);
-    });
+}
+
+const applyFilterPartToNode = function(node : AstNode, enter : boolean,
+                               filterpart : FilterPart) {
+  if (!node || !node.tag) {
+    throw(new Error("Filter called on a non-node."));
   }
-  if ("footnotes" in node && node.footnotes) {
-    for (const key in node.footnotes) {
-      const note = node.footnotes[key];
-      handleAstNode(note, filterpart);
+  const trans = filterpart[node.tag];
+  if (!trans) {
+    return false;
+  }
+  if (enter && "enter" in trans) {
+    const transform = trans.enter;
+    if (!transform) {
+      return false;
     }
-  }
-  if (transformOut) {
-    transformOut(node);
+    return transform(node);
+  } else {
+    let transform;
+    if ("exit" in trans && trans.exit) {
+      transform = trans.exit;
+    } else if ("enter" in trans && trans.enter) {
+      transform = trans.enter;
+    } else {
+      transform = trans;
+    }
+    if (typeof transform === "function") {
+      return transform(node);
+    }
   }
 }
 
 // Returns the node for convenience (but modifies it in place).
 const traverse = function(node : AstNode, filterpart : FilterPart) : AstNode {
-  handleAstNode(node, filterpart);
+  new Walker(node).walk((walker) => {
+    let result = applyFilterPartToNode(walker.current, walker.enter,
+                                       filterpart);
+    const stackTop = walker.stack[walker.stack.length - 1];
+    if (typeof result === "object" && "stop" in result && result.stop) {
+      result = result.stop;
+      walker.enter = false; // set to exit, which stops traversal of children
+    }
+    if (result) {
+      if (Array.isArray(result)) {
+        if (stackTop) {
+          stackTop.node.children.splice(stackTop.childIndex, 1, ...result);
+          // stackTop.childIndex += (result.length - 1);
+          walker.current = stackTop.node.children[stackTop.childIndex];
+        } else {
+          throw(Error("Cannot replace top node with multiple nodes"));
+        }
+      } else if (typeof result === "object" && "tag" in result && result.tag) {
+        if (stackTop) {
+          stackTop.node.children[stackTop.childIndex] = result;
+        } else {
+          return result;
+        }
+      }
+    }
+  });
+
   return node;
 }
 
+
 // Apply a filter to a document.
-const applyFilter = function(node : Doc, filter : Filter) : void {
+const applyFilter = function(doc : Doc, filter : Filter) : void {
   const f : FilterPart | FilterPart[] = filter();
+  let filterparts;
   if (Array.isArray(f)) {
-    for (let i=0; i<f.length; i++) {
-      traverse(node, f[i]);
-    }
-  } else if (typeof f === "object") {
-    traverse(node, f);
+    filterparts = f;
   } else {
-    throw(new Error("Filter returned wrong type: " + typeof f));
+    filterparts = [f];
+  }
+  for (const f of filterparts) {
+    traverse(doc, f);
+    for (const i in doc.footnotes) {
+      traverse(doc.footnotes[i], f);
+    }
+    for (const i in doc.references) {
+      traverse(doc.references[i], f);
+    }
   }
 }
 

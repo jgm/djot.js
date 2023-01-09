@@ -30,12 +30,15 @@ const getListStyles = function(marker: string): string[] {
   }
 }
 
-const isSpaceOrTab = function(cp: number) {
+const isSpaceOrTab = function(cp?: number) : boolean {
   return (cp === 32 || cp === 9);
 }
 
+const isEolChar = function(cp?: number) : boolean {
+  return (cp === 10 || cp === 13);
+}
+
 const pattEndline = pattern("[ \\t]*\\r?\\n");
-const pattNonNewlines = pattern("[^\\n\\r]*");
 const pattWord = pattern("^\\w+\\s");
 const pattWhitespace = pattern("[ \\t\\r\\n]");
 const pattNonWhitespace = pattern("[^ \\t\\r\\n]+");
@@ -780,29 +783,23 @@ class EventParser {
   skipSpace(): void {
     const subject = this.subject;
     let newpos = this.pos;
-    while (true) {
-      const cp = subject.codePointAt(newpos);
-      if (cp && isSpaceOrTab(cp)) {
-        newpos++;
-      } else {
-        break;
-      }
-    }
+    while (isSpaceOrTab(subject.codePointAt(newpos))) newpos++;
     this.indent = newpos - this.startline;
     this.pos = newpos;
   }
 
   // set this.starteol, this.endeol
   getEol(): void {
-    const m = find(this.subject, pattNonNewlines, this.pos);
-    if (m) {
-      this.starteol = m.endpos + 1;
-      if (this.subject.codePointAt(this.starteol) === 13 &&
-        this.subject.codePointAt(this.starteol + 1) === 10) { // CR
-        this.endeol = this.starteol + 1;
-      } else {
-        this.endeol = this.starteol;
-      }
+    const subject = this.subject;
+    let i = this.pos;
+    while (!isEolChar(subject.codePointAt(i))) {
+      i++;
+    }
+    this.starteol = i;
+    if (subject.codePointAt(i) === 13 && subject.codePointAt(i+1) === 10) {
+      this.endeol = i+1;
+    } else {
+      this.endeol = i;
     }
   }
 
