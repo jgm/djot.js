@@ -134,83 +134,58 @@ type Action = Transform | { enter ?: Transform, exit : Transform };
 type FilterPart = Record<string, Action>;
 type Filter = () => (FilterPart | FilterPart[]);
 
-type Visit = {
-  node: AstNode;
-  enter: boolean;
-  parent?: { node: HasChildren<AstNode>, childIndex: number};
-}
-
-type NodeIterator = {
-  next: () => { value: Visit, done: boolean };
-}
-
-
 class Walker {
-  finished : boolean = false;
+  finished  = false;
   top: AstNode;
   current: AstNode;
   stack: {node : HasChildren<AstNode>, childIndex: number}[] = [];
-  enter: boolean = true;
+  enter = true;
 
   constructor(node : AstNode) {
     this.top = node;
     this.current = node;
   }
 
-  [Symbol.iterator](): NodeIterator {
-    let walker : Walker = this;
-    return {
-      next() {
-        const topStack =
-                   walker.stack && walker.stack[walker.stack.length - 1];
-        const current = walker.current;
-        const parent = topStack ? { node: topStack.node,
-                                    childIndex: topStack.childIndex }
-                                 : undefined;
-        if (walker.finished) {
-          return { value: { node: walker.current, enter: false,
-                            parent: parent },
-                   done: true };
+  walk(callback : (walker : Walker) => void) {
+    while (!this.finished) {
+      callback(this); // apply the action to current this state
+      const topStack = this.stack && this.stack[this.stack.length - 1];
+      this.enter = this.enter && "children" in this.current;
+      if (this.enter) {
+        if ("children" in this.current &&
+            this.current.children.length > 0) {
+          // move to first child
+          this.stack.push({ node: this.current, childIndex: 0 });
+          this.current = this.current.children[0];
+          this.enter = true;
+        } else {
+          // no children, set to exit
+          this.enter = false;
         }
-        walker.enter = walker.enter && "children" in current;
-        if (walker.enter) {
-          if ("children" in current && current.children.length > 0) {
-            walker.stack.push({ node: current, childIndex: 0 });
-            walker.current = current.children[0];
-            walker.enter = true;
+      } else { // exit
+        if (topStack) {
+          // try next sibling
+          topStack.childIndex++;
+          const nextChild = topStack.node.children[topStack.childIndex];
+          if (nextChild) {
+            this.current = nextChild;
+            this.enter = true;
           } else {
-            walker.enter = false;
+            this.stack.pop();
+            // go up to parent
+            this.current = topStack.node as AstNode;
+            this.enter = false;
           }
-          return { value: { node: current, enter: true,
-                            parent: parent }, done: false };
-        } else { // exit
-          if (topStack) {
-            // try next sibling
-            topStack.childIndex++;
-            let nextChild = topStack.node.children[topStack.childIndex];
-            if (nextChild) {
-              walker.current = nextChild;
-              walker.enter = true;
-            } else {
-              walker.stack.pop();
-              // go up to parent
-              walker.current = topStack.node as AstNode;
-              walker.enter = false;
-            }
-          } else {
-            walker.finished = true;
-          }
-          return { value: { node: current, enter: false, parent: parent },
-                     done: false } ;
+        } else {
+          this.finished = true;
         }
       }
     }
   }
 }
 
-// returns true to stop traverse
-const handleAstNode = function(visit : Visit, filterpart : FilterPart) {
-  const node = visit.node;
+const applyFilterPartToNode = function(node : AstNode, enter : boolean,
+                               filterpart : FilterPart) {
   if (!node || !node.tag) {
     throw(new Error("Filter called on a non-node."));
   }
@@ -218,8 +193,8 @@ const handleAstNode = function(visit : Visit, filterpart : FilterPart) {
   if (!trans) {
     return false;
   }
-  if (visit.enter && "enter" in trans) {
-    let transform = trans.enter;
+  if (enter && "enter" in trans) {
+    const transform = trans.enter;
     if (!transform) {
       return false;
     }
@@ -240,45 +215,33 @@ const handleAstNode = function(visit : Visit, filterpart : FilterPart) {
 
 // Returns the node for convenience (but modifies it in place).
 const traverse = function(node : AstNode, filterpart : FilterPart) : AstNode {
-  let walker = new Walker(node);
-  for (const visit of walker) {
-    let result = handleAstNode(visit, filterpart);
-    let stopTraversal = false;
+  new Walker(node).walk((walker) => {
+    let result = applyFilterPartToNode(walker.current, walker.enter,
+                                       filterpart);
+    const stackTop = walker.stack[walker.stack.length - 1];
     if (result && "stop" in result) {
-      stopTraversal = true;
       result = result.stop;
+      walker.enter = false; // set to exit, which stops traversal of children
     }
     if (result) {
       if (Array.isArray(result)) {
-        if (visit.parent) {
-          visit.parent.node.children.splice(visit.parent.childIndex, 1,
-                                          ...result);
+        if (stackTop) {
+          stackTop.node.children.splice(stackTop.childIndex, 1, ...result);
+          // stackTop.childIndex += (result.length - 1);
+          walker.current = stackTop.node.children[stackTop.childIndex];
         } else {
           throw(Error("Cannot replace top node with multiple nodes"));
         }
       } else {
-        if (visit.parent) {
-          visit.parent.node.children[visit.parent.childIndex] = result;
+        if (stackTop) {
+          stackTop.node.children[stackTop.childIndex] = result;
         } else {
           return result;
         }
       }
     }
-    if (stopTraversal && walker.enter) {
-      if (visit.node !== walker.current) {
-        // find our original node and revert current to that...
-        let stackTop = walker.stack.pop();
-        if (stackTop) {
-          walker.current = stackTop.node as AstNode;
-          walker.enter = false;
-        } else {
-          break;
-        }
-      } else if (walker.enter) {
-        walker.enter = false;
-      }
-    }
-  }
+  });
+
   return node;
 }
 

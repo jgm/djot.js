@@ -44,6 +44,12 @@ const imagesToDescriptions : Filter = () => {
   }
 }
 
+const deleteEmph : Filter = () => {
+  return {
+    emph: (e) => []
+  }
+}
+
 const fancyFilter : Filter = () => {
   let capitalize = 0;
   return {
@@ -158,5 +164,17 @@ footnotes
           str text="emph"
 `);
   });
+
+  it("deletes nodes", () => {
+    const ast = parse("Hello _there_ friend");
+    applyFilter(ast, deleteEmph);
+    expect(renderAST(ast)).toEqual(
+`doc
+  para
+    str text="Hello "
+    str text=" friend"
+`);
+  });
+
 
 });
