@@ -24,7 +24,7 @@ install the library's build dependencies:
 You can install the command-line utility `djot` via
 
 ```
-npm install -g djot-js
+npm install -g @djot/djot
 ```
 
 `djot --help` will give a summary of options. For more
