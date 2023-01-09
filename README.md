@@ -130,8 +130,7 @@ djot.renderHTML(
   { 
     overrides: {
       emph: (node, renderer) => {
-        return
-          `<span class="emphasized">${renderer.renderChildren(node)}</span>`;
+        return `<span class="emphasized">${renderer.renderChildren(node)}</span>`;
       }
     } 
   });
