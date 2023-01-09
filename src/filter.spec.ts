@@ -50,6 +50,12 @@ const deleteEmph : Filter = () => {
   }
 }
 
+const loopyFilter : Filter = () => {
+  return {
+    emph: (e) => [{tag: "str", text: "hi"},e]
+  }
+}
+
 const fancyFilter : Filter = () => {
   let capitalize = 0;
   return {
@@ -172,6 +178,21 @@ footnotes
 `doc
   para
     str text="Hello "
+    str text=" friend"
+`);
+  });
+
+
+  it("doesn't loop", () => {
+    const ast = parse("Hello _there_ friend");
+    applyFilter(ast, loopyFilter);
+    expect(renderAST(ast)).toEqual(
+`doc
+  para
+    str text="Hello "
+    str text="hi"
+    emph
+      str text="there"
     str text=" friend"
 `);
   });

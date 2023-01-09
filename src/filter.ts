@@ -228,8 +228,12 @@ const traverse = function(node : AstNode, filterpart : FilterPart) : AstNode {
       if (Array.isArray(result)) {
         if (stackTop) {
           stackTop.node.children.splice(stackTop.childIndex, 1, ...result);
-          // stackTop.childIndex += (result.length - 1);
+          // next line is needed for cases where we delete an element
           walker.current = stackTop.node.children[stackTop.childIndex];
+          // adjust childIndex to skip multiple items added;
+          if (result.length > 1) {
+            stackTop.childIndex += result.length - 1;
+          }
         } else {
           throw(Error("Cannot replace top node with multiple nodes"));
         }
