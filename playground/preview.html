@@ -21,6 +21,24 @@ th, td {
   border: 1px solid #ddd;
   padding: 0 0.3em;
 }
+ul.task-list {
+  list-style: none;
+  padding-left: 0.5em;
+}
+ul.task-list > li {
+  margin-left: 1.5em;
+  padding-left: 0;
+}
+li.checked:before {
+  content: "☒";
+  margin-left: -1.5em;
+  float: left;
+}
+li.unchecked:before {
+  content: "☐";
+  margin-left: -1.5em;
+  float: left;
+}
   </style>
   <script type="text/javascript" id="MathJax-script" async
           src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
