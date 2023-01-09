@@ -130,7 +130,7 @@ type Transform = (node : any) =>
                   | AstNode
                   | AstNode[]
                   | {stop: void | AstNode | AstNode[]};
-type Action = Transform | { enter ?: Transform, exit : Transform };
+type Action = Transform | { enter : Transform, exit ?: Transform };
 type FilterPart = Record<string, Action>;
 type Filter = () => (FilterPart | FilterPart[]);
 
@@ -201,15 +201,16 @@ const applyFilterPartToNode = function(node : AstNode, enter : boolean,
     return transform(node);
   } else {
     let transform;
-    if ("exit" in trans) {
+    if ("exit" in trans && trans.exit) {
       transform = trans.exit;
+    } else if ("enter" in trans && trans.enter) {
+      transform = trans.enter;
     } else {
       transform = trans;
     }
-    if (!transform) {
-      return false;
+    if (typeof transform === "function") {
+      return transform(node);
     }
-    return transform(node);
   }
 }
 
@@ -219,7 +220,7 @@ const traverse = function(node : AstNode, filterpart : FilterPart) : AstNode {
     let result = applyFilterPartToNode(walker.current, walker.enter,
                                        filterpart);
     const stackTop = walker.stack[walker.stack.length - 1];
-    if (result && "stop" in result) {
+    if (typeof result === "object" && "stop" in result && result.stop) {
       result = result.stop;
       walker.enter = false; // set to exit, which stops traversal of children
     }
@@ -232,7 +233,7 @@ const traverse = function(node : AstNode, filterpart : FilterPart) : AstNode {
         } else {
           throw(Error("Cannot replace top node with multiple nodes"));
         }
-      } else {
+      } else if (typeof result === "object" && "tag" in result && result.tag) {
         if (stackTop) {
           stackTop.node.children[stackTop.childIndex] = result;
         } else {
