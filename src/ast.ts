@@ -364,7 +364,8 @@ interface Doc extends HasAttributes {
   children: Block[];
 }
 
-type AstNode = Doc
+type AstNode =
+  | Doc
   | Block
   | Inline
   | ListItem
