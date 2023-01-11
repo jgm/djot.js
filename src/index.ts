@@ -4,3 +4,4 @@ export { renderHTML, HTMLRenderer } from "./html";
 export { applyFilter } from "./filter";
 export { fromPandoc, toPandoc } from "./pandoc";
 export { renderDjot } from "./djot-renderer";
+export { version } from "./version";
