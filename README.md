@@ -348,6 +348,13 @@ return {
 }
 ```
 
+### Getting the version
+
+```js
+djot.version : string
+```
+
+returns the version number.
 
 ## The AST
 
