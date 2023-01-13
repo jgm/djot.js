@@ -820,7 +820,13 @@ class PandocParser {
         } else if (block.t === "OrderedList") {
           const start = block.c[0][0];
           let pandocStyle = block.c[0][1].t;
+          if (pandocStyle === "DefaultStyle") {
+            pandocStyle = "Decimal";
+          }
           let pandocDelim = block.c[0][2].t;
+          if (pandocDelim === "DefaultDelim") {
+            pandocDelim = "Period";
+          }
           let style : OrderedListStyle = styleMap[pandocStyle][pandocDelim];
           return {tag: "ordered_list",
                   style: style,
