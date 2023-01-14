@@ -80,12 +80,11 @@ class HTMLRenderer {
 
   renderTag(tag: string, node: AstNode, extraAttrs?: Record<string, string>)
     : string {
-    let result = `<${tag}`;
+    let attributes = "";
     if ("attributes" in node || extraAttrs || node.pos) {
-      result += this.renderAttributes(node, extraAttrs);
+      attributes = this.renderAttributes(node, extraAttrs);
     }
-    result += ">";
-    return result;
+    return `<${tag}${attributes}>`;
   }
 
   renderCloseTag(tag: string): string {
@@ -94,12 +93,9 @@ class HTMLRenderer {
 
   inTags(tag: string, node: HasChildren<AstNode>, newlines: number,
     extraAttrs?: Record<string, string>): string {
-    let result = this.renderTag(tag, node as AstNode, extraAttrs);
-    if (newlines >= 2) { result += "\n"; }
-    result += this.renderChildren(node);
-    result += this.renderCloseTag(tag);
-    if (newlines >= 1) { result += "\n";  }
-    return result;
+    const afterOpenSpace = newlines >= 2 ? "\n" : "";
+    const afterCloseSpace = newlines >= 1 ? "\n" : "";
+    return `${this.renderTag(tag, node as AstNode, extraAttrs)}${afterOpenSpace}${this.renderChildren(node)}</${tag}>${afterCloseSpace}`;
   }
 
   addBacklink(orignote: Footnote, ident: number): Footnote {
@@ -178,14 +174,11 @@ class HTMLRenderer {
 
 
       case "para": {
-        let result  = "";
         if (this.tight) {
-          result += this.renderChildren(node);
-          result += "\n";
+          return `${this.renderChildren(node)}\n`;
         } else {
-          result += this.inTags("p", node, 1);
+          return this.inTags("p", node, 1);
         }
-        return result;
       }
 
       case "block_quote":
@@ -312,15 +305,11 @@ class HTMLRenderer {
       }
 
       case "str": {
-        let result = "";
         if (node.attributes) {
-          result += this.renderTag("span", node);
-          result += this.escape(node.text);
-          result += this.renderCloseTag("span");
+          return `${this.renderTag("span", node)}${this.escape(node.text)}</span>`;
         } else {
-          result += this.escape(node.text);
+          return this.escape(node.text);
         }
-        return result;
       }
 
       case "smart_punctuation":
