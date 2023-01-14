@@ -743,8 +743,7 @@ class EventParser {
   }
 
   getInlineMatches(): void {
-    const tip = this.tip();
-    const ilparser = tip && tip.inlineParser;
+    const ilparser = this.tip()?.inlineParser;
     if (ilparser) {
       for (const match of ilparser.getMatches()) {
         this.matches.push(match);

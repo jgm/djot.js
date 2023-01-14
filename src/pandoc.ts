@@ -2,7 +2,7 @@ import { AstNode, Doc, Block, Caption, Row, Cell, Alignment,
          TaskListItem, OrderedListStyle, ListItem, Inline, Reference,
          Span, Verbatim, Image, Link,
          Attributes, CodeBlock, Heading, Div, Table, CheckboxStatus,
-         DefinitionListItem, Term, Definition, Footnote } from "./ast";
+         DefinitionListItem, Footnote } from "./ast";
 import { Options, Warning } from "./options";
 
 interface Pandoc {
@@ -37,9 +37,9 @@ const styleMap : Record<string,Record<string,OrderedListStyle>> =
                   OneParen: "I)",
                   TwoParens: "(I)" } };
 
-let reverseStyleMap : Record<string, [string,string]> = {};
-for (let i in styleMap) {
-  for (let j in styleMap[i]) {
+const reverseStyleMap : Record<string, [string,string]> = {};
+for (const i in styleMap) {
+  for (const j in styleMap[i]) {
     reverseStyleMap[styleMap[i][j]] = [i,j];
   }
 }
@@ -155,7 +155,7 @@ class PandocRenderer {
         break;
 
       case "definition_list": {
-        let items : DefinitionListItem[] =
+        const items : DefinitionListItem[] =
                      node.children.map(this.toPandocDefinitionListItem(node));
         elts.push({ t: "DefinitionList", c: items } );
         break;
@@ -172,7 +172,7 @@ class PandocRenderer {
           elts.push({ t: "BulletList", c: items } );
         } else {
           items = node.children.map(this.toPandocListItem(node));
-          let [style, delim] = reverseStyleMap[node.style as string];
+          const [style, delim] = reverseStyleMap[node.style as string];
           const start : number = node.start || 1;
           elts.push({ t: "OrderedList", c: [[start, {t: style}, {t: delim}],
                                             items] } );
@@ -794,7 +794,7 @@ class PandocParser {
                                      tight = true;
                                    } else if (b.t === "Para") {
                                      tight = false;
-                                   };
+                                   }
                                    return this.fromPandocBlock(b);
                                 });
           if (checkbox !== null) {
@@ -827,7 +827,7 @@ class PandocParser {
           if (pandocDelim === "DefaultDelim") {
             pandocDelim = "Period";
           }
-          let style : OrderedListStyle = styleMap[pandocStyle][pandocDelim];
+          const style : OrderedListStyle = styleMap[pandocStyle][pandocDelim];
           return {tag: "ordered_list",
                   style: style,
                   start: start,
@@ -839,7 +839,7 @@ class PandocParser {
       case "Table": {
         const attr = fromPandocAttr(block.c[0]);
         const rawcaption = block.c[1][1];
-        let caption : Caption = { tag: "caption", children: []};
+        const caption : Caption = { tag: "caption", children: []};
         if (rawcaption.length > 1 ||
             (rawcaption.length === 1 && !isPlainOrPara(rawcaption[0]))) {
           this.warn(new Warning("Skipping block-level content in table caption."));

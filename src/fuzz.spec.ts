@@ -19,15 +19,15 @@ const random = function(low : number, high : number) : number {
 }
 
 const randomstring = function() : string {
-  let numlines = random(1, MAXLINES);
-  let buffer : string[] = [];
+  const numlines = random(1, MAXLINES);
+  const buffer : string[] = [];
   for (let j=1; j <= numlines; j++) {
     let res = "";
     // -1 to privilege blank lines
     let len = random(-1, MAXLENGTH);
     if (len < 0) { len = 0 }
     for (let i=1; i<=len; i++) {
-      let charclass = random(1, 4);
+      const charclass = random(1, 4);
       if (charclass < 4) {
         res = res + activechars[random(0, activecharslen - 1)];
       } else {
@@ -43,11 +43,11 @@ describe("Fuzz tests", () => {
   const timeout = 80;
   it("does not exhibit pathological behavior on random input", () => {
     for (let i=1; i <= NUMTESTS; i++) {
-      let s = randomstring();
-      let startTime = performance.now();
+      const s = randomstring();
+      const startTime = performance.now();
       const ast = parse(s, {warn: (() => {})});
-      let endTime = performance.now();
-      let elapsed = endTime - startTime;
+      const endTime = performance.now();
+      const elapsed = endTime - startTime;
       let status : string;
       if (!ast) {
         status = "Could not parse:\n" + s;

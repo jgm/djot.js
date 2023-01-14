@@ -426,7 +426,7 @@ const matchers = {
     return pos + 1;
   },
 
-  [41]: function(self: InlineParser, pos: number, endpos: number): number | null {
+  [C_RIGHT_PAREN]: function(self: InlineParser, pos: number, endpos: number): number | null {
     if (!self.destination) {
       return null;
     }
@@ -543,7 +543,7 @@ class InlineParser {
   attributeParser: null | AttributeParser; // attribute parser
   attributeStart: null | number; // start pos of potential attribute
   attributeSlices: null | { startpos: number, endpos: number }[]; // slices we've tried to parse as atttributes
-  matchers: { [codepoint: number]: (self: InlineParser, sp: number, ep: number) => null | number }; // functions to handle different code points
+  matchers: Record<number, (self: InlineParser, sp: number, ep: number) => null | number>; // functions to handle different code points
 
   constructor(subject: string,
               options: Options = {}) {
@@ -566,7 +566,7 @@ class InlineParser {
 
   addMatch(startpos: number, endpos: number,
            annot: string, matchIndex?: number): void {
-    let match = { startpos: startpos, endpos: endpos, annot: annot };
+    const match = { startpos: startpos, endpos: endpos, annot: annot };
     if (matchIndex !== undefined) {
       // insert into the proper place, replacing placeholder
       this.matches.splice(matchIndex, 1, match);
@@ -612,7 +612,7 @@ class InlineParser {
     // remove trailing softbreak and any spaces
     if (this.matches[i] && this.matches[i].annot === "soft_break") {
       this.matches.pop();
-      let match = this.matches[this.matches.length - 1];
+      const match = this.matches[this.matches.length - 1];
       if (match && match.annot === "str" &&
           subject.codePointAt(match.endpos) === 32) {
         while (match.endpos >= match.startpos &&
@@ -626,8 +626,8 @@ class InlineParser {
     }
     i = this.matches.length - 1;
     while (this.matches[i]) {
-      let match = this.matches[i];
-      let last = this.matches[i - 1];
+      const match = this.matches[i];
+      const last = this.matches[i - 1];
       if (last && last.annot === "str" &&
                   match.annot === "str" &&
                   last.endpos === match.startpos - 1) {
@@ -637,7 +637,7 @@ class InlineParser {
       }
       i--;
     }
-    let sorted = this.matches.filter((m) => m.annot !== "");
+    const sorted = this.matches.filter((m) => m.annot !== "");
     // add -verbatim if needed
     if (sorted.length > 0 && this.verbatim > 0) { // unclosed verbatim
       const last = sorted[sorted.length - 1];

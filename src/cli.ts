@@ -10,7 +10,7 @@ import { applyFilter } from "./filter";
 import { fromPandoc, toPandoc } from "./pandoc";
 import { renderDjot } from "./djot-renderer";
 import { version } from "./version";
-import { Options, Warning } from "./options";
+import { Warning } from "./options";
 
 const warn = function(warning: Warning) : void {
   process.stderr.write(warning.render() + "\n");

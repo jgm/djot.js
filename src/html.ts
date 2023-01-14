@@ -48,7 +48,7 @@ class HTMLRenderer {
 
   renderAttributes(node: HasAttributes, extraAttrs?: Record<string, string>)
     : string {
-    let result = ""
+    let result  = "";
     if (extraAttrs) {
       for (const k in extraAttrs) {
         if (k === "class") {
@@ -131,7 +131,7 @@ class HTMLRenderer {
     if ("tight" in node) {
       this.tight = !!node.tight;
     }
-    for (let child of node.children) {
+    for (const child of node.children) {
       result += this.renderAstNode(child);
     }
     if ("tight" in node) {
@@ -149,7 +149,7 @@ class HTMLRenderer {
   }
 
   renderNotes(notes: Record<string, Footnote>): string {
-    let result : string = "";
+    let result  = "";
     const orderedFootnotes = [];
     for (const k in notes) {
       const index = this.footnoteIndex[k];
@@ -167,11 +167,10 @@ class HTMLRenderer {
   }
 
   renderAstNodeDefault(node: AstNode): string {
-    let result = ""
+    let result  = "";
     let extraAttr: Record<string, string> = {};
     switch (node.tag) {
       case "doc": {
-        let result = "";
         result += this.renderChildren(node);
         if (this.nextFootnoteIndex > 1) {
           // render notes
@@ -226,7 +225,7 @@ class HTMLRenderer {
         return this.inTags("ul", node, 2, { class: "task-list" });
 
       case "ordered_list": {
-        let extraAttr : Record<string,string> = {};
+        const extraAttr : Record<string,string> = {};
         if (node.start && node.start !== 1) {
           extraAttr.start = node.start.toString();
         }

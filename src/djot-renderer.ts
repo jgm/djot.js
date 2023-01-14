@@ -395,7 +395,7 @@ class DjotRenderer {
             this.newline();
           }
         }
-        let marker : string = formatNumber(start + i, style);
+        const marker : string = formatNumber(start + i, style);
         this.lit(marker);
         this.needsBlankLine = false;
         this.space();
@@ -418,7 +418,7 @@ class DjotRenderer {
             this.newline();
           }
         }
-        let marker : string = node.style;
+        const marker : string = node.style;
         this.lit(marker);
         this.needsBlankLine = false;
         this.space();

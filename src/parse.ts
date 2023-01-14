@@ -166,7 +166,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
   const identifiers: Record<string, boolean> = {}; // identifiers used
   const blockAttributes: Attributes = {}; // accumulated block attributes
   const parser = parseEvents(input, options);
-  let warn = options.warn || (() => {});
+  const warn = options.warn || (() => {});
   const addBlockAttributes = function(container: HasAttributes) {
     if (Object.keys(blockAttributes).length > 0) {
       container.attributes = container.attributes || {};
