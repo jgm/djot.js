@@ -165,6 +165,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
   const footnotes: Record<string, Footnote> = {};
   const identifiers: Record<string, boolean> = {}; // identifiers used
   const blockAttributes: Attributes = {}; // accumulated block attributes
+  let listDepth = 0;
   const parser = parseEvents(input, options);
   const warn = options.warn || (() => {});
   const addBlockAttributes = function(container: HasAttributes) {
@@ -775,6 +776,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
         topContainer().data.styles = suffixes;
         topContainer().data.blanklines = false;
         topContainer().data.tight = true;
+        listDepth++;
       },
 
       ["-list"]: (suffixes, startpos, endpos, pos) => {
@@ -817,6 +819,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
             attributes: node.attributes,
             pos: node.pos});
         }
+        listDepth--;
       },
 
       ["+list_item"]: (suffixes, startpos, endpos, pos) => {
@@ -1167,7 +1170,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
     // about to process something other than a blankline,
     // the end of a list or list item, or the start of
     // a list, then it's a loose list.
-    if (annot !== "blankline") {
+    if (listDepth > 0 && annot !== "blankline") {
       let ln;
       const top = topContainer();
       if (top) {
