@@ -167,10 +167,9 @@ class HTMLRenderer {
   }
 
   renderAstNodeDefault(node: AstNode): string {
-    let result  = "";
-    let extraAttr: Record<string, string> = {};
     switch (node.tag) {
       case "doc": {
+        let result  = "";
         result += this.renderChildren(node);
         if (this.nextFootnoteIndex > 1) {
           // render notes
@@ -180,7 +179,8 @@ class HTMLRenderer {
       }
 
 
-      case "para":
+      case "para": {
+        let result  = "";
         if (this.tight) {
           result += this.renderChildren(node);
           result += "\n";
@@ -188,6 +188,7 @@ class HTMLRenderer {
           result += this.inTags("p", node, 1);
         }
         return result;
+      }
 
       case "block_quote":
         return this.inTags("blockquote", node, 2);
@@ -239,6 +240,7 @@ class HTMLRenderer {
         return this.inTags(`h${node.level}`, node, 1);
 
       case "footnote_reference": {
+        let result = "";
         const label = node.text;
         let index = this.footnoteIndex[label];
         if (!index) {
@@ -260,13 +262,15 @@ class HTMLRenderer {
       case "table":
         return this.inTags("table", node, 2);
 
-      case "caption":
+      case "caption": {
+        let result = "";
         // AST always has at least a dummy caption, no
         // need to render that.
         if (node.children.length > 0) {
           result += this.inTags("caption", node, 1);
         }
         return result;
+      }
 
       case "row":
         return this.inTags("tr", node, 2);
@@ -279,12 +283,15 @@ class HTMLRenderer {
         return this.inTags(node.head ? "th" : "td", node, 1, cellAttr);
       }
 
-      case "thematic_break":
+      case "thematic_break": {
+        let result = "";
         result += this.renderTag("hr", node);
         result += "\n";
         return result;
+      }
 
-      case "code_block":
+      case "code_block": {
+        let result = "";
         result += this.renderTag("pre", node);
         result += "<code";
         if (node.lang) {
@@ -296,14 +303,18 @@ class HTMLRenderer {
         result += this.renderCloseTag("pre");
         result += "\n";
         return result;
+      }
 
-      case "raw_block":
+      case "raw_block": {
+        let result = "";
         if (node.format === "html") {
           result += node.text;
         }
         return result;
+      }
 
-      case "str":
+      case "str": {
+        let result = "";
         if (node.attributes) {
           result += this.renderTag("span", node);
           result += this.escape(node.text);
@@ -312,48 +323,61 @@ class HTMLRenderer {
           result += this.escape(node.text);
         }
         return result;
+      }
 
       case "smart_punctuation":
         return this.smartPunctuationMap[node.type] || node.text;
 
-      case "double_quoted":
+      case "double_quoted": {
+        let result = "";
         result += this.smartPunctuationMap.left_double_quote || '"';
         result += this.renderChildren(node);
         result += this.smartPunctuationMap.right_double_quote || '"';
         return result;
+      }
 
-      case "single_quoted":
+      case "single_quoted": {
+        let result = "";
         result += this.smartPunctuationMap.left_single_quote || "'";
         result += this.renderChildren(node);
         result += this.smartPunctuationMap.right_single_quote || "'";
         return result;
+      }
 
       case "symb":
         return this.escape(`:${node.alias}:`);
 
-      case "inline_math":
+      case "inline_math": {
+        let result = "";
         result += this.renderTag("span", node, { class: "math inline" });
         result += `\\(${this.escape(node.text)}\\)`;
         result += this.renderCloseTag("span");
         return result;
+      }
 
-      case "display_math":
+      case "display_math": {
+        let result = "";
         result += this.renderTag("span", node, { class: "math display" });
         result += `\\[${this.escape(node.text)}\\]`;
         result += this.renderCloseTag("span");
         return result;
+      }
 
-      case "verbatim":
+      case "verbatim": {
+        let result = "";
         result += this.renderTag("code", node);
         result += this.escape(node.text);
         result += this.renderCloseTag("code");
         return result;
+      }
 
-      case "raw_inline":
+      case "raw_inline": {
+        let result = "";
         if (node.format === "html") {
           result += node.text;
         }
         return result;
+      }
 
       case "soft_break":
         return "\n";
@@ -366,7 +390,7 @@ class HTMLRenderer {
 
       case "link":
       case "image": {
-        extraAttr = {};
+        const extraAttr : Record<string,string> = {};
         let dest: string | undefined = node.destination;
         if (node.reference) {
           const ref = this.references[node.reference];
@@ -403,16 +427,16 @@ class HTMLRenderer {
           }
         }
         if (node.tag === "image") {
-          result += this.renderTag("img", node, extraAttr);
+          return this.renderTag("img", node, extraAttr);
         } else {
-          result += this.inTags("a", node, 0, extraAttr);
+          return this.inTags("a", node, 0, extraAttr);
         }
-        return result;
       }
 
       case "url":
-      case "email":
-        extraAttr = {};
+      case "email": {
+        let result = "";
+        const extraAttr : Record<string,string> = {};
         if (node.tag === "email") {
           extraAttr.href = "mailto:" + node.text;
         } else {
@@ -422,6 +446,7 @@ class HTMLRenderer {
         result += this.escape(node.text);
         result += this.renderCloseTag("a");
         return result;
+      }
 
       case "strong":
         return  this.inTags("strong", node, 0);
@@ -448,7 +473,7 @@ class HTMLRenderer {
         return  this.inTags("sub", node, 0);
 
       default:
-        return result;
+        return "";
     }
   }
 
