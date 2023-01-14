@@ -18,7 +18,9 @@ describe("InlineParser", () => {
     expect(parser.getMatches()).toStrictEqual([
       { annot: "str", startpos: 0, endpos: 1 },
       { annot: "+verbatim", startpos: 2, endpos: 4 },
-      { annot: "str", startpos: 5, endpos: 19 },
+      { annot: "str", startpos: 5, endpos: 11 },
+      { annot: "str", startpos: 12, endpos: 13 },
+      { annot: "str", startpos: 14, endpos: 19 },
       { annot: "-verbatim", startpos: 20, endpos: 22 },
       { annot: "str", startpos: 23, endpos: 24 }
     ]);
@@ -34,7 +36,8 @@ describe("InlineParser", () => {
       { annot: "str", startpos: 3, endpos: 3 },
       { annot: "escape", startpos: 4, endpos: 4 },
       { annot: "non_breaking_space", startpos: 5, endpos: 5 },
-      { annot: "str", startpos: 6, endpos: 7 },
+      { annot: "str", startpos: 6, endpos: 6 },
+      { annot: "str", startpos: 7, endpos: 7 },
       { annot: "escape", startpos: 9, endpos: 9 },
       { annot: "hard_break", startpos: 10, endpos: 10 }
     ]);
@@ -71,7 +74,9 @@ describe("InlineParser", () => {
       { annot: "+subscript", startpos: 1, endpos: 1 },
       { annot: "str", startpos: 2, endpos: 2 },
       { annot: "-subscript", startpos: 3, endpos: 3 },
-      { annot: "str", startpos: 4, endpos: 9 },
+      { annot: "str", startpos: 4, endpos: 6 },
+      { annot: "str", startpos: 7, endpos: 7 },
+      { annot: "str", startpos: 8, endpos: 9 },
       { annot: "+superscript", startpos: 10, endpos: 10 },
       { annot: "str", startpos: 11, endpos: 11 },
       { annot: "-superscript", startpos: 12, endpos: 12 },

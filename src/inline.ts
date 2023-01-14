@@ -624,31 +624,17 @@ class InlineParser {
         }
       }
     }
-    i = this.matches.length - 1;
-    while (this.matches[i]) {
-      const match = this.matches[i];
-      const last = this.matches[i - 1];
-      if (last && last.annot === "str" &&
-                  match.annot === "str" &&
-                  last.endpos === match.startpos - 1) {
-        // consolidate adjacent strs
-        last.endpos = match.endpos;
-        match.annot = "";
-      }
-      i--;
-    }
-    const sorted = this.matches.filter((m) => m.annot !== "");
     // add -verbatim if needed
-    if (sorted.length > 0 && this.verbatim > 0) { // unclosed verbatim
-      const last = sorted[sorted.length - 1];
+    if (this.matches.length > 0 && this.verbatim > 0) { // unclosed verbatim
+      const last = this.matches[this.matches.length - 1];
       this.warn(new Warning("Unclosed verbatim", last.endpos));
-      sorted.push({
+      this.matches.push({
         startpos: last.endpos,
         endpos: last.endpos,
         annot: "-" + this.verbatimType
       });
     }
-    return sorted;
+    return this.matches;
   }
 
   addOpener(name: string,

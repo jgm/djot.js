@@ -745,8 +745,16 @@ class EventParser {
   getInlineMatches(): void {
     const ilparser = this.tip()?.inlineParser;
     if (ilparser) {
+      let last;
       for (const match of ilparser.getMatches()) {
-        this.matches.push(match);
+        if (last && last.annot === "str" && match.annot === "str" &&
+            match.startpos === last.endpos + 1) {
+          // just extend last str:
+          this.matches[this.matches.length - 1].endpos = match.endpos;
+        } else {
+          this.matches.push(match);
+        }
+        last = match;
       }
     }
   }
