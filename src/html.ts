@@ -92,13 +92,11 @@ class HTMLRenderer {
     return `</${tag}>`
   }
 
-  inTags(tag: string, node: AstNode, newlines: number,
+  inTags(tag: string, node: HasChildren<AstNode>, newlines: number,
     extraAttrs?: Record<string, string>): string {
-    let result = this.renderTag(tag, node, extraAttrs);
+    let result = this.renderTag(tag, node as AstNode, extraAttrs);
     if (newlines >= 2) { result += "\n"; }
-    if ("children" in node) {
-      result += this.renderChildren(node);
-    }
+    result += this.renderChildren(node);
     result += this.renderCloseTag(tag);
     if (newlines >= 1) { result += "\n";  }
     return result;
