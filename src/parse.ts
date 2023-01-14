@@ -160,7 +160,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
 
 
   let context = Context.Normal;
-  let accumulatedText: string[] = [];
+  let accumulatedText: string = "";
   const references: Record<string, Reference> = {};
   const footnotes: Record<string, Footnote> = {};
   const identifiers: Record<string, boolean> = {}; // identifiers used
@@ -246,20 +246,20 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
         if (context === Context.Normal) {
           addChildToTip({ tag: "str", text: txt, pos: pos});
         } else {
-          accumulatedText.push(txt);
+          accumulatedText += txt;
         }
       },
       soft_break: (suffixes, startpos, endpos, pos) => {
         if (context === Context.Normal) {
           addChildToTip({ tag: "soft_break", pos: pos});
         } else {
-          accumulatedText.push("\n");
+          accumulatedText += "\n";
         }
       },
 
       escape: (suffixes, startpos, endpos, pos) => {
         if (context === Context.Verbatim) {
-          accumulatedText.push("\\");
+          accumulatedText += "\\";
         }
       },
 
@@ -267,13 +267,13 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
         if (context === Context.Normal) {
           addChildToTip({ tag: "hard_break", pos: pos});
         } else {
-          accumulatedText.push("\n");
+          accumulatedText += "\n";
         }
       },
 
       non_breaking_space: (suffixes, startpos, endpos, pos) => {
         if (context === Context.Verbatim) {
-          accumulatedText.push("\\ ");
+          accumulatedText += "\\ ";
         } else {
           addChildToTip({ tag: "non_breaking_space", pos: pos});
         }
@@ -285,7 +285,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
           addChildToTip({ tag: "symb", alias: alias, pos: pos});
         } else {
           const txt = input.substring(startpos, endpos + 1);
-          accumulatedText.push(txt);
+          accumulatedText += txt;
         }
       },
 
@@ -583,11 +583,11 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
         const node = popContainer(pos);  // the container added by +linktext/+imagetext
         addChildToTip({
           tag: node.data.isimage ? "image" : "link",
-          destination: accumulatedText.join("").replace(/[\r\n]/g,""),
+          destination: accumulatedText.replace(/[\r\n]/g,""),
           children: node.children,
           pos: node.pos});
         context = Context.Normal;
-        accumulatedText = [];
+        accumulatedText = "";
       },
 
       ["+reference"]: (suffixes, startpos, endpos, pos) => {
@@ -596,7 +596,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
 
       ["-reference"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);  // the container added by +linktext
-        let ref = accumulatedText.join("").replace(/\r?\n/g," ");
+        let ref = accumulatedText.replace(/\r?\n/g," ");
         if (ref.length === 0) {
           ref = getStringContent(node);
         }
@@ -606,7 +606,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
           children: node.children,
           pos: node.pos});
         context = Context.Normal;
-        accumulatedText = [];
+        accumulatedText = "";
       },
 
       ["+verbatim"]: (suffixes, startpos, endpos, pos) => {
@@ -618,10 +618,10 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
         const node = popContainer(pos);
         addChildToTip({
           tag: "verbatim",
-          text: trimVerbatim(accumulatedText.join("")),
+          text: trimVerbatim(accumulatedText),
           pos: node.pos});
         context = Context.Normal;
-        accumulatedText = [];
+        accumulatedText = "";
       },
 
       raw_format: (suffixes, startpos, endpos, pos) => {
@@ -656,20 +656,20 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
         const node = popContainer(pos);
         addChildToTip({
           tag: "display_math",
-          text: trimVerbatim(accumulatedText.join("")),
+          text: trimVerbatim(accumulatedText),
           pos: node.pos});
         context = Context.Normal;
-        accumulatedText = [];
+        accumulatedText = "";
       },
 
       ["-inline_math"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         addChildToTip({
           tag: "inline_math",
-          text: trimVerbatim(accumulatedText.join("")),
+          text: trimVerbatim(accumulatedText),
           pos: node.pos});
         context = Context.Normal;
-        accumulatedText = [];
+        accumulatedText = "";
       },
 
       ["+url"]: (suffixes, startpos, endpos, pos) => {
@@ -680,10 +680,10 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
       ["-url"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         addChildToTip({ tag: "url",
-                        text: accumulatedText.join("").replace(/[\r\n]/g,""),
+                        text: accumulatedText.replace(/[\r\n]/g,""),
                         pos: node.pos});
         context = Context.Normal;
-        accumulatedText = [];
+        accumulatedText = "";
       },
 
       ["+email"]: (suffixes, startpos, endpos, pos) => {
@@ -694,10 +694,10 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
       ["-email"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         addChildToTip({ tag: "email",
-                        text: accumulatedText.join("").replace(/[\r\n]/g,""),
+                        text: accumulatedText.replace(/[\r\n]/g,""),
                         pos: node.pos});
         context = Context.Normal;
-        accumulatedText = [];
+        accumulatedText = "";
       },
 
       ["+para"]: (suffixes, startpos, endpos, pos) => {
@@ -1050,19 +1050,19 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
           addChildToTip({
             tag: "raw_block",
             format: node.data.format,
-            text: accumulatedText.join(""),
+            text: accumulatedText,
             attributes: node.attributes,
             pos: node.pos});
         } else {
           addChildToTip({
             tag: "code_block",
-            text: accumulatedText.join(""),
+            text: accumulatedText,
             lang: node.data.lang,
             attributes: node.attributes,
             pos: node.pos});
         }
         context = Context.Normal;
-        accumulatedText = [];
+        accumulatedText = "";
       },
 
       code_language: (suffixes, startpos, endpos, pos) => {
