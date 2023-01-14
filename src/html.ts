@@ -148,6 +148,24 @@ class HTMLRenderer {
     return this.renderAstNodeDefault(node);
   }
 
+  renderNotes(notes: Record<string, Footnote>): string {
+    let result : string = "";
+    const orderedFootnotes = [];
+    for (const k in notes) {
+      const index = this.footnoteIndex[k];
+      orderedFootnotes[index] = notes[k];
+    }
+    result += `<section role="doc-endnotes">\n<hr>\n<ol>\n`;
+    for (let i = 1; i < orderedFootnotes.length; i++) {
+      result += `<li id="fn${i}">\n`;
+      const note = this.addBacklink(orderedFootnotes[i], i);
+      result += this.renderChildren(note);
+      result += `</li>\n`;
+    }
+    result += `</ol>\n</section>\n`;
+    return result;
+  }
+
   renderAstNodeDefault(node: AstNode): string {
     let result = ""
     let extraAttr: Record<string, string> = {};
@@ -157,19 +175,7 @@ class HTMLRenderer {
         result += this.renderChildren(node);
         if (this.nextFootnoteIndex > 1) {
           // render notes
-          const orderedFootnotes = [];
-          for (const k in node.footnotes) {
-            const index = this.footnoteIndex[k];
-            orderedFootnotes[index] = node.footnotes[k];
-          }
-          result += `<section role="doc-endnotes">\n<hr>\n<ol>\n`;
-          for (let i = 1; i < orderedFootnotes.length; i++) {
-            result += `<li id="fn${i}">\n`;
-            const note = this.addBacklink(orderedFootnotes[i], i);
-            result += this.renderChildren(note);
-            result += `</li>\n`;
-          }
-          result += `</ol>\n</section>\n`;
+          result += this.renderNotes(node.footnotes);
         }
         return result;
       }
