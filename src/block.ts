@@ -79,7 +79,7 @@ type BlockSpec =
     content: ContentType,
     continue: (container: Container) => boolean,
     open: (spec: BlockSpec) => boolean,
-    close: (container: Container) => void
+    close: () => void
   }
 
 class Container {
@@ -87,7 +87,7 @@ class Container {
   type: ContentType;
   content: ContentType;
   continue: (container: Container) => boolean;
-  close: (container: Container) => void;
+  close: () => void;
   indent: number | null;
   inlineParser: InlineParser | null;
   attributeParser: AttributeParser | null;
@@ -160,12 +160,12 @@ class EventParser {
         this.addMatch(this.pos, this.pos, "+para");
         return true;
       },
-      close: (container) => {
+      close: () => {
         this.getInlineMatches();
+        this.containers.pop();
         const last = this.matches[this.matches.length - 1]
         const ep = (last && last.endpos + 1) || this.pos;
         this.addMatch(ep, ep, "-para");
-        this.containers.pop();
       }
     };
 
@@ -192,9 +192,9 @@ class EventParser {
             return false;
           }
         },
-        close: (container) => {
-          this.addMatch(this.pos, this.pos, "-block_quote");
+        close: () => {
           this.containers.pop();
+          this.addMatch(this.pos, this.pos, "-block_quote");
         }
       },
 
@@ -224,12 +224,12 @@ class EventParser {
             return false;
           }
         },
-        close: (container) => {
+        close: () => {
           this.getInlineMatches()
+          this.containers.pop();
           const last = this.matches[this.matches.length - 1]
           const ep = (last && last.endpos + 1) || this.pos;
           this.addMatch(ep, ep, "-heading")
-          this.containers.pop();
         }
       },
 
@@ -251,10 +251,10 @@ class EventParser {
             return false;
           }
         },
-        close: (container) => {
+        close: () => {
           this.getInlineMatches();
-          this.addMatch(this.pos - 1, this.pos - 1, "-caption");
           this.containers.pop();
+          this.addMatch(this.pos - 1, this.pos - 1, "-caption");
         }
       },
 
@@ -290,9 +290,9 @@ class EventParser {
             return false;
           }
         },
-        close: (container) => {
-          this.addMatch(this.pos, this.pos, "-footnote");
+        close: () => {
           this.containers.pop();
+          this.addMatch(this.pos, this.pos, "-footnote");
         }
       },
 
@@ -334,9 +334,9 @@ class EventParser {
             return false;
           }
         },
-        close: (container) => {
-          this.addMatch(this.pos, this.pos, "-reference_definition");
+        close: () => {
           this.containers.pop();
+          this.addMatch(this.pos, this.pos, "-reference_definition");
         }
       },
 
@@ -360,7 +360,7 @@ class EventParser {
             return false;
           }
         },
-        close: (container) => {
+        close: () => {
           this.containers.pop();
         }
       },
@@ -429,9 +429,9 @@ class EventParser {
           this.addMatch(sp, ep - 1, annot);
           return true;
         },
-        close: (container) => {
-          this.addMatch(this.pos, this.pos, "-list");
+        close: () => {
           this.containers.pop();
+          this.addMatch(this.pos, this.pos, "-list");
         }
       },
 
@@ -484,9 +484,9 @@ class EventParser {
           }
           return true;
         },
-        close: (container) => {
-          this.addMatch(this.pos, this.pos, "-list_item");
+        close: () => {
           this.containers.pop();
+          this.addMatch(this.pos, this.pos, "-list_item");
         }
       },
 
@@ -522,9 +522,9 @@ class EventParser {
             return false;
           }
         },
-        close: (container) => {
-          this.addMatch(this.pos, this.pos, "-table");
+        close: () => {
           this.containers.pop();
+          this.addMatch(this.pos, this.pos, "-table");
         }
       },
 
@@ -596,7 +596,9 @@ class EventParser {
           this.pos = para.inlineParser.lastpos + 1;
           return true;
         },
-        close: (container) => {
+        close: () => {
+          const container = this.containers.pop();
+          if (!container) return;
           this.addMatch(container.extra.startpos, container.extra.startpos,
             "+block_attributes");
           if (container.attributeParser) { // should always be true
@@ -606,7 +608,6 @@ class EventParser {
             }
           }
           this.addMatch(this.pos, this.pos, "-block_attributes");
-          this.containers.pop();
         }
       },
 
@@ -652,7 +653,9 @@ class EventParser {
           this.finishedLine = true;
           return true;
         },
-        close: (container) => {
+        close: () => {
+          const container = this.containers.pop();
+          if (!container) return;
           const sp = container.extra.endFenceStartpos || this.pos;
           const ep = container.extra.endFenceEndpos || this.pos;
           // check to make sure the match is in order
@@ -660,7 +663,6 @@ class EventParser {
           if (sp === ep) {
             this.warn(new Warning("Unclosed div", this.pos));
           }
-          this.containers.pop();
         }
       },
 
@@ -709,14 +711,15 @@ class EventParser {
             return false;
           }
         },
-        close: (container) => {
+        close: () => {
+          const container = this.containers.pop();
+          if (!container) return;
           const sp = container.extra.endFenceStartpos || this.pos;
           const ep = container.extra.endFenceEndpos || this.pos;
           this.addMatch(sp, ep, "-code_block");
           if (sp === ep) {
             this.warn(new Warning("Unclosed code block", this.pos));
           }
-          this.containers.pop();
         }
       }
     ];
@@ -765,7 +768,7 @@ class EventParser {
     let tip = this.tip();
     while (tip &&
       this.containers.length - 1 > lastMatched) {
-      tip.close(tip);
+      tip.close();
       tip = this.tip();
     }
   }
@@ -775,7 +778,7 @@ class EventParser {
     // close containers that can't contain this one:
     let tip = this.tip();
     while (tip && tip.content !== container.type) {
-      tip.close(tip);
+      tip.close();
       tip = this.tip();
     }
     if (container.content === ContentType.Inline) {
@@ -980,7 +983,7 @@ class EventParser {
               self.lastMatchedContainer < self.containers.length - 1) {
               const tip = self.tip();
               if (tip) {
-                tip.close(tip);
+                tip.close();
               }
             }
           }
