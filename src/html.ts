@@ -7,6 +7,9 @@ interface HTMLRenderOptions extends Options {
   overrides?: Visitor<HTMLRenderer, string>;
 }
 
+const reNeedsEscape = /[&<>]/;
+const reNeedsEscapeAttr = /[&<>"]/;
+
 class HTMLRenderer {
   warn: (warning : Warning) => void;
   options: HTMLRenderOptions;
@@ -25,15 +28,26 @@ class HTMLRenderer {
   }
 
   escape(s: string): string {
-    return s
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
+    if (reNeedsEscape.test(s)) {
+      return s
+       .replace(/&/g, "&amp;")
+       .replace(/</g, "&lt;")
+       .replace(/>/g, "&gt;");
+    } else {
+      return s;
+    }
   }
 
   escapeAttribute(s: string): string {
-    return this.escape(s)
-      .replace(/"/g, "&quot;");
+    if (reNeedsEscapeAttr.test(s)) {
+      return s
+       .replace(/&/g, "&amp;")
+       .replace(/</g, "&lt;")
+       .replace(/>/g, "&gt;")
+       .replace(/"/g, "&quot;");
+    } else {
+      return s;
+    }
   }
 
   smartPunctuationMap : Record<string, string> = {
