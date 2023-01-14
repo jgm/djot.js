@@ -88,7 +88,7 @@ class Container {
   content: ContentType;
   continue: (container: Container) => boolean;
   close: () => void;
-  indent: number | null;
+  indent: number;
   inlineParser: InlineParser | null;
   attributeParser: AttributeParser | null;
   extra: { [key: string]: any };
@@ -99,7 +99,7 @@ class Container {
     this.content = spec.content;
     this.continue = spec.continue;
     this.close = spec.close;
-    this.indent = null;
+    this.indent = 0;
     this.inlineParser = null;
     this.attributeParser = null;
     this.extra = extra;
