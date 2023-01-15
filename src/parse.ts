@@ -1255,7 +1255,7 @@ const omitFields: Record<string, boolean> =
 };
 
 const stringify = function(x : any) : string {
-  return JSON.stringify(x).replace("\n","n");
+  return JSON.stringify(x).replace(/\\\n/g,"\\n");
 }
 
 const renderAstNode = function(node: Record<string, any>, buff: string[], indent: number): void {
