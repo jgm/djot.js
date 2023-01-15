@@ -23,11 +23,15 @@ const find = function(subject : string,
   if (result !== null) {
     let idx = 1;
     const capts = [];
-    while (result.indices[idx]) {
-      capts.push(subj.substring(result.indices[idx][0], result.indices[idx][1]));
-      idx++;
+    if (result.indices.length > 1) {
+      for (let i = 1; i < result.indices.length; i++) {
+        const [sp, ep] = result.indices[i];
+        capts.push(subj.substring(sp, ep));
+      }
     }
-    return { startpos: result.indices[0][0], endpos: result.indices[0][1] - 1, captures: capts };
+    return { startpos: result.indices[0][0],
+             endpos: result.indices[0][1] - 1,
+             captures: capts };
   } else {
     return null;
   }
