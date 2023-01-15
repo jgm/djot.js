@@ -79,10 +79,6 @@ const findSpecial = function(s: string, startpos: number, endpos: number)
   }
 }
 
-const matchesPattern = function(match: Event, patt: RegExp): boolean {
-  return (match && patt.exec(match.annot) !== null);
-}
-
 const pattNonspace = pattern("[^ \t\r\n]");
 const pattLineEnd = pattern("[ \\t]*\\r?\\n");
 const pattPunctuation = pattern("['!\"#$%&\\\\'()\\*+,\\-\\.\\/:;<=>?@\\[\\]\\^_`{|}~']");
@@ -115,8 +111,8 @@ const betweenMatched = function(
     let can_open = find(subject, pattNonspace, pos + 1) !== null &&
       opentest(self, pos);
     let can_close = find(subject, pattNonspace, pos - 1) !== null;
-    const has_open_marker = matchesPattern(self.matches[self.matches.length - 1],
-      pattern("open_marker"));
+    const lastmatch = self.matches[self.matches.length - 1];
+    const has_open_marker = lastmatch && lastmatch.annot === "open_marker";
     const has_close_marker = pos + 1 <= endpos &&
       subject.codePointAt(pos + 1) === C_RIGHT_BRACE;
     let endcloser = pos;
