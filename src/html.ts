@@ -112,25 +112,13 @@ class HTMLRenderer {
     return `${this.renderTag(tag, node as AstNode, extraAttrs)}${afterOpenSpace}${this.renderChildren(node)}</${tag}>${afterCloseSpace}`;
   }
 
-  addBacklink(orignote: Footnote, ident: number): Footnote {
-    const note = structuredClone(orignote); // we modify a deep copy
-    const backlink: Link = {
-      tag: "link",
-      destination: `#fnref${ident}`,
-      attributes: { role: "doc-backlink" },
-      children: [{ tag: "str", text: "↩︎︎" }]
-    };
-    if (note.children.length >= 1) {
-      const lastblock = note.children[note.children.length - 1];
-      if (lastblock.tag === "para") {
-        lastblock.children.push(backlink);
-      } else {
-        note.children.push({ tag: "para", children: [backlink] });
-      }
+  addBacklink(note : string, ident: number): string {
+    const backlink : string = `<a href="#fnref${ident}" role="doc-backlink">↩︎︎</a>`;
+    if (/\<\/p\>[\r\n]*$/.test(note)) {
+      return note.replace(/\<\/p\>([\r\n]*)$/, backlink + "</p>$1");
     } else {
-      note.children.push({ tag: "para", children: [backlink] });
+      return note + `<p>${backlink}</p>\n`;
     }
-    return note;
   }
 
   renderChildren(node: HasChildren<AstNode>): string {
@@ -159,18 +147,24 @@ class HTMLRenderer {
   renderNotes(notes: Record<string, Footnote>): string {
     let result  = "";
     const orderedFootnotes = [];
+    const renderedNotes : Record<string, string> = {};
+    for (const k in notes) {
+      renderedNotes[k] = this.renderChildren(notes[k]);
+    }
+    // now this.footnoteIndex includes notes only indexed in other notes (#37)
     for (const k in notes) {
       const index = this.footnoteIndex[k];
-      orderedFootnotes[index] = notes[k];
+      if (index) {
+        orderedFootnotes[index] = renderedNotes[k];
+      }
     }
     result += `<section role="doc-endnotes">\n<hr>\n<ol>\n`;
     for (let i = 1; i < orderedFootnotes.length; i++) {
       // note: there can be gaps in the sequence, so we
       // want to insert a dummy note in that case
-      const note = orderedFootnotes[i] || { tag: "footnote",
-                                            children: [] };
+      const note = orderedFootnotes[i] || "";
       result += `<li id="fn${i}">\n`;
-      result += this.renderChildren(this.addBacklink(note, i));
+      result += this.addBacklink(note, i);
       result += `</li>\n`;
     }
     result += `</ol>\n</section>\n`;
