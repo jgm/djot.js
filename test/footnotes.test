@@ -44,3 +44,24 @@ test[^nonexistent]
 </ol>
 </section>
 ```
+
+```
+[^a]
+[^b]
+
+[^b]:
+.
+<p><a id="fnref1" href="#fn1" role="doc-noteref"><sup>1</sup></a>
+<a id="fnref2" href="#fn2" role="doc-noteref"><sup>2</sup></a></p>
+<section role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn1">
+<p><a href="#fnref1" role="doc-backlink">↩︎︎</a></p>
+</li>
+<li id="fn2">
+<p><a href="#fnref2" role="doc-backlink">↩︎︎</a></p>
+</li>
+</ol>
+</section>
+```

@@ -165,9 +165,12 @@ class HTMLRenderer {
     }
     result += `<section role="doc-endnotes">\n<hr>\n<ol>\n`;
     for (let i = 1; i < orderedFootnotes.length; i++) {
+      // note: there can be gaps in the sequence, so we
+      // want to insert a dummy note in that case
+      const note = orderedFootnotes[i] || { tag: "footnote",
+                                            children: [] };
       result += `<li id="fn${i}">\n`;
-      const note = this.addBacklink(orderedFootnotes[i], i);
-      result += this.renderChildren(note);
+      result += this.renderChildren(this.addBacklink(note, i));
       result += `</li>\n`;
     }
     result += `</ol>\n</section>\n`;
