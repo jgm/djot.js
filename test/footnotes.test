@@ -41,6 +41,9 @@ test[^nonexistent]
 <section role="doc-endnotes">
 <hr>
 <ol>
+<li id="fn1">
+<p><a href="#fnref1" role="doc-backlink">↩︎︎</a></p>
+</li>
 </ol>
 </section>
 ```

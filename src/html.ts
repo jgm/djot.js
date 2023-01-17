@@ -152,7 +152,7 @@ class HTMLRenderer {
       renderedNotes[k] = this.renderChildren(notes[k]);
     }
     // now this.footnoteIndex includes notes only indexed in other notes (#37)
-    for (const k in notes) {
+    for (const k in this.footnoteIndex) {
       const index = this.footnoteIndex[k];
       if (index) {
         orderedFootnotes[index] = renderedNotes[k];
