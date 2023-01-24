@@ -279,7 +279,7 @@ class HTMLRenderer {
 
       case "cell": {
         const cellAttr: Record<string, string> = {};
-        if (node.align !== "default") {
+        if (node.align && node.align !== "default") {
           cellAttr.style = `text-align: ${node.align};`;
         }
         return this.inTags(node.head ? "th" : "td", node, 1, cellAttr);
