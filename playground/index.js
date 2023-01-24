@@ -87,7 +87,7 @@ window.onload = () => {
   const input = document.getElementById("input");
   input.onkeyup = debounce(parse_and_render, 200);
   input.onscroll = syncScroll;
-  document.getElementById("mode").onchange = render;
+  document.getElementById("mode").onchange = parse_and_render;
   document.getElementById("sourcepos").onchange = parse_and_render;
 
   document.getElementById("filter-examples").onchange = (e) => {
@@ -171,7 +171,10 @@ const ignoreWarnings = () => { };
 function parse_and_render() {
   const text = document.getElementById("input").value;
   const filter = document.getElementById("filter").value;
-  const sourcepos = document.getElementById("sourcepos").checked;
+  const mode = document.getElementById("mode").value;
+  // always enable source positions for preview as they are needed for scroll
+  // sync and are not visible anyway
+  const sourcepos = document.getElementById("sourcepos").checked || mode == "preview";
   try {
     var startTime = new Date().getTime();
     ast = djot.parse(text, { sourcePositions: sourcepos, warn: ignoreWarnings });
