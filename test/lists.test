@@ -465,6 +465,22 @@ b
 </ol>
 ```
 
+When ambiguous, prioritize roman numerals.
+
+```
+i. a
+i. b
+.
+<ol type="i">
+<li>
+a
+</li>
+<li>
+b
+</li>
+</ol>
+```
+
 ```
 I. a
 II. b
