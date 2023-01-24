@@ -171,9 +171,10 @@ const ignoreWarnings = () => { };
 function parse_and_render() {
   const text = document.getElementById("input").value;
   const filter = document.getElementById("filter").value;
+  const sourcepos = document.getElementById("sourcepos").checked;
   try {
     var startTime = new Date().getTime();
-    ast = djot.parse(text, { sourcePositions: true, warn: ignoreWarnings });
+    ast = djot.parse(text, { sourcePositions: sourcepos, warn: ignoreWarnings });
     if (filter) {
       try {
         let filterprog = `"use strict"; return ( function() { ${filter} } );`;
