@@ -45,7 +45,7 @@ check-optimization: pm.dj
 	open ./v8-deopt-viewer/index.html
 .PHONY: check-optimization
 
-test-playground:
+test-playground: playground/djot.js
 	cd playground && python3 -m http.server
 
 update-playground: playground/djot.js
