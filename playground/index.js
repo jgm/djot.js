@@ -217,9 +217,9 @@ function render() {
     }
     result.innerText = "[" + events.join("\n,") + "]";
   } else if (mode == "html") {
-    result.innerText = djot.renderHTML(ast, { sourcePositions: sourcepos });
+    result.innerText = djot.renderHTML(ast);
   } else if (mode == "preview") {
-    let rendered = djot.renderHTML(ast, { sourcePositions: true });
+    let rendered = djot.renderHTML(ast);
     inject(iframe, rendered);
   }
   iframe.style.display = mode == "preview" ? "block" : "none";
