@@ -14,9 +14,9 @@ const getListStyles = function(marker: string): string[] {
   } else if (/^[(]?[0-9]+[).]/.exec(marker)) {
     return [marker.replace(/[0-9]+/, "1")];
   } else if (/^[(]?[ivxlcdm][).]/.exec(marker)) {
-    return [marker.replace(/[a-z]+/, "a"), marker.replace(/[a-z]+/, "i")];
+    return [marker.replace(/[a-z]+/, "i"), marker.replace(/[a-z]+/, "a")];
   } else if (/^[(]?[IVXLCDM][).]/.exec(marker)) {
-    return [marker.replace(/[A-Z]+/, "A"), marker.replace(/[A-Z]+/, "I")];
+    return [marker.replace(/[A-Z]+/, "I"), marker.replace(/[A-Z]+/, "A")];
   } else if (/^[(]?[ivxlcdm]+[).]/.exec(marker)) {
     return [marker.replace(/[a-z]+/, "i")];
   } else if (/^[(]?[IVXLCDM]+[).]/.exec(marker)) {
