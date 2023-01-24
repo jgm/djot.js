@@ -944,7 +944,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
             tip.head = true;
             for (let i = 0; i < tip.children.length; i++) {
               tip.children[i].head = true;
-              tip.children[i].align = node.data.aligns[i];
+              tip.children[i].align = node.data.aligns[i] || "default";
             }
           }
         } else {
