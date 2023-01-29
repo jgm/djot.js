@@ -84,14 +84,14 @@ and `pos` (`{ line: number, col: number, offset: number }` if defined).
 
 ### Parsing djot to a stream of events
 
-`new EventParser(input : string, options : Options = {})`
+`parseEvents(input : string, options : Options = {})`
 
 Exposes an iterator over events, each with the form
 `{startpos : number, endpos : number, annot : string}`.
 Example of usage:
 
 ```js
-for (let event in new djot.EventParser("Hi _there_")) {
+for (let event of parseEvents("Hi _there_")) {
   console.log(event)
 }
 ```
