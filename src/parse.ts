@@ -760,7 +760,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
           // move id attribute from heading to section
           if (node.attributes && node.attributes.id) {
             topContainer().attributes = { id: node.attributes.id };
-            delete node.attributes;
+            delete node.attributes.id;
           }
         }
         addChildToTip({
