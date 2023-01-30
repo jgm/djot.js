@@ -759,8 +759,8 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
           topContainer().data.headinglevel = node.data.level;
           // move id attribute from heading to section
           if (node.attributes && node.attributes.id) {
-            topContainer().attributes = { id: node.attributes.id };
-            delete node.attributes.id;
+            topContainer().attributes = node.attributes;
+            delete node.attributes;
           }
         }
         addChildToTip({
