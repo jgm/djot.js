@@ -1,6 +1,8 @@
 var ast;
 var initialized = false;
 
+var debounceMs = 20;
+
 var filterExamples =
   { "capitalize_text":
 `// This filter capitalizes regular text, leaving code and URLs unaffected
@@ -85,7 +87,7 @@ function initializeFromURL() {
 window.onload = () => {
   initializeFromURL();
   const input = document.getElementById("input");
-  input.onkeyup = debounce(parse_and_render, 200);
+  input.onkeyup = debounce(parse_and_render);
   input.onscroll = syncScroll;
   document.getElementById("mode").onchange = parse_and_render;
   document.getElementById("sourcepos").onchange = parse_and_render;
@@ -155,14 +157,13 @@ const inject = (iframe, html) => {
   }
 }
 
-const debounce = (func, delay) => {
+const debounce = (func) => {
     let debounceTimer
     return function() {
         const context = this
         const args = arguments
-            clearTimeout(debounceTimer)
-                debounceTimer
-            = setTimeout(() => func.apply(context, args), delay)
+        clearTimeout(debounceTimer)
+        debounceTimer = setTimeout(() => func.apply(context, args), debounceMs)
     }
 }
 
@@ -193,6 +194,7 @@ function parse_and_render() {
     render();
     var endTime = new Date().getTime();
     var elapsedTime = endTime - startTime;
+    debounceMs = elapsedTime * 8;
     document.getElementById("elapsed-time").innerText = elapsedTime;
     document.getElementById("kbps").innerText = ((text.length / elapsedTime)).toFixed(1);
     document.getElementById("timing").style.visibility = "visible";
