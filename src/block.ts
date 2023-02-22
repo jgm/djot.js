@@ -599,15 +599,30 @@ class EventParser {
         close: () => {
           const container = this.containers.pop();
           if (!container) return;
-          this.addMatch(container.extra.startpos, container.extra.startpos,
-            "+block_attributes");
-          if (container.attributeParser) { // should always be true
-            const attrMatches = container.attributeParser.matches;
-            for (const match of attrMatches) {
-              this.matches.push(match);
+          if (container.extra.status === "continue") {
+            // attribute parsing failed; convert to para
+            this.addMatch(container.extra.startpos,
+              container.extra.startpos, "+para");
+            // add para container
+            const para = this.addContainer(new Container(this.paraSpec, {}), true);
+            if (!para || !para.inlineParser) {
+              throw(new Error("Could not add paragraph"));
             }
+            // reparse the text we couldn't parse as a block attribute:
+            para.inlineParser.attributeSlices = container.extra.slices;
+            para.inlineParser.reparseAttributes();
+            para.close();
+          } else {
+            this.addMatch(container.extra.startpos, container.extra.startpos,
+              "+block_attributes");
+            if (container.attributeParser) { // should always be true
+              const attrMatches = container.attributeParser.matches;
+              for (const match of attrMatches) {
+                this.matches.push(match);
+              }
+            }
+            this.addMatch(this.pos, this.pos, "-block_attributes");
           }
-          this.addMatch(this.pos, this.pos, "-block_attributes");
         }
       },
 
@@ -773,8 +788,10 @@ class EventParser {
     }
   }
 
-  addContainer(container: Container): Container {
-    this.closeUnmatchedContainers();
+  addContainer(container: Container, skipCloseUnmatched ?: boolean): Container {
+    if (!skipCloseUnmatched) {
+      this.closeUnmatchedContainers();
+    }
     // close containers that can't contain this one:
     let tip = this.tip();
     while (tip && tip.content !== container.type) {

@@ -270,6 +270,13 @@ text{a=x
 # non-heading</p>
 ```
 
+```
+{a=" inline text
+.
+<p>{a=&ldquo; inline text</p>
+```
+
+
 ``` a
 {
  attr="long
