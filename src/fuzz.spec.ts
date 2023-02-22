@@ -3,7 +3,7 @@ import { performance } from "perf_hooks";
 
 const MAXLINES = 5;
 const MAXLENGTH = 5;
-const NUMTESTS = 5000;
+const NUMTESTS = 10000;
 
 const activechars = [
   '\t', ' ', '[', ']', '1', '2', 'a', 'b',
@@ -44,17 +44,21 @@ describe("Fuzz tests", () => {
   it("does not exhibit pathological behavior on random input", () => {
     for (let i=1; i <= NUMTESTS; i++) {
       const s = randomstring();
-      const startTime = performance.now();
-      const ast = parse(s, {warn: (() => {})});
-      const endTime = performance.now();
-      const elapsed = endTime - startTime;
-      let status : string;
-      if (!ast) {
-        status = "Could not parse:\n" + s;
-      } else if (elapsed > timeout) {
-        status = "Parsing took too long (" + elapsed.toFixed(1) + " ms) for:\n" + s;
-      } else {
-        status = "OK";
+      let status : string = "";
+      try {
+        const startTime = performance.now();
+        const ast = parse(s, {warn: (() => {})});
+        const endTime = performance.now();
+        const elapsed = endTime - startTime;
+        if (!ast) {
+          status = "Could not parse:\n" + s;
+        } else if (elapsed > timeout) {
+          status = "Parsing took too long (" + elapsed.toFixed(1) + " ms) for:\n" + s;
+        } else {
+          status = "OK";
+        }
+      } catch(e : any) {
+          status = "Error parsing '" + s + "': " + e.message + "\n" + e.stack;
       }
       expect(status).toBe("OK");
     }
