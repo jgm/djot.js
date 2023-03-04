@@ -4,7 +4,7 @@ import { Doc, AstNode, HasChildren,
          DefinitionList, Table, Caption, Row,
          BlockQuote, Section, CodeBlock, RawBlock,
          Term, Definition, Footnote, Reference, Symb,
-         Link, Image, HasText, RawInline, FootnoteReference,
+         Link, Image, Email, Url, HasText, RawInline, FootnoteReference,
          Inline, Str, InlineMath, DisplayMath, Verbatim, SmartPunctuation,
          isInline,  isBlock, isCaption, isRow } from "./ast";
 import { getStringContent } from "./parse";
@@ -539,6 +539,12 @@ class DjotRenderer {
     },
     symb: (node : Symb) => {
       this.lit(":" + node.alias + ":");
+    },
+    email: (node : Email) => {
+      this.lit("<" + node.text + ">");
+    },
+    url: (node : Url) => {
+      this.lit("<" + node.text + ">");
     },
     link: (node : Link) => {
       this.lit("[");
