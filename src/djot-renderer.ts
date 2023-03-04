@@ -615,6 +615,8 @@ class DjotRenderer {
       if ("attributes" in node && isInline(node)) {
         this.renderAttributes<Inline>(node);
       }
+    } else {
+      throw(new Error("No renderer defined for node type " + node.tag));
     }
   }
 
