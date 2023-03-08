@@ -544,7 +544,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
         const top = topContainer();
         const val = input.substring(startpos, endpos + 1)
           .replace(/[ \r\n]+/g, " ")  // collapse interior whitespace
-          .replace(/\\(?=[.,\\/#!$%^&*;:{}=\-_`~+[\]()'"?|])/g, "");
+          .replace(/\\([.,\\/#!$%^&*;:{}=\-_`~+[\]()'"?|])/g, "$1");
         // resolve backslash escapes
         if (!top.attributes) {
           top.attributes = {};

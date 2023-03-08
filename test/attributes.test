@@ -1,4 +1,4 @@
-An inline attribute allies to the preceding element, which might
+An inline attribute attaches to the preceding element, which might
 be complex (span, emphasis, link) or a simple word (defined as a
 sequence of non-ASCII-whitespace characters).
 ```
@@ -40,6 +40,18 @@ Don't mind braces in quotes:
 hi{key="{#hi"}
 .
 <p><span key="{#hi">hi</span></p>
+```
+
+Process escapes correctly:
+
+```
+hi{key="\\\\\*"}
+
+{key="\\\\\*"}
+foo
+.
+<p><span key="\\*">hi</span></p>
+<p key="\\*">foo</p>
 ```
 
 Don't allow attributes to start when we're parsing a potential
