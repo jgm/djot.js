@@ -69,7 +69,7 @@ foo_bar_baz
 ```
 aa_"bb"_cc
 .
-<p>aa<em>&ldquo;bb&rdquo;</em>cc</p>
+<p>aa<em>“bb”</em>cc</p>
 ```
 
 ```

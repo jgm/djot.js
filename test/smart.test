@@ -6,28 +6,28 @@ as is used in emphasis parsing:
 "Hello," said the spider.
 "'Shelob' is my name."
 .
-<p>&ldquo;Hello,&rdquo; said the spider.
-&ldquo;&lsquo;Shelob&rsquo; is my name.&rdquo;</p>
+<p>“Hello,” said the spider.
+“‘Shelob’ is my name.”</p>
 ```
 
 ```
 'A', 'B', and 'C' are letters.
 .
-<p>&lsquo;A&rsquo;, &lsquo;B&rsquo;, and &lsquo;C&rsquo; are letters.</p>
+<p>‘A’, ‘B’, and ‘C’ are letters.</p>
 ```
 
 ```
 'Oak,' 'elm,' and 'beech' are names of trees.
 So is 'pine.'
 .
-<p>&lsquo;Oak,&rsquo; &lsquo;elm,&rsquo; and &lsquo;beech&rsquo; are names of trees.
-So is &lsquo;pine.&rsquo;</p>
+<p>‘Oak,’ ‘elm,’ and ‘beech’ are names of trees.
+So is ‘pine.’</p>
 ```
 
 ```
 'He said, "I want to go."'
 .
-<p>&lsquo;He said, &ldquo;I want to go.&rdquo;&rsquo;</p>
+<p>‘He said, “I want to go.”’</p>
 ```
 
 A single quote that isn't an open quote matched
@@ -37,13 +37,13 @@ apostrophe:
 ```
 Were you alive in the '70s?
 .
-<p>Were you alive in the &rsquo;70s?</p>
+<p>Were you alive in the ’70s?</p>
 ```
 
 ```
 Here is some quoted '`code`' and a "[quoted link](url)".
 .
-<p>Here is some quoted &lsquo;<code>code</code>&rsquo; and a &ldquo;<a href="url">quoted link</a>&rdquo;.</p>
+<p>Here is some quoted ‘<code>code</code>’ and a “<a href="url">quoted link</a>”.</p>
 ```
 
 Here the first `'` is treated as an apostrophe, not
@@ -53,7 +53,7 @@ by the single quote before `jolly`:
 ```
 'tis the season to be 'jolly'
 .
-<p>&rsquo;tis the season to be &lsquo;jolly&rsquo;</p>
+<p>’tis the season to be ‘jolly’</p>
 ```
 
 Multiple apostrophes should not be marked as open/closing quotes.
@@ -61,7 +61,7 @@ Multiple apostrophes should not be marked as open/closing quotes.
 ```
 'We'll use Jane's boat and John's truck,' Jenna said.
 .
-<p>&lsquo;We&rsquo;ll use Jane&rsquo;s boat and John&rsquo;s truck,&rsquo; Jenna said.</p>
+<p>‘We’ll use Jane’s boat and John’s truck,’ Jenna said.</p>
 ```
 
 An unmatched double quote will be interpreted as a
@@ -72,8 +72,8 @@ left double quote, to facilitate this style:
 
 "Second paragraph by same speaker, in fiction."
 .
-<p>&ldquo;A paragraph with no closing quote.</p>
-<p>&ldquo;Second paragraph by same speaker, in fiction.&rdquo;</p>
+<p>“A paragraph with no closing quote.</p>
+<p>“Second paragraph by same speaker, in fiction.”</p>
 ```
 
 A quote following a `]` or `)` character cannot
@@ -82,7 +82,7 @@ be an open quote:
 ```
 [a]'s b'
 .
-<p>[a]&rsquo;s b&rsquo;</p>
+<p>[a]’s b’</p>
 ```
 
 Quotes that are escaped come out as literal straight
@@ -103,7 +103,7 @@ Doubled quotes are treated as nested:
 ```
 ''hi''
 .
-<p>&lsquo;&lsquo;hi&rsquo;&rsquo;</p>
+<p>‘‘hi’’</p>
 ```
 
 Heuristics for determining openers and closers can
@@ -112,7 +112,7 @@ be overridden using `{` and `}`:
 ```
 {''}hi{''}
 .
-<p>&lsquo;&rsquo;hi&lsquo;&rsquo;</p>
+<p>‘’hi‘’</p>
 ```
 
 Two hyphens form an en-dash, three an em-dash.
@@ -124,11 +124,11 @@ em --- em
 en -- en
 2--3
 .
-<p>Some dashes:  em&mdash;em
-en&ndash;en
-em &mdash; em
-en &ndash; en
-2&ndash;3</p>
+<p>Some dashes:  em—em
+en–en
+em — em
+en – en
+2–3</p>
 ```
 
 A sequence of more than three hyphens is
@@ -155,15 +155,15 @@ nine---------
 thirteen-------------.
 .
 <p>one-
-two&ndash;
-three&mdash;
-four&ndash;&ndash;
-five&mdash;&ndash;
-six&mdash;&mdash;
-seven&mdash;&ndash;&ndash;
-eight&ndash;&ndash;&ndash;&ndash;
-nine&mdash;&mdash;&mdash;
-thirteen&mdash;&mdash;&mdash;&ndash;&ndash;.</p>
+two–
+three—
+four––
+five—–
+six——
+seven—––
+eight––––
+nine———
+thirteen———––.</p>
 ```
 
 Hyphens can be escaped:
@@ -179,7 +179,7 @@ Three periods form an ellipsis:
 ```
 Ellipses...and...and....
 .
-<p>Ellipses&hellip;and&hellip;and&hellip;.</p>
+<p>Ellipses…and…and….</p>
 ```
 
 Periods can be escaped if ellipsis-formation

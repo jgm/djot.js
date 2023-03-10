@@ -60,7 +60,7 @@ attribute.
 ```
 hi\{key="abc{#hi}"
 .
-<p>hi{key=&ldquo;<span id="hi">abc</span>&rdquo;</p>
+<p>hi{key=“<span id="hi">abc</span>”</p>
 ```
 
 ```
@@ -285,7 +285,7 @@ text{a=x
 ```
 {a=" inline text
 .
-<p>{a=&ldquo; inline text</p>
+<p>{a=“ inline text</p>
 ```
 
 
