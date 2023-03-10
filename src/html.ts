@@ -51,13 +51,13 @@ class HTMLRenderer {
   }
 
   smartPunctuationMap : Record<string, string> = {
-    right_single_quote: "&rsquo;",
-    left_single_quote: "&lsquo;",
-    right_double_quote: "&rdquo;",
-    left_double_quote: "&ldquo;",
-    ellipses: "&hellip;",
-    em_dash: "&mdash;",
-    en_dash: "&ndash;"
+    right_single_quote: "’",
+    left_single_quote: "‘",
+    right_double_quote: "”",
+    left_double_quote: "“",
+    ellipses: "…",
+    em_dash: "—",
+    en_dash: "–"
   }
 
   renderAttributes(node: HasAttributes, extraAttrs?: Record<string, string>)
