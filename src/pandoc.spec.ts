@@ -7,9 +7,7 @@ describe("PandocParser", () => {
       {
         "pandoc-api-version": [
           1,
-          22,
-          2,
-          1
+          23,
         ],
         "meta": {},
         "blocks": [
@@ -665,9 +663,7 @@ describe("PandocRenderer", () => {
       {
         "pandoc-api-version": [
           1,
-          22,
-          2,
-          1
+          23,
         ],
         "meta": {},
         "blocks": [

@@ -451,7 +451,7 @@ class PandocRenderer {
   toPandoc(doc : Doc) : Pandoc {
     this.references = doc.references;
     this.footnotes = doc.footnotes;
-    return { ["pandoc-api-version"]: [1,22,2,1],
+    return { ["pandoc-api-version"]: [1,23],
              meta: {},
              blocks: this.toPandocChildren(doc) };
   }
@@ -885,6 +885,30 @@ class PandocParser {
         }
         return table;
       }
+
+      case "Figure": {
+        let attr = fromPandocAttr(block.c[0]);
+        const tag = /\bsection\b/.test((attr && attr.class) || "")
+                    ? "section" : "div";
+        let blocks = block.c[2].map((b : PandocElt) => {
+                      return this.fromPandocBlock(b);
+                    });
+        const rawcapt = block.c[1][1];
+        if (rawcapt.length > 0) {
+          const capt = rawcapt.map((b : PandocElt) => {
+                  return this.fromPandocBlock(b)
+                });
+          blocks.push(...capt);
+        }
+
+        const div : Div = {tag: "div", children: blocks};
+        if (attr) {
+          div.attributes = attr;
+        }
+        return div;
+      }
+
+
 
       case "LineBlock": {
         const ils : Inline[] = [];
