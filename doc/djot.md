@@ -16,7 +16,7 @@ It can produce
 - an AST in either human-readable or JSON form (`-t ast`, `-t astpretty`).
 - a djot document (`-t djot`)
 - a pandoc AST serialized to JSON (`-t pandoc`), which can be
-  read by pandoc and converted to many other formats
+  read by pandoc (version >= 3) and converted to many other formats
 
 It can also read a JSON-serialized djot AST (`-f ast`) or
 a pandoc AST serialized to JSON (`-f pandoc`), allowing

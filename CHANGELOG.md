@@ -1,5 +1,10 @@
 # Changelog for djot.js
 
+## 0.2.3
+
+* Support pandoc-types 1.23 JSON API (#54).
+  Note that this will require use of pandoc >= 3 with djot.
+
 ## 0.2.2
 
 * Lists: prioritize roman numerals over alpha when ambiguous (#38,

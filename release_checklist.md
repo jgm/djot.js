@@ -1,7 +1,7 @@
 Release checklist
 
 _ update CHANGELOG.md
-_ update version in package.json
+_ update version in package.json, src/version.ts
 _ git push
 _ make dist
 _ npm publish --access public
