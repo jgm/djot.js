@@ -442,7 +442,7 @@ class DjotRenderer {
           }
         }
         this.needsBlankLine = false;
-        this.lit(`- [${item.checkbox === "checked" ? "X" : " "}]`);
+        this.lit(`- [${item.checked  ? "X" : " "}]`);
         this.space();
         this.prefixes.push(" ".repeat(2));
         this.renderChildren<Block>(item.children);
