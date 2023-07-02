@@ -84,8 +84,11 @@ handlers[State.SCANNING] = function(parser : AttributeParser, pos : number) {
 }
 
 handlers[State.SCANNING_COMMENT] = function(parser : AttributeParser, pos : number) {
-  if (parser.subject.charAt(pos) === '%') {
+  const c = parser.subject.charAt(pos)
+  if (c === '%') {
     return State.SCANNING;
+  } else if (c == '}') {
+    return State.DONE;
   } else {
     return State.SCANNING_COMMENT;
   }
