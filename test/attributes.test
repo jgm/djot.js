@@ -209,7 +209,8 @@ two
 ```
 
 Comments start at a `%` character
-(not in quotes) and end with another `%`.
+(not in quotes) and end with another `%` or
+the end of the attribute (`}`).
 These can be used to comment up an attribute
 list or without any real attributes.
 
@@ -217,6 +218,12 @@ list or without any real attributes.
 foo{#ident % this is a comment % .class}
 .
 <p><span id="ident" class="class">foo</span></p>
+```
+
+```
+foo{#ident % this is a comment}
+.
+<p><span id="ident">foo</span></p>
 ```
 
 In block-level comment, subsequent lines must
