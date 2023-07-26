@@ -150,7 +150,6 @@ class Walker {
     while (!this.finished) {
       callback(this); // apply the action to current this state
       const topStack = this.stack && this.stack[this.stack.length - 1];
-      this.enter = this.enter && "children" in this.current;
       if (this.enter) {
         if ("children" in this.current &&
             this.current.children.length > 0) {
@@ -193,24 +192,20 @@ const applyFilterPartToNode = function(node : AstNode, enter : boolean,
   if (!trans) {
     return false;
   }
-  if (enter && "enter" in trans) {
-    const transform = trans.enter;
-    if (!transform) {
-      return false;
+  let transform;
+  if (enter) {
+    if ("enter" in trans && trans.enter) {
+      transform = trans.enter;
     }
-    return transform(node);
   } else {
-    let transform;
     if ("exit" in trans && trans.exit) {
       transform = trans.exit;
-    } else if ("enter" in trans && trans.enter) {
-      transform = trans.enter;
     } else {
       transform = trans;
     }
-    if (typeof transform === "function") {
-      return transform(node);
-    }
+  }
+  if (typeof transform === "function") {
+    return transform(node);
   }
 }
 
