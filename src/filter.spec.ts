@@ -81,6 +81,19 @@ const fancyFilter : Filter = () => {
         };
 };
 
+const countSpanRuns : Filter = () => {
+  let count = 0;
+  return {
+    span: (e) => {
+      ++count;
+      return {
+        tag: "span",
+        children: [{tag: "str", text: String(count)}]
+      };
+    }
+  }
+};
+
 describe("applyFilter", () => {
   it("capitalizes text", () => {
     const ast = parse("Hello *there* `code`");
@@ -182,6 +195,16 @@ footnotes
 `);
   });
 
+  it("doesn't run exit filters twice", () => {
+    const ast = parse("[count goes here]{.span}");
+    applyFilter(ast, countSpanRuns);
+    expect(renderAST(ast)).toEqual(
+`doc
+  para
+    span
+      str text="1"
+`);
+  });
 
   it("doesn't loop", () => {
     const ast = parse("Hello _there_ friend");
