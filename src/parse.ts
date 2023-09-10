@@ -1003,13 +1003,15 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
         if (!tip || ("tag" in tip && tip.tag !== "table")) {
           return;
         }
-        tip.children.unshift( // add caption as first child of table
-          {
+        const capt =  {
             tag: "caption",
             children: node.children,
             attributes: node.attributes,
             pos: node.pos
-          });
+          };
+        if (tip.children[0]?.tag === "caption") {
+          tip.children[0] = capt;
+        }
       },
 
       ["+footnote"]: (suffixes, startpos, endpos, pos) => {
