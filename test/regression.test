@@ -40,3 +40,24 @@ Issue #127:
 <p>{
 .<code></code></p>
 ```
+
+Issue #57:
+
+``` a
+| 1 | 2 |
+
+ ^ cap1
+
+ ^ cap2
+.
+doc
+  table
+    caption
+      str text="cap2"
+    row head=false
+      cell head=false align="default"
+        str text="1"
+      cell head=false align="default"
+        str text="2"
+```
+
