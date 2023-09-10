@@ -82,14 +82,14 @@ class PandocRenderer {
   constructor(options : Options = {}) {
     this.options = options;
     this.smartPunctuationMap = this.options.smartPunctuationMap ||
-      { non_breaking_space: " ",
-        ellipses: "⋯",
-        em_dash: "-",
-        en_dash: "-",
+      { right_single_quote: "’",
         left_single_quote: "‘",
-        right_single_quote: "’",
+        right_double_quote: "”",
         left_double_quote: "“",
-        right_double_quote: "”" };
+        ellipses: "…",
+        em_dash: "—",
+        en_dash: "–"
+      };
     this.warn ||= (() => {});
   }
 
@@ -325,7 +325,7 @@ class PandocRenderer {
         break;
 
       case "non_breaking_space":
-        elts.push({ t: "Str", c: " " });
+        elts.push({ t: "Str", c: "\u00A0" });
         break;
 
       case "smart_punctuation":
