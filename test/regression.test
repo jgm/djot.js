@@ -61,3 +61,10 @@ doc
         str text="2"
 ```
 
+Issue #46:
+
+```
+[hi]({#ab})
+.
+<p><a href="{#ab}">hi</a></p>
+```

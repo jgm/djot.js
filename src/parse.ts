@@ -563,7 +563,12 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
       },
 
       ["-linktext"]: (suffixes, startpos, endpos, pos) => {
-        // we don't pop yet, but wait for -destination
+        const node = popContainer(pos);  // the container added by +linktext/+imagetext
+        addChildToTip({
+          tag: "link",
+          destination: "",
+          children: node.children,
+          pos: node.pos});
       },
 
       ["+imagetext"]: (suffixes, startpos, endpos, pos) => {
@@ -572,41 +577,56 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
       },
 
       ["-imagetext"]: (suffixes, startpos, endpos, pos) => {
-        // we don't pop yet, but wait for -destination
+        const node = popContainer(pos);  // the container added by +linktext/+imagetext
+        addChildToTip({
+          tag: "image",
+          destination: "",
+          children: node.children,
+          pos: node.pos});
       },
 
       ["+destination"]: (suffixes, startpos, endpos, pos) => {
-        context = Context.Literal;
+        pushContainer(pos);
+        topContainer().data.startDestination = endpos;
       },
 
-      ["-destination"]: (suffixes, startpos, endpos, pos) => {
-        const node = popContainer(pos);  // the container added by +linktext/+imagetext
-        addChildToTip({
-          tag: node.data.isimage ? "image" : "link",
-          destination: accumulatedText.replace(/[\r\n]/g,""),
-          children: node.children,
-          pos: node.pos});
-        context = Context.Normal;
-        accumulatedText = "";
+     ["-destination"]: (suffixes, startpos, endpos, pos) => {
+       const node = popContainer(pos);
+       const txt = input.substring(node.data.startDestination + 1, startpos);
+       if (containers.length > 0) {
+	  const tip = containers[containers.length - 1];
+	  // the container added by +linktext or +imagetext
+	  const lastchild = tip.children[tip.children.length - 1];
+	  if (lastchild) {
+	    lastchild.destination = lastchild.destination +
+	      txt.replace(/[\r\n]+/g,"").replace(/[\\](['!\"#$%&\\'()\\*+,\-\.\/:;<=>?@\[\]\^_`{|}~'])/g,"$1");
+	  }
+	}
       },
 
       ["+reference"]: (suffixes, startpos, endpos, pos) => {
-        context = Context.Literal;
+        pushContainer(pos);
+        topContainer().data.startReference = endpos;
       },
 
       ["-reference"]: (suffixes, startpos, endpos, pos) => {
-        const node = popContainer(pos);  // the container added by +linktext
-        let ref = accumulatedText.replace(/\r?\n/g," ");
-        if (ref.length === 0) {
-          ref = getStringContent(node);
-        }
-        addChildToTip({
-          tag: node.data.isimage ? "image" : "link",
-          reference: ref,
-          children: node.children,
-          pos: node.pos});
-        context = Context.Normal;
-        accumulatedText = "";
+        const node = popContainer(pos);
+        const txt = input.substring(node.data.startReference + 1, startpos);
+	if (containers.length > 0) {
+	  const tip = containers[containers.length - 1];
+	  // the container added by +linktext or +imagetext
+	  const lastchild = tip.children[tip.children.length - 1];
+	  if (lastchild) {
+	    if (lastchild.reference === undefined) {
+	      lastchild.reference = "";
+	    }
+            let ref = txt.replace(/[\r\n]+/g," ").replace(/[\\](['!\"#$%&\\'()\*+,\-\.\/:;<=>?@\[\]\^_`{|}~'])/g,"$1");
+            if (ref.length === 0) {
+              ref = getStringContent(lastchild);
+            }
+	    lastchild.reference = lastchild.reference + ref;
+	  }
+	}
       },
 
       ["+verbatim"]: (suffixes, startpos, endpos, pos) => {
