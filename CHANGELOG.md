@@ -1,5 +1,14 @@
 # Changelog for djot.js
 
+## 0.2.4
+
+  * Fix bug in parsing code for links/images (#46).
+  * Fix buggy table caption parsing (#57).
+  * Fix smart punctuation in pandoc output (#62).
+  * Fix filters to not run twice (#61, kibigo!).
+  * Add package-lock.json and yarn.lock to repository (#60).
+  * Allow comment end with attribute end (gemmaro, #59).
+
 ## 0.2.3
 
 * Support pandoc-types 1.23 JSON API (#54).
