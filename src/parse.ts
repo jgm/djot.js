@@ -119,6 +119,10 @@ enum Context {
   Literal = 2    // gather str, soft_break, hard_break in accumulatedText
 }
 
+const normalizeLabel = function(label : string): string {
+  return label.trim().replace(/[ \t\r\n]+/, " ")
+}
+
 const parse = function(input: string, options: ParseOptions = {}): Doc {
 
   const linestarts: number[] = [-1];
@@ -291,7 +295,8 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
 
       footnote_reference: (suffixes, startpos, endpos, pos) => {
         const fnref = input.substring(startpos + 2, endpos);
-        addChildToTip({ tag: "footnote_reference", text: fnref, pos: pos});
+        addChildToTip({ tag: "footnote_reference",
+	  text: normalizeLabel(fnref), pos: pos});
       },
 
       ["+reference_definition"]: (suffixes, startpos, endpos, pos) => {
@@ -300,14 +305,15 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
 
       ["-reference_definition"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
+	const lab = normalizeLabel(node.data.key);
         const r: Reference = {
           tag: "reference",
-          label: node.data.key,
+          label: lab,
           destination: node.data.value || "",
           attributes: node.attributes
         };
         if (node.data.key) {
-          references[node.data.key] = r;
+          references[lab] = r;
         }
       },
 
@@ -611,7 +617,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
 
       ["-reference"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
-        const txt = input.substring(node.data.startReference + 1, startpos);
+        const txt = normalizeLabel(input.substring(node.data.startReference + 1, startpos));
 	if (containers.length > 0) {
 	  const tip = containers[containers.length - 1];
 	  // the container added by +linktext or +imagetext
@@ -751,10 +757,11 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
           identifiers[node.attributes.id] = true;
         }
         // add implicit heading reference
-        if (!references[headingStr]) {
-          references[headingStr] = {
+	const lab = normalizeLabel(headingStr);
+        if (!references[lab]) {
+          references[lab] = {
             tag: "reference",
-            label: headingStr,
+            label: lab,
             destination: "#" + node.attributes.id
           };
         }
@@ -1041,10 +1048,11 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
       ["-footnote"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         if (node.data.label) {
-          footnotes[node.data.label] =
+	  const lab = normalizeLabel(node.data.label);
+          footnotes[lab] =
           {
             tag: "footnote",
-            label: node.data.label || "",
+            label: lab || "",
             children: node.children,
             attributes: node.attributes,
             pos: node.pos
