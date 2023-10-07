@@ -120,7 +120,7 @@ enum Context {
 }
 
 const normalizeLabel = function(label : string): string {
-  return label.trim().replace(/[ \t\r\n]+/, " ")
+  return label.trim().replace(/[ \t\r\n]+/g, " ")
 }
 
 const parse = function(input: string, options: ParseOptions = {}): Doc {
