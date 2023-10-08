@@ -62,18 +62,23 @@ handlers[State.DONE] = function(parser : AttributeParser, pos : number) {
 
 handlers[State.SCANNING] = function(parser : AttributeParser, pos : number) {
   const c = parser.subject.charAt(pos);
-  if (c === ' ' || c === '\t' || c === '\n' || c === '\r') {
+  if (c === '\n' || c === '\r') {
+    return State.SCANNING;
+  } else if (c === ' ' || c === '\t') {
+    parser.addEvent(pos, pos, "attr_space");
     return State.SCANNING;
   } else if (c === '}') {
     return State.DONE;
   } else if (c === '#') {
     parser.begin = pos;
+    parser.addEvent(pos, pos, "attr_id_marker");
     return State.SCANNING_ID;
   } else if (c === '%') {
     parser.begin = pos;
     return State.SCANNING_COMMENT;
   } else if (c === '.') {
     parser.begin = pos;
+    parser.addEvent(pos, pos, "attr_class_marker");
     return State.SCANNING_CLASS;
   } else if (isKeyChar(c)) {
     parser.begin = pos;
@@ -86,6 +91,9 @@ handlers[State.SCANNING] = function(parser : AttributeParser, pos : number) {
 handlers[State.SCANNING_COMMENT] = function(parser : AttributeParser, pos : number) {
   const c = parser.subject.charAt(pos)
   if (c === '%') {
+    if (parser.begin && pos > parser.begin) {
+      parser.addEvent(parser.begin, pos, "comment");
+    }
     return State.SCANNING;
   } else if (c == '}') {
     return State.DONE;
@@ -95,7 +103,7 @@ handlers[State.SCANNING_COMMENT] = function(parser : AttributeParser, pos : numb
 }
 
 handlers[State.SCANNING_ID] = function(parser : AttributeParser, pos : number) {
-  const c = parser.subject.substr(pos, 1);
+  const c = parser.subject.charAt(pos);
 
   if ((/^\w/.exec(c) !== null) || c === '_' || c === '-' || c === ':') {
     return State.SCANNING_ID;
@@ -109,6 +117,9 @@ handlers[State.SCANNING_ID] = function(parser : AttributeParser, pos : number) {
     if (parser.begin && parser.lastpos && parser.lastpos > parser.begin) {
       parser.addEvent(parser.begin + 1, parser.lastpos, "id");
     }
+    if (!(c === '\r' || c === '\n')) {
+      parser.addEvent(pos, pos, "attr_space");
+    }
     parser.begin = null;
     return State.SCANNING;
   } else {
@@ -117,7 +128,7 @@ handlers[State.SCANNING_ID] = function(parser : AttributeParser, pos : number) {
 }
 
 handlers[State.SCANNING_CLASS] = function(parser : AttributeParser, pos : number) {
-  const c = parser.subject.substr(pos, 1);
+  const c = parser.subject.charAt(pos);
   if ((/^\w/.exec(c) !== null) || c === '_' || c === '-' || c === ':') {
     return State.SCANNING_CLASS;
   } else if (c === '}') {
@@ -130,6 +141,9 @@ handlers[State.SCANNING_CLASS] = function(parser : AttributeParser, pos : number
     if (parser.begin && parser.lastpos && parser.lastpos > parser.begin) {
       parser.addEvent(parser.begin + 1, parser.lastpos, "class");
     }
+    if (!(c === '\r' || c === '\n')) {
+      parser.addEvent(pos, pos, "attr_space");
+    }
     parser.begin = null;
     return State.SCANNING;
   } else {
@@ -138,9 +152,10 @@ handlers[State.SCANNING_CLASS] = function(parser : AttributeParser, pos : number
 }
 
 handlers[State.SCANNING_KEY] = function(parser : AttributeParser, pos : number) {
-  const c = parser.subject.substr(pos, 1);
+  const c = parser.subject.charAt(pos);
   if (c === '=' && parser.begin && parser.lastpos) {
     parser.addEvent(parser.begin, parser.lastpos, "key");
+    parser.addEvent(pos, pos, "attr_equal_marker")
     parser.begin = null;
     return State.SCANNING_VALUE;
   } else if (/^[a-zA-Z0-9_:-]/.exec(c) !== null) {
@@ -154,6 +169,7 @@ handlers[State.SCANNING_VALUE] = function(parser : AttributeParser, pos : number
   const c = parser.subject.charAt(pos);
   if (c === '"') {
     parser.begin = pos;
+    parser.addEvent(pos, pos, "attr_quote_marker");
     return State.SCANNING_QUOTED_VALUE;
   } else if (/^[a-zA-Z0-9_:-]/.exec(c) !== null) {
     parser.begin = pos;
@@ -173,6 +189,9 @@ handlers[State.SCANNING_BARE_VALUE] = function(parser : AttributeParser, pos : n
     return State.DONE;
   } else if (/^\s/.exec(c) && parser.begin && parser.lastpos) {
     parser.addEvent(parser.begin, parser.lastpos, "value");
+    if (!(c === '\r' || c === '\n')) {
+      parser.addEvent(pos, pos, "attr_space");
+    }
     parser.begin = null;
     return State.SCANNING;
   } else {
@@ -192,6 +211,7 @@ handlers[State.SCANNING_QUOTED_VALUE] = function(parser : AttributeParser, pos :
   const c = parser.subject.charAt(pos);
   if (c === '"' && parser.begin && parser.lastpos) {
     parser.addEvent(parser.begin + 1, parser.lastpos, "value");
+    parser.addEvent(pos, pos, "attr_quote_marker");
     parser.begin = null;
     return State.SCANNING;
   } else if (c === "\n" && parser.begin && parser.lastpos) {
@@ -211,6 +231,7 @@ handlers[State.SCANNING_QUOTED_VALUE_CONTINUATION] = function(parser : Attribute
     parser.begin = pos;
   }
   if (c === '"' && parser.begin && parser.lastpos) {
+    parser.addEvent(pos, pos, "attr_quote_marker");
     parser.addEvent(parser.begin, parser.lastpos, "value");
     parser.begin = null;
     return State.SCANNING;

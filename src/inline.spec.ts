@@ -146,10 +146,17 @@ describe("InlineParser", () => {
     parser.feed(0,20);
     expect(parser.getMatches()).toStrictEqual([
       { annot: "+attributes", startpos: 0, endpos: 0 },
+      { annot: "attr_id_marker", startpos: 1, endpos: 1 },
       { annot: "id", startpos: 2, endpos: 4 },
+      { annot: "attr_space", startpos: 5, endpos: 5 },
+      { annot: "attr_class_marker", startpos: 6, endpos: 6 },
       { annot: "class", startpos: 7, endpos: 9 },
+      { annot: "attr_space", startpos: 10, endpos: 10 },
       { annot: "key", startpos: 11, endpos: 13 },
+      { annot: "attr_equal_marker", startpos: 14, endpos: 14 },
+      { annot: "attr_quote_marker", startpos: 15, endpos: 15 },
       { annot: "value", startpos: 16, endpos: 18 },
+      { annot: "attr_quote_marker", startpos: 19, endpos: 19 },
       { annot: "-attributes", startpos: 20, endpos: 20 }
     ]);
   });
@@ -163,10 +170,17 @@ describe("InlineParser", () => {
       { annot: "str", startpos: 1, endpos: 2 },
       { annot: "-span", startpos: 3, endpos: 3 },
       { annot: "+attributes", startpos: 4, endpos: 4 },
+      { annot: "attr_id_marker", startpos: 5, endpos: 5 },
       { annot: "id", startpos: 6, endpos: 8 },
+      { annot: "attr_space", startpos: 9, endpos: 9 },
+      { annot: "attr_class_marker", startpos: 10, endpos: 10 },
       { annot: "class", startpos: 11, endpos: 13 },
+      { annot: "attr_space", startpos: 14, endpos: 14 },
       { annot: "key", startpos: 15, endpos: 17 },
+      { annot: "attr_equal_marker", startpos: 18, endpos: 18 },
+      { annot: "attr_quote_marker", startpos: 19, endpos: 19 },
       { annot: "value", startpos: 20, endpos: 22 },
+      { annot: "attr_quote_marker", startpos: 23, endpos: 23 },
       { annot: "-attributes", startpos: 24, endpos: 24 }
     ]);
   });

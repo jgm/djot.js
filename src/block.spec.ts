@@ -256,10 +256,13 @@ describe("EventParser", () => {
     }
     expect(events).toStrictEqual([
       { startpos: 0, endpos: 0, annot: "+block_attributes" },
+      { startpos: 1, endpos: 1, annot: "attr_class_marker" },
       { startpos: 2, endpos: 4, annot: "class" },
       { startpos: 7, endpos: 7, annot: "-block_attributes" },
       { startpos: 7, endpos: 7, annot: "+block_attributes" },
+      { startpos: 8, endpos: 8, annot: "attr_id_marker" },
       { startpos: 9, endpos: 11, annot: "id" },
+      { startpos: 14, endpos: 14, annot: "attr_class_marker" },
       { startpos: 15, endpos: 17, annot: "class" },
       { startpos: 20, endpos: 20, annot: "-block_attributes" },
       { startpos: 20, endpos: 20, annot: "+para" },
