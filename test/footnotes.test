@@ -19,12 +19,12 @@ another ref to the first note[^a].
 <ol>
 <li id="fn1">
 <p>This is a note.</p>
-<p>Second paragraph.<a href="#fnref1" role="doc-backlink">↩︎︎</a></p>
+<p>Second paragraph.<a href="#fnref1" role="doc-backlink">↩</a></p>
 </li>
 <li id="fn2">
 <pre><code>code
 </code></pre>
-<p><a href="#fnref2" role="doc-backlink">↩︎︎</a></p>
+<p><a href="#fnref2" role="doc-backlink">↩</a></p>
 </li>
 </ol>
 </section>
@@ -42,7 +42,7 @@ test[^nonexistent]
 <hr>
 <ol>
 <li id="fn1">
-<p><a href="#fnref1" role="doc-backlink">↩︎︎</a></p>
+<p><a href="#fnref1" role="doc-backlink">↩</a></p>
 </li>
 </ol>
 </section>
@@ -60,10 +60,10 @@ test[^nonexistent]
 <hr>
 <ol>
 <li id="fn1">
-<p><a href="#fnref1" role="doc-backlink">↩︎︎</a></p>
+<p><a href="#fnref1" role="doc-backlink">↩</a></p>
 </li>
 <li id="fn2">
-<p><a href="#fnref2" role="doc-backlink">↩︎︎</a></p>
+<p><a href="#fnref2" role="doc-backlink">↩</a></p>
 </li>
 </ol>
 </section>
@@ -82,10 +82,10 @@ text[^footnote].
 <hr>
 <ol>
 <li id="fn1">
-<p>very long footnote<a id="fnref2" href="#fn2" role="doc-noteref"><sup>2</sup></a><a href="#fnref1" role="doc-backlink">↩︎︎</a></p>
+<p>very long footnote<a id="fnref2" href="#fn2" role="doc-noteref"><sup>2</sup></a><a href="#fnref1" role="doc-backlink">↩</a></p>
 </li>
 <li id="fn2">
-<p>bla bla<a id="fnref2" href="#fn2" role="doc-noteref"><sup>2</sup></a><a href="#fnref2" role="doc-backlink">↩︎︎</a></p>
+<p>bla bla<a id="fnref2" href="#fn2" role="doc-noteref"><sup>2</sup></a><a href="#fnref2" role="doc-backlink">↩</a></p>
 </li>
 </ol>
 </section>
