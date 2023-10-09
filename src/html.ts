@@ -113,7 +113,7 @@ class HTMLRenderer {
   }
 
   addBacklink(note : string, ident: number): string {
-    const backlink : string = `<a href="#fnref${ident}" role="doc-backlink">\u21a9</a>`;
+    const backlink : string = `<a href="#fnref${ident}" role="doc-backlink">\u21A9\uFE0E</a>`;
     if (/\<\/p\>[\r\n]*$/.test(note)) {
       return note.replace(/\<\/p\>([\r\n]*)$/, backlink + "</p>$1");
     } else {
