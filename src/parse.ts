@@ -182,10 +182,10 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
     }
   };
   const getUniqueIdentifier = function(s: string): string {
-    const base = s.trim()
-      .replace(/[\W\s.]+/g, "-")
-      .replace(/-$/, "")
-      .replace(/^-/, "");
+    const base =
+      s.replace(/[\]\[~!@#$%^&*(){}`,.<>\\|=+/?\s]+/g, " ")
+       .trim()
+       .replace(/ +/g, "-");
     let i = 0;
     let ident = base;
     // generate unique id
