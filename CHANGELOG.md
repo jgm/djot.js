@@ -1,5 +1,20 @@
 # Changelog for djot.js
 
+## 0.2.5
+
+  * HTML renderer: use a *single* variation selector in backlink (#65).
+    Previously we had a doubled one.
+  * Revert change in parsing code for links/images.
+    (commit 1b5425c7ac175127288dc8412e06df23db20b89a). (See #46, #64.)
+  * Attributes: put events on markers and spaces (new fix for #46).
+    Otherwise this is lost in `strMatches`, when we have to treat
+    this material as part of a reference or destination.
+  * Normalize reference + footnote labels. Trim and collapse adjacent
+    interior whitespace, including newlines, to a single space. This
+    will allow implicit heading references to work even when headings
+    span multiple lines (#63).
+  * `getUniqueIdentifier`: improve regex for symbol replacement (#63).
+
 ## 0.2.4
 
   * Fix bug in parsing code for links/images (#46).
