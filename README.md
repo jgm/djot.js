@@ -53,6 +53,16 @@ And to convert back to `gfm`,
 djot mydoc.dj -t pandoc | pandoc -f json -t gfm
 ```
 
+## CDN
+
+The library is available via the `unpkg` CDN:
+
+``` html
+<script src="https://unpkg.com/@djot/djot@0.2.5/dist/djot.js"></script>
+```
+
+(Replace `0.2.5` with the version you want to use.)
+
 ## Library API
 
 ### Parsing djot to an AST
