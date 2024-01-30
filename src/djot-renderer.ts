@@ -613,12 +613,12 @@ class DjotRenderer {
     this.doBlankLines();
     const handler = this.handlers[node.tag];
     if (handler) {
-      if ("attributes" in node && isBlock(node)) {
+      if (node.attributes && isBlock(node)) {
         this.renderAttributes<Block>(node);
         this.cr();
       }
       handler(node);
-      if ("attributes" in node && isInline(node)) {
+      if (node.attributes && isInline(node)) {
         this.renderAttributes<Inline>(node);
       }
     } else {
