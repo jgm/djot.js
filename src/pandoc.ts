@@ -162,21 +162,19 @@ class PandocRenderer {
       }
 
       case "task_list":
-      case "ordered_list":
       case "bullet_list": {
         let items : PandocElt[][];
-        if (node.style &&
-            node.style === "-" || node.style === "+" || node.style === "*" ||
-            node.style === "X") {
-          items = node.children.map(this.toPandocListItem(node));
-          elts.push({ t: "BulletList", c: items } );
-        } else {
-          items = node.children.map(this.toPandocListItem(node));
-          const [style, delim] = reverseStyleMap[node.style as string];
-          const start : number = node.start || 1;
-          elts.push({ t: "OrderedList", c: [[start, {t: style}, {t: delim}],
-                                            items] } );
-        }
+        items = node.children.map(this.toPandocListItem(node));
+        elts.push({ t: "BulletList", c: items } );
+        break;
+      }
+
+      case "ordered_list": {
+        let items = node.children.map(this.toPandocListItem(node));
+        const [style, delim] = reverseStyleMap[node.style as string];
+        const start : number = node.start || 1;
+        elts.push({ t: "OrderedList", c: [[start, {t: style}, {t: delim}],
+                                          items] } );
         break;
       }
 
