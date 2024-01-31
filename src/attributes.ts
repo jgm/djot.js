@@ -105,7 +105,7 @@ handlers[State.SCANNING_COMMENT] = function(parser : AttributeParser, pos : numb
 handlers[State.SCANNING_ID] = function(parser : AttributeParser, pos : number) {
   const c = parser.subject.charAt(pos);
 
-  if ((/^\w/.exec(c) !== null) || c === '_' || c === '-' || c === ':') {
+  if ((/^[^\]\[~!@#$%^&*(){}`,.<>\\|=+/?\s]/.exec(c) !== null)) {
     return State.SCANNING_ID;
   } else if (c === '}') {
     if (parser.begin && parser.lastpos && parser.lastpos > parser.begin) {
