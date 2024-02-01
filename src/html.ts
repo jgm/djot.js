@@ -17,6 +17,7 @@ class HTMLRenderer {
   footnoteIndex: Record<string, number>;
   nextFootnoteIndex: number;
   references: Record<string, Reference>;
+  autoReferences: Record<string, Reference>;
 
   constructor(options : HTMLRenderOptions) {
     this.warn = options.warn || (() => {});
@@ -25,6 +26,7 @@ class HTMLRenderer {
     this.footnoteIndex = {};
     this.nextFootnoteIndex = 1;
     this.references = {};
+    this.autoReferences = {};
   }
 
   escape(s: string): string {
@@ -76,9 +78,13 @@ class HTMLRenderer {
         }
       }
     }
-    if (node.attributes) {
-      for (const k in node.attributes) {
-        const v = node.attributes[k];
+    const attributes = {
+      ...node.autoAttributes,
+      ...node.attributes,
+    }
+    if (attributes) {
+      for (const k in attributes) {
+        const v = attributes[k];
         if (!(k === "class" && extraAttrs && extraAttrs.class)) {
           result += ` ${k}="${this.escapeAttribute(v)}"`;
         }
@@ -95,7 +101,7 @@ class HTMLRenderer {
   renderTag(tag: string, node: AstNode, extraAttrs?: Record<string, string>)
     : string {
     let attributes = "";
-    if ("attributes" in node || extraAttrs || node.pos) {
+    if (node.attributes || node.autoAttributes || extraAttrs || node.pos) {
       attributes = this.renderAttributes(node, extraAttrs);
     }
     return `<${tag}${attributes}>`;
@@ -113,7 +119,7 @@ class HTMLRenderer {
   }
 
   addBacklink(note : string, ident: number): string {
-    const backlink : string = `<a href="#fnref${ident}" role="doc-backlink">\u21A9\uFE0E</a>`;
+    const backlink  = `<a href="#fnref${ident}" role="doc-backlink">\u21A9\uFE0E</a>`;
     if (/\<\/p\>[\r\n]*$/.test(note)) {
       return note.replace(/\<\/p\>([\r\n]*)$/, backlink + "</p>$1");
     } else {
@@ -316,7 +322,7 @@ class HTMLRenderer {
       }
 
       case "str": {
-        if (node.attributes) {
+        if (node.attributes || node.autoAttributes) {
           return `${this.renderTag("span", node)}${this.escape(node.text)}</span>`;
         } else {
           return this.escape(node.text);
@@ -391,7 +397,7 @@ class HTMLRenderer {
         const extraAttr : Record<string,string> = {};
         let dest: string | undefined = node.destination;
         if (node.reference) {
-          const ref = this.references[node.reference];
+          const ref = this.references[node.reference] ||this.autoReferences[node.reference];
           if (ref) {
             dest = ref.destination;
             if (node.tag === "image") {
@@ -405,6 +411,14 @@ class HTMLRenderer {
                 if (!node.attributes || !node.attributes[k]) {
                   // attribs on link take priority over attribs on reference
                   extraAttr[k] = ref.attributes[k];
+                }
+              }
+            }
+            if (ref.autoAttributes) {
+              for (const k in ref.autoAttributes) {
+                if (!node.autoAttributes || !node.autoAttributes[k]) {
+                  // attribs on link take priority over attribs on reference
+                  extraAttr[k] = ref.autoAttributes[k];
                 }
               }
             }
@@ -477,6 +491,7 @@ class HTMLRenderer {
 
   render(doc: Doc): string {
     this.references = doc.references;
+    this.autoReferences = doc.autoReferences;
     return this.renderAstNode(doc);
   }
 }

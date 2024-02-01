@@ -6,6 +6,7 @@ const cicero  = "Sed ut perspiciatis unde omnis iste natus error sit voluptatem 
 const mkdoc = function(children : Block[]) : Doc {
   return {tag: "doc",
           references: {},
+          autoReferences: {},
           footnotes: {},
           children: children};
 }
@@ -67,6 +68,7 @@ Thus Cicero.
       {
         "tag": "doc",
         "references": {},
+        "autoReferences": {},
         "footnotes": {
           "1": {
             "tag": "footnote",
