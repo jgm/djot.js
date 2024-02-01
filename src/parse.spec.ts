@@ -6,6 +6,7 @@ describe("Parser", () => {
     expect(ast).toEqual(
 {
   "tag": "doc",
+  "autoReferences": {},
   "references": {},
   "footnotes": {},
   "children": [
@@ -44,6 +45,7 @@ describe("Parser", () => {
     expect(ast).toEqual(
 {
   "tag": "doc",
+  "autoReferences": {},
   "references": {},
   "footnotes": {},
   "children": [

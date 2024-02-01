@@ -24,6 +24,7 @@ import {
 interface Container {
   children: any[];
   attributes?: Attributes;
+  autoAttributes?: Attributes;
   data: Record<string,any>;
   pos?: Pos;
 }
@@ -164,8 +165,9 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
 
 
   let context = Context.Normal;
-  let accumulatedText: string = "";
+  let accumulatedText = "";
   const references: Record<string, Reference> = {};
+  const autoReferences: Record<string, Reference> = {};
   const footnotes: Record<string, Footnote> = {};
   const identifiers: Record<string, boolean> = {}; // identifiers used
   const blockAttributes: Attributes = {}; // accumulated block attributes
@@ -730,20 +732,23 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
         if (!node.attributes) {
           node.attributes = {};
         }
+
+        if (!node.autoAttributes) {
+          node.autoAttributes = {}
+        }
         const headingStr = getStringContent(node).trim();
 
         if (!node.attributes.id) {
-          // generate auto identifier
-          node.attributes.id = getUniqueIdentifier(headingStr);
-          identifiers[node.attributes.id] = true;
+          node.autoAttributes.id = getUniqueIdentifier(headingStr);
+          identifiers[node.autoAttributes.id] = true;
         }
         // add implicit heading reference
 	const lab = normalizeLabel(headingStr);
-        if (!references[lab]) {
-          references[lab] = {
+        if (!references[lab] && !autoReferences[lab]) {
+          autoReferences[lab] = {
             tag: "reference",
             label: lab,
-            destination: "#" + node.attributes.id
+            destination: "#" + (node.attributes.id||node.autoAttributes.id)
           };
         }
 
@@ -758,6 +763,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
               tag: "section",
               children: pnode.children,
               attributes: pnode.attributes,
+              autoAttributes: pnode.autoAttributes,
               pos: pnode.pos});
             pnode = topContainer();
           }
@@ -766,6 +772,10 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
           pushContainer(pos);
           topContainer().data.headinglevel = node.data.level;
           // move id attribute from heading to section
+          if (node.autoAttributes && node.autoAttributes.id) {
+            topContainer().autoAttributes = node.autoAttributes;
+            delete node.autoAttributes;
+          }
           if (node.attributes && node.attributes.id) {
             topContainer().attributes = node.attributes;
             delete node.attributes;
@@ -776,6 +786,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
           level: node.data.level,
           children: node.children,
           attributes: node.attributes,
+          autoAttributes: node.autoAttributes,
           pos: node.pos});
       },
 
@@ -800,6 +811,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
             tag: "definition_list",
             children: node.children,
             attributes: node.attributes,
+            autoAttributes: node.autoAttributes,
             pos: node.pos});
         } else if (listStyle === "X") {
           addChildToTip({
@@ -807,6 +819,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
             tight: node.data.tight,
             children: node.children,
             attributes: node.attributes,
+            autoAttributes: node.autoAttributes,
             pos: node.pos});
         } else if (listStyle === "+" || listStyle === "*" ||
                    listStyle === "-") {
@@ -816,6 +829,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
             style: listStyle,
             children: node.children,
             attributes: node.attributes,
+            autoAttributes: node.autoAttributes,
             pos: node.pos});
         } else {
           addChildToTip({
@@ -825,6 +839,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
             start: listStart,
             tight: node.data.tight,
             attributes: node.attributes,
+            autoAttributes: node.autoAttributes,
             pos: node.pos});
         }
         listDepth--;
@@ -864,6 +879,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
               tag: "definition_list_item",
               children: [term, definition],
               attributes: node.attributes,
+              autoAttributes: node.autoAttributes,
               pos: node.pos});
           } else {
             const term: Term = { tag: "term", children: [] };
@@ -876,6 +892,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
               tag: "definition_list_item",
               children: [term, definition],
               attributes: node.attributes,
+              autoAttributes: node.autoAttributes,
               pos: node.pos});
           }
         } else if (node.data.checkbox) {
@@ -883,6 +900,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
             tag: "task_list_item",
             children: node.children,
             attributes: node.attributes,
+            autoAttributes: node.autoAttributes,
             checkbox: node.data.checkbox,
             pos: node.pos});
         } else {
@@ -890,6 +908,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
             tag: "list_item",
             children: node.children,
             attributes: node.attributes,
+            autoAttributes: node.autoAttributes,
             pos: node.pos});
         }
       },
@@ -912,6 +931,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
           tag: "block_quote",
           children: node.children,
           attributes: node.attributes,
+          autoAttributes: node.autoAttributes,
           pos: node.pos});
       },
 
@@ -934,6 +954,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
           tag: "table",
           children: [caption, ...rows],
           attributes: node.attributes,
+          autoAttributes: node.autoAttributes,
           pos: node.pos});
       },
 
@@ -966,6 +987,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
             children: node.children,
             head: false, // gets set later
             attributes: node.attributes,
+            autoAttributes: node.autoAttributes,
             pos: node.pos});
         }
       },
@@ -998,6 +1020,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
           head: false, // gets set in "-row"
           align: "default", // set at "-row"
           attributes: node.attributes,
+          autoAttributes: node.autoAttributes,
           pos: node.pos});
       },
 
@@ -1015,6 +1038,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
             tag: "caption",
             children: node.children,
             attributes: node.attributes,
+            autoAttributes: node.autoAttributes,
             pos: node.pos
           };
         if (tip.children[0]?.tag === "caption") {
@@ -1036,6 +1060,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
             label: lab || "",
             children: node.children,
             attributes: node.attributes,
+            autoAttributes: node.autoAttributes,
             pos: node.pos
           };
         } else {
@@ -1063,6 +1088,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
             format: node.data.format,
             text: accumulatedText,
             attributes: node.attributes,
+            autoAttributes: node.autoAttributes,
             pos: node.pos});
         } else {
           addChildToTip({
@@ -1070,6 +1096,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
             text: accumulatedText,
             lang: node.data.lang,
             attributes: node.attributes,
+            autoAttributes: node.autoAttributes,
             pos: node.pos});
         }
         context = Context.Normal;
@@ -1091,6 +1118,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
           tag: "div",
           children: node.children,
           attributes: node.attributes,
+          autoAttributes: node.autoAttributes,
           pos: node.pos});
       },
 
@@ -1238,6 +1266,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
       tag: "section",
       children: pnode.children,
       attributes: pnode.attributes,
+      autoAttributes: pnode.autoAttributes,
       pos: pnode.pos});
     pnode = topContainer();
   }
@@ -1246,9 +1275,13 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
   {
     tag: "doc",
     references: references,
+    autoReferences: autoReferences,
     footnotes: footnotes,
     children: containers[0].children,
   };
+  if (containers[0].autoAttributes) {
+    doc.autoAttributes = containers[0].autoAttributes;
+  }
   if (containers[0].attributes) {
     doc.attributes = containers[0].attributes;
   }
@@ -1261,7 +1294,9 @@ const omitFields: Record<string, boolean> =
   tag: true,
   pos: true,
   attributes: true,
+  autoAttributes: true,
   references: true,
+  autoReferences: true,
   footnotes: true
 };
 

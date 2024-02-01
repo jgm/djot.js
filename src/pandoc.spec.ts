@@ -409,6 +409,7 @@ describe("PandocParser", () => {
       {
         "tag": "doc",
         "references": {},
+        "autoReferences": {},
         "footnotes": {},
         "children": [
           {

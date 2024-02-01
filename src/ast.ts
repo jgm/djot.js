@@ -14,6 +14,7 @@ type Pos = {
 
 interface HasAttributes {
   attributes?: Attributes;
+  autoAttributes?: Attributes;
   pos?: Pos;
 }
 
@@ -360,6 +361,7 @@ interface Footnote extends HasAttributes {
 interface Doc extends HasAttributes {
   tag: "doc";
   references: Record<string, Reference>;
+  autoReferences: Record<string, Reference>;
   footnotes: Record<string, Footnote>;
   children: Block[];
 }
