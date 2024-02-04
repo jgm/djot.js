@@ -310,7 +310,8 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
           tag: "reference",
           label: lab,
           destination: node.data.value || "",
-          attributes: node.attributes
+          attributes: node.attributes,
+          pos: node.pos,
         };
         if (node.data.key) {
           references[lab] = r;
