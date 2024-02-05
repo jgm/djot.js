@@ -878,12 +878,12 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
               attributes: node.attributes,
               pos: node.pos});
           }
-        } else if (node.data.checkbox) {
+        } else if ("checked" in node.data) {
           addChildToTip({
             tag: "task_list_item",
             children: node.children,
             attributes: node.attributes,
-            checkbox: node.data.checkbox,
+            checked: node.data.checked,
             pos: node.pos});
         } else {
           addChildToTip({
@@ -895,11 +895,11 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
       },
 
       checkbox_checked: (suffixes, startpos, endpos, pos) => {
-        topContainer().data.checkbox = "checked";
+        topContainer().data.checked = true;
       },
 
       checkbox_unchecked: (suffixes, startpos, endpos, pos) => {
-        topContainer().data.checkbox = "unchecked";
+        topContainer().data.checked = false;
       },
 
       ["+block_quote"]: (suffixes, startpos, endpos, pos) => {

@@ -1,7 +1,7 @@
 import { AstNode, Doc, Block, Caption, Row, Cell, Alignment,
          TaskListItem, OrderedListStyle, ListItem, Inline, Reference,
          Span, Verbatim, Image, Link,
-         Attributes, CodeBlock, Heading, Div, Table, CheckboxStatus,
+         Attributes, CodeBlock, Heading, Div, Table,
          DefinitionListItem, Footnote } from "./ast";
 import { Options, Warning } from "./options";
 
@@ -124,8 +124,8 @@ class PandocRenderer {
       const self = this;
     return function(item : AstNode) : PandocElt[] {
       let elts = self.toPandocChildren(item);
-      if ("checkbox" in item && item.checkbox && elts[0].t === "Para") {
-        if (item.checkbox === "checked") {
+      if ("checked" in item && elts[0].t === "Para") {
+        if (item.checked) {
           elts[0].c.unshift({t: "Str", c: "☒"}, {t: "Space"});
         } else {
           elts[0].c.unshift({t: "Str", c: "☐"}, {t: "Space"});
@@ -477,7 +477,7 @@ const isPlainOrPara = function(x : PandocElt) : boolean {
   return (x.t === "Plain" || x.t === "Para");
 }
 
-const hasCheckbox = function(elt : PandocElt[]) : CheckboxStatus | null {
+const hasCheckbox = function(elt : PandocElt[]) : boolean | null {
   if (!elt[0]) {
     return null;
   }
@@ -489,11 +489,11 @@ const hasCheckbox = function(elt : PandocElt[]) : CheckboxStatus | null {
     if (x.c[0].c === "☒") {
       x.c.shift(); // remove the checkbox
       x.c.shift();
-      return "checked";
+      return true;
     } else if (x.c[0].c === "☐") {
       x.c.shift(); // remove the checkbox
       x.c.shift();
-      return "unchecked";
+      return false;
     } else {
       return null;
     }
@@ -786,7 +786,7 @@ class PandocParser {
           rawitems = block.c[1];
         }
         for (let i=0; i<rawitems.length; i++) {
-          const checkbox = hasCheckbox(rawitems[i]);
+          const checked = hasCheckbox(rawitems[i]);
           const children = rawitems[i].map((b : PandocElt) => {
                                    if (b.t === "Plain") {
                                      tight = true;
@@ -795,9 +795,9 @@ class PandocParser {
                                    }
                                    return this.fromPandocBlock(b);
                                 });
-          if (checkbox !== null) {
+          if (checked !== null) {
             taskListItems.push( { tag: "task_list_item",
-                                  checkbox: checkbox,
+                                  checked: checked,
                                   children: children });
           } else {
             items.push( { tag: "list_item",

@@ -382,13 +382,6 @@
             ],
             "type": "object"
         },
-        "CheckboxStatus": {
-            "enum": [
-                "checked",
-                "unchecked"
-            ],
-            "type": "string"
-        },
         "CodeBlock": {
             "additionalProperties": false,
             "properties": {
@@ -3301,8 +3294,8 @@
                 "attributes": {
                     "$ref": "#/definitions/Attributes"
                 },
-                "checkbox": {
-                    "$ref": "#/definitions/CheckboxStatus"
+                "checked": {
+                    "type": "boolean"
                 },
                 "children": {
                     "items": {
@@ -3743,4 +3736,3 @@
     ],
     "type": "object"
 }
-

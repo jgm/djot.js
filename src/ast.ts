@@ -106,11 +106,9 @@ interface TaskList extends HasAttributes {
 
 interface TaskListItem extends HasAttributes {
   tag: "task_list_item";
-  checkbox: CheckboxStatus;
+  checked: boolean;
   children: Block[];
 }
-
-type CheckboxStatus = "checked" | "unchecked";
 
 interface OrderedList extends HasAttributes {
   tag: "ordered_list";
@@ -377,7 +375,7 @@ type AstNode =
   | Cell
   | Caption
   | Footnote
-  | Reference 
+  | Reference
   ;
 
 type Visitor<C, R> = {
@@ -520,7 +518,6 @@ export type {
   ListItem,
   TaskList,
   TaskListItem,
-  CheckboxStatus,
   DefinitionList,
   DefinitionListItem,
   Term,
