@@ -52,14 +52,18 @@ const paraToPlain = function(elt : PandocElt) : PandocElt {
 }
 
 const toPandocAttr = function(node : AstNode) : PandocAttr {
-  if ("attributes" in node && node.attributes) {
-    const id = node.attributes.id || "";
+  const attributes = {
+    ...node.autoAttributes,
+    ...node.attributes,
+  }
+  if (attributes) {
+    const id = attributes.id || "";
     const classes =
-         (node.attributes.class && node.attributes.class.split(" ")) || [];
+         (attributes.class && attributes.class.split(" ")) || [];
     const kvs = [];
-    for (const k in node.attributes) {
+    for (const k in attributes) {
       if (k !== id && k !== "class") {
-       kvs.push([k, node.attributes[k]]);
+       kvs.push([k, attributes[k]]);
       }
     }
     return [id, classes, kvs];
@@ -170,7 +174,7 @@ class PandocRenderer {
       }
 
       case "ordered_list": {
-        let items = node.children.map(this.toPandocListItem(node));
+        const items = node.children.map(this.toPandocListItem(node));
         const [style, delim] = reverseStyleMap[node.style as string];
         const start : number = node.start || 1;
         elts.push({ t: "OrderedList", c: [[start, {t: style}, {t: delim}],
@@ -368,28 +372,36 @@ class PandocRenderer {
           const ref = this.references[node.reference];
           if (ref) {
             destination = ref.destination || "";
-            if (ref.attributes) {
-              for (const k in ref.attributes) {
-                linkAttrs[k] = ref.attributes[k];
+            const attributes = {
+              ...ref.autoAttributes,
+              ...ref.attributes,
+            }
+            if (attributes) {
+              for (const k in attributes) {
+                linkAttrs[k] = attributes[k];
               }
             }
           } else {
             this.warn(new Warning("Reference " + node.reference + " not found."));
           }
         }
-        if (node.attributes) {
-          for (const k in node.attributes) {
+        const attributes = {
+          ...node.autoAttributes,
+          ...node.attributes,
+        }
+        if (attributes) {
+          for (const k in attributes) {
             if (linkAttrs[k] && k === "class") {
-              linkAttrs[k] += " " + node.attributes[k];
+              linkAttrs[k] += " " + attributes[k];
             } else if (!linkAttrs[k]) {
-              linkAttrs[k] = node.attributes[k];
+              linkAttrs[k] = attributes[k];
             }
           }
         }
-       const attrs = toPandocAttr({tag: "link", attributes: linkAttrs,
+        const attrs = toPandocAttr({tag: "link", attributes: linkAttrs,
                                       children: []});
         const url = destination || "";
-        const title = (node.attributes && node.attributes.title) || "";
+        const title = (node.attributes && node.attributes.title) || (node.autoAttributes && node.autoAttributes.title) || "";
         if (title) {
           attrs[2] = attrs[2].filter(([k,v]) => k !== "title");
         }
@@ -885,10 +897,10 @@ class PandocParser {
       }
 
       case "Figure": {
-        let attr = fromPandocAttr(block.c[0]);
+        const attr = fromPandocAttr(block.c[0]);
         const tag = /\bsection\b/.test((attr && attr.class) || "")
                     ? "section" : "div";
-        let blocks = block.c[2].map((b : PandocElt) => {
+        const blocks = block.c[2].map((b : PandocElt) => {
                       return this.fromPandocBlock(b);
                     });
         const rawcapt = block.c[1][1];
@@ -984,7 +996,8 @@ class PandocParser {
     return { tag: "doc",
             children: docblocks,
             footnotes: this.footnotes,
-            references: {} };
+            references: {},
+            autoReferences: {} };
   }
 }
 
