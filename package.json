@@ -17,7 +17,8 @@
   "exports": {
     ".": {
       "require": "./dist/djot.js",
-      "default": "./lib/index.js"
+      "default": "./lib/index.js",
+      "types": "./types/index.d.ts"
     }
   },
   "bin": {
@@ -38,8 +39,7 @@
     "./types/*.d.ts",
     "./doc/djot.1"
   ],
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
     "@types/jest": "^29.2.4",
     "@typescript-eslint/eslint-plugin": "^5.46.1",
