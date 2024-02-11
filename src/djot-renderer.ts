@@ -3,7 +3,7 @@ import { Doc, AstNode, HasChildren,
          OrderedList, TaskList,
          DefinitionList, Table, Caption, Row,
          BlockQuote, Section, CodeBlock, RawBlock,
-         Term, Definition, Footnote, Reference, Symb,
+         Term, Definition, Footnote, Reference, Symb, Span,
          Link, Image, Email, Url, HasText, RawInline, FootnoteReference,
          Inline, Str, InlineMath, DisplayMath, Verbatim, SmartPunctuation,
          isInline,  isBlock, isCaption, isRow } from "./ast";
@@ -545,6 +545,11 @@ class DjotRenderer {
     },
     url: (node : Url) => {
       this.lit("<" + node.text + ">");
+    },
+    span: (node : Span) => {
+      this.lit("[");
+      this.renderChildren<Inline>(node.children);
+      this.lit("]");
     },
     link: (node : Link) => {
       this.lit("[");
