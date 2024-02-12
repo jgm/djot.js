@@ -476,11 +476,11 @@ class EventParser {
 
           if (checkbox) {
             if (checkbox === " ") {
-              this.addMatch(sp + 2, sp + 4, "task_not_done");
+              this.addMatch(sp + 2, sp + 4, "task_unfinished");
             } else if (checkbox === "-") {
-              this.addMatch(sp + 2, sp + 4, "task_in_progress");
+              this.addMatch(sp + 2, sp + 4, "task_inprogress");
             } else {
-              this.addMatch(sp + 2, sp + 4, "task_done");
+              this.addMatch(sp + 2, sp + 4, "task_finished");
             }
             this.pos = sp + 5;
           }

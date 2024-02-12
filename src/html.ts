@@ -211,9 +211,7 @@ class HTMLRenderer {
         return this.inTags("li", node, 2);
 
       case "task_list_item":
-        return this.inTags("li", node, 2,
-                           { class: node.status === "done"
-                               ? "checked" : "unchecked" });
+        return this.inTags("li", node, 2, { class: node.status });
 
       case "definition_list_item":
         return this.renderChildren(node);

@@ -29,12 +29,17 @@ ul.task-list > li {
   margin-left: 1.5em;
   padding-left: 0;
 }
-li.checked:before {
+li.finished:before {
   content: "☒";
   margin-left: -1.5em;
   float: left;
 }
-li.unchecked:before {
+li.inprogress:before {
+  content: "▣";
+  margin-left: -1.5em;
+  float: left;
+}
+li.unfinished:before {
   content: "☐";
   margin-left: -1.5em;
   float: left;

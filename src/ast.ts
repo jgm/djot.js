@@ -111,7 +111,7 @@ interface TaskListItem extends HasAttributes {
   children: Block[];
 }
 
-type TaskStatus = "done" | "in_progress" | "not_done";
+type TaskStatus = "finished" | "inprogress" | "unfinished";
 
 interface OrderedList extends HasAttributes {
   tag: "ordered_list";

@@ -913,16 +913,16 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
         }
       },
 
-      task_done: (suffixes, startpos, endpos, pos) => {
-        topContainer().data.status = "done";
+      task_finished: (suffixes, startpos, endpos, pos) => {
+        topContainer().data.status = "finished";
       },
 
-      task_not_done: (suffixes, startpos, endpos, pos) => {
-        topContainer().data.status = "not_done";
+      task_unfinished: (suffixes, startpos, endpos, pos) => {
+        topContainer().data.status = "unfinished";
       },
 
-      task_in_progress: (suffixes, startpos, endpos, pos) => {
-        topContainer().data.status = "in_progress";
+      task_inprogress: (suffixes, startpos, endpos, pos) => {
+        topContainer().data.status = "inprogress";
       },
 
       ["+block_quote"]: (suffixes, startpos, endpos, pos) => {
