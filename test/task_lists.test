@@ -3,10 +3,10 @@
 - [x] checked item
 .
 <ul class="task-list">
-<li class="unchecked">
+<li class="unfinished">
 an unchecked task list item
 </li>
-<li class="checked">
+<li class="finished">
 checked item
 </li>
 </ul>
@@ -20,12 +20,31 @@ checked item
 * [x] checked item
 .
 <ul class="task-list">
-<li class="unchecked">
+<li class="unfinished">
 <p>an unchecked task list item</p>
 <p>with two paragraphs</p>
 </li>
-<li class="checked">
+<li class="finished">
 <p>checked item</p>
+</li>
+</ul>
+```
+
+
+```
+* [ ] an unfinished task
+* [-] an in-progress task
+* [x] a finished task
+.
+<ul class="task-list">
+<li class="unfinished">
+an unfinished task
+</li>
+<li class="inprogress">
+an in-progress task
+</li>
+<li class="finished">
+a finished task
 </li>
 </ul>
 ```

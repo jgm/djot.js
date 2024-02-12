@@ -382,10 +382,11 @@
             ],
             "type": "object"
         },
-        "CheckboxStatus": {
+        "TaskStatus": {
             "enum": [
-                "checked",
-                "unchecked"
+                "finished",
+                "inprogress",
+                "unfinished"
             ],
             "type": "string"
         },
@@ -3301,8 +3302,8 @@
                 "attributes": {
                     "$ref": "#/definitions/Attributes"
                 },
-                "checkbox": {
-                    "$ref": "#/definitions/CheckboxStatus"
+                "status": {
+                    "$ref": "#/definitions/TaskStatus"
                 },
                 "children": {
                     "items": {
@@ -3368,7 +3369,7 @@
                 }
             },
             "required": [
-                "checkbox",
+                "status",
                 "children",
                 "tag"
             ],

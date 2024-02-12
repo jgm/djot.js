@@ -895,13 +895,13 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
               autoAttributes: node.autoAttributes,
               pos: node.pos});
           }
-        } else if (node.data.checkbox) {
+        } else if (node.data.status) {
           addChildToTip({
             tag: "task_list_item",
             children: node.children,
             attributes: node.attributes,
             autoAttributes: node.autoAttributes,
-            checkbox: node.data.checkbox,
+            status: node.data.status,
             pos: node.pos});
         } else {
           addChildToTip({
@@ -913,12 +913,16 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
         }
       },
 
-      checkbox_checked: (suffixes, startpos, endpos, pos) => {
-        topContainer().data.checkbox = "checked";
+      task_finished: (suffixes, startpos, endpos, pos) => {
+        topContainer().data.status = "finished";
       },
 
-      checkbox_unchecked: (suffixes, startpos, endpos, pos) => {
-        topContainer().data.checkbox = "unchecked";
+      task_unfinished: (suffixes, startpos, endpos, pos) => {
+        topContainer().data.status = "unfinished";
+      },
+
+      task_inprogress: (suffixes, startpos, endpos, pos) => {
+        topContainer().data.status = "inprogress";
       },
 
       ["+block_quote"]: (suffixes, startpos, endpos, pos) => {
