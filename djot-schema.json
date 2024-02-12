@@ -382,10 +382,11 @@
             ],
             "type": "object"
         },
-        "CheckboxStatus": {
+        "TaskStatus": {
             "enum": [
-                "checked",
-                "unchecked"
+                "done",
+                "in_progress",
+                "not_done"
             ],
             "type": "string"
         },

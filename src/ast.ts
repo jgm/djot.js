@@ -107,11 +107,11 @@ interface TaskList extends HasAttributes {
 
 interface TaskListItem extends HasAttributes {
   tag: "task_list_item";
-  checkbox: CheckboxStatus;
+  status: TaskStatus;
   children: Block[];
 }
 
-type CheckboxStatus = "checked" | "unchecked";
+type TaskStatus = "done" | "in_progress" | "not_done";
 
 interface OrderedList extends HasAttributes {
   tag: "ordered_list";
@@ -522,7 +522,7 @@ export type {
   ListItem,
   TaskList,
   TaskListItem,
-  CheckboxStatus,
+  TaskStatus,
   DefinitionList,
   DefinitionListItem,
   Term,

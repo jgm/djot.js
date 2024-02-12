@@ -476,9 +476,11 @@ class EventParser {
 
           if (checkbox) {
             if (checkbox === " ") {
-              this.addMatch(sp + 2, sp + 4, "checkbox_unchecked");
+              this.addMatch(sp + 2, sp + 4, "task_not_done");
+            } else if (checkbox === "-") {
+              this.addMatch(sp + 2, sp + 4, "task_in_progress");
             } else {
-              this.addMatch(sp + 2, sp + 4, "checkbox_checked");
+              this.addMatch(sp + 2, sp + 4, "task_done");
             }
             this.pos = sp + 5;
           }

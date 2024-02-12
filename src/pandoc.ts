@@ -1,7 +1,7 @@
 import { AstNode, Doc, Block, Caption, Row, Cell, Alignment,
          TaskListItem, OrderedListStyle, ListItem, Inline, Reference,
          Span, Verbatim, Image, Link,
-         Attributes, CodeBlock, Heading, Div, Table, CheckboxStatus,
+         Attributes, CodeBlock, Heading, Div, Table, TaskStatus,
          DefinitionListItem, Footnote } from "./ast";
 import { Options, Warning } from "./options";
 
@@ -128,8 +128,8 @@ class PandocRenderer {
       const self = this;
     return function(item : AstNode) : PandocElt[] {
       let elts = self.toPandocChildren(item);
-      if ("checkbox" in item && item.checkbox && elts[0].t === "Para") {
-        if (item.checkbox === "checked") {
+      if ("status" in item && item.status && elts[0].t === "Para") {
+        if (item.status === "done") {
           elts[0].c.unshift({t: "Str", c: "☒"}, {t: "Space"});
         } else {
           elts[0].c.unshift({t: "Str", c: "☐"}, {t: "Space"});
@@ -489,7 +489,7 @@ const isPlainOrPara = function(x : PandocElt) : boolean {
   return (x.t === "Plain" || x.t === "Para");
 }
 
-const hasCheckbox = function(elt : PandocElt[]) : CheckboxStatus | null {
+const hasCheckbox = function(elt : PandocElt[]) : TaskStatus | null {
   if (!elt[0]) {
     return null;
   }
@@ -501,11 +501,11 @@ const hasCheckbox = function(elt : PandocElt[]) : CheckboxStatus | null {
     if (x.c[0].c === "☒") {
       x.c.shift(); // remove the checkbox
       x.c.shift();
-      return "checked";
+      return "done";
     } else if (x.c[0].c === "☐") {
       x.c.shift(); // remove the checkbox
       x.c.shift();
-      return "unchecked";
+      return "not_done";
     } else {
       return null;
     }
@@ -809,7 +809,7 @@ class PandocParser {
                                 });
           if (checkbox !== null) {
             taskListItems.push( { tag: "task_list_item",
-                                  checkbox: checkbox,
+                                  status: checkbox,
                                   children: children });
           } else {
             items.push( { tag: "list_item",

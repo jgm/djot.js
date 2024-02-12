@@ -212,7 +212,7 @@ class HTMLRenderer {
 
       case "task_list_item":
         return this.inTags("li", node, 2,
-                           { class: node.checkbox === "checked"
+                           { class: node.status === "done"
                                ? "checked" : "unchecked" });
 
       case "definition_list_item":

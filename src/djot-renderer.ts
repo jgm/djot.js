@@ -442,7 +442,7 @@ class DjotRenderer {
           }
         }
         this.needsBlankLine = false;
-        this.lit(`- [${item.checkbox === "checked" ? "X" : " "}]`);
+        this.lit(`- [${item.status === "done" ? "X" : (item.status === "in_progress" ? "-" : " ")}]`);
         this.space();
         this.prefixes.push(" ".repeat(6));
         this.renderChildren<Block>(item.children);
