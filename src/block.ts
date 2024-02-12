@@ -9,7 +9,7 @@ import { InlineParser } from "./inline";
 const getListStyles = function(marker: string): string[] {
   if (marker === "+" || marker === "-" || marker === "*" || marker === ":") {
     return [marker];
-  } else if (/^[+*-] \[[Xx ]\]/.exec(marker)) {
+  } else if (/^[+*-] \[[Xx\- ]\]/.exec(marker)) {
     return ["X"]; // task list
   } else if (/^[(]?[0-9]+[).]/.exec(marker)) {
     return [marker.replace(/[0-9]+/, "1")];
@@ -56,7 +56,7 @@ const pattDivFenceEnd = pattern("([\\w_-]*)[ \\t]*\\r?\\n");
 const pattReferenceDefinition = pattern("\\[([^\\]\\r\\n]*)\\]:[ \\t]*([^ \\t\\r\\n]*)[\\r\\n]");
 const pattTableRow = pattern("(\\|[^\\r\\n]*\\|)[ \\t]*\\r?\\n");
 const pattListMarker = pattern("(:?[-*+:]|\\([0-9]+\\)|[0-9]+[.)]|[ivxlcdmIVXLCDM]+[.)]|\\([ivxlcdmIVXLCDM]+\\)|[a-zA-Z][.)]|\\([a-zA-Z]\\))[ \\t\\r\\n]");
-const pattTaskListMarker = pattern("[*+-] \\[[Xx ]\\][ \\t\\r\\n]");
+const pattTaskListMarker = pattern("[*+-] \\[[Xx\\- ]\\][ \\t\\r\\n]");
 
 type EventIterator = {
   next: () => { value: Event, done: boolean };

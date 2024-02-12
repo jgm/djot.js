@@ -29,3 +29,22 @@ checked item
 </li>
 </ul>
 ```
+
+
+```
+* [ ] an unfinished task
+* [-] an in-progress task
+* [x] a finished task
+.
+<ul class="task-list">
+<li class="unfinished">
+an unfinished task
+</li>
+<li class="inprogress">
+an in-progress task
+</li>
+<li class="finished">
+a finished task
+</li>
+</ul>
+```
