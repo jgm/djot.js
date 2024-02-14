@@ -1,10 +1,14 @@
 # Changelog for djot.js
 
+## 0.3.1
+
+  * Update man page and schema.
+
 ## 0.3.0
 
   * Djot renderer:
     + Handle spans (#79).
-    + Adjust task_list indent to 6 (black-desk).
+    + Adjust `task_list` indent to 6 (black-desk).
     + Fix bug that introduced an extra newline before some blocks (black-desk).
     + Omit auto generated attributes and references (#69, #75, black-desk).
   * Types [API change]: The interface HasAttributes now contains an
