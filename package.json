@@ -29,9 +29,11 @@
   ],
   "types": "./types/index.d.ts",
   "scripts": {
-    "test": "npx jest",
-    "build": "npx tsc && npx webpack",
-    "bench": "npx webpack && node ./bench/bench.js"
+    "build": "tsc && webpack",
+    "prepare": "npm run build",
+    "pretest": "npm run build",
+    "test": "jest",
+    "bench": "npm run build && node ./bench/bench.js"
   },
   "files": [
     "./dist/djot.js",
