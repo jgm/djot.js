@@ -64,6 +64,9 @@
                 "attributes": {
                     "$ref": "#/definitions/Attributes"
                 },
+                "autoAttributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
                 "children": {
                     "items": {
                         "$ref": "#/definitions/Block"
@@ -137,6 +140,9 @@
             "additionalProperties": false,
             "properties": {
                 "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "autoAttributes": {
                     "$ref": "#/definitions/Attributes"
                 },
                 "children": {
@@ -230,6 +236,9 @@
                 "attributes": {
                     "$ref": "#/definitions/Attributes"
                 },
+                "autoAttributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
                 "children": {
                     "items": {
                         "$ref": "#/definitions/Inline"
@@ -306,6 +315,9 @@
                     "$ref": "#/definitions/Alignment"
                 },
                 "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "autoAttributes": {
                     "$ref": "#/definitions/Attributes"
                 },
                 "children": {
@@ -395,6 +407,9 @@
                 "attributes": {
                     "$ref": "#/definitions/Attributes"
                 },
+                "autoAttributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
                 "lang": {
                     "type": "string"
                 },
@@ -468,6 +483,9 @@
             "additionalProperties": false,
             "properties": {
                 "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "autoAttributes": {
                     "$ref": "#/definitions/Attributes"
                 },
                 "children": {
@@ -545,6 +563,9 @@
                 "attributes": {
                     "$ref": "#/definitions/Attributes"
                 },
+                "autoAttributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
                 "children": {
                     "items": {
                         "$ref": "#/definitions/DefinitionListItem"
@@ -618,6 +639,9 @@
             "additionalProperties": false,
             "properties": {
                 "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "autoAttributes": {
                     "$ref": "#/definitions/Attributes"
                 },
                 "children": {
@@ -702,6 +726,9 @@
                 "attributes": {
                     "$ref": "#/definitions/Attributes"
                 },
+                "autoAttributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
                 "children": {
                     "items": {
                         "$ref": "#/definitions/Inline"
@@ -777,6 +804,9 @@
                 "attributes": {
                     "$ref": "#/definitions/Attributes"
                 },
+                "autoAttributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
                 "pos": {
                     "additionalProperties": false,
                     "properties": {
@@ -847,6 +877,9 @@
             "additionalProperties": false,
             "properties": {
                 "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "autoAttributes": {
                     "$ref": "#/definitions/Attributes"
                 },
                 "children": {
@@ -924,6 +957,9 @@
                 "attributes": {
                     "$ref": "#/definitions/Attributes"
                 },
+                "autoAttributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
                 "children": {
                     "items": {
                         "$ref": "#/definitions/Inline"
@@ -999,6 +1035,9 @@
                 "attributes": {
                     "$ref": "#/definitions/Attributes"
                 },
+                "autoAttributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
                 "pos": {
                     "additionalProperties": false,
                     "properties": {
@@ -1069,6 +1108,9 @@
             "additionalProperties": false,
             "properties": {
                 "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "autoAttributes": {
                     "$ref": "#/definitions/Attributes"
                 },
                 "children": {
@@ -1146,6 +1188,9 @@
                 "attributes": {
                     "$ref": "#/definitions/Attributes"
                 },
+                "autoAttributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
                 "pos": {
                     "additionalProperties": false,
                     "properties": {
@@ -1218,6 +1263,9 @@
                 "attributes": {
                     "$ref": "#/definitions/Attributes"
                 },
+                "autoAttributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
                 "pos": {
                     "additionalProperties": false,
                     "properties": {
@@ -1284,6 +1332,9 @@
             "additionalProperties": false,
             "properties": {
                 "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "autoAttributes": {
                     "$ref": "#/definitions/Attributes"
                 },
                 "children": {
@@ -1363,6 +1414,9 @@
             "additionalProperties": false,
             "properties": {
                 "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "autoAttributes": {
                     "$ref": "#/definitions/Attributes"
                 },
                 "children": {
@@ -1525,6 +1579,9 @@
                 "attributes": {
                     "$ref": "#/definitions/Attributes"
                 },
+                "autoAttributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
                 "pos": {
                     "additionalProperties": false,
                     "properties": {
@@ -1595,6 +1652,9 @@
             "additionalProperties": false,
             "properties": {
                 "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "autoAttributes": {
                     "$ref": "#/definitions/Attributes"
                 },
                 "children": {
@@ -1670,6 +1730,9 @@
             "additionalProperties": false,
             "properties": {
                 "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "autoAttributes": {
                     "$ref": "#/definitions/Attributes"
                 },
                 "children": {
@@ -1753,6 +1816,9 @@
                 "attributes": {
                     "$ref": "#/definitions/Attributes"
                 },
+                "autoAttributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
                 "children": {
                     "items": {
                         "$ref": "#/definitions/Block"
@@ -1826,6 +1892,9 @@
             "additionalProperties": false,
             "properties": {
                 "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "autoAttributes": {
                     "$ref": "#/definitions/Attributes"
                 },
                 "children": {
@@ -1903,6 +1972,9 @@
                 "attributes": {
                     "$ref": "#/definitions/Attributes"
                 },
+                "autoAttributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
                 "pos": {
                     "additionalProperties": false,
                     "properties": {
@@ -1969,6 +2041,9 @@
             "additionalProperties": false,
             "properties": {
                 "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "autoAttributes": {
                     "$ref": "#/definitions/Attributes"
                 },
                 "children": {
@@ -2077,6 +2152,9 @@
                 "attributes": {
                     "$ref": "#/definitions/Attributes"
                 },
+                "autoAttributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
                 "children": {
                     "items": {
                         "$ref": "#/definitions/Inline"
@@ -2150,6 +2228,9 @@
             "additionalProperties": false,
             "properties": {
                 "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "autoAttributes": {
                     "$ref": "#/definitions/Attributes"
                 },
                 "format": {
@@ -2226,6 +2307,9 @@
             "additionalProperties": false,
             "properties": {
                 "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "autoAttributes": {
                     "$ref": "#/definitions/Attributes"
                 },
                 "format": {
@@ -2312,6 +2396,9 @@
                 "attributes": {
                     "$ref": "#/definitions/Attributes"
                 },
+                "autoAttributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
                 "children": {
                     "items": {
                         "$ref": "#/definitions/Cell"
@@ -2391,6 +2478,9 @@
                 "attributes": {
                     "$ref": "#/definitions/Attributes"
                 },
+                "autoAttributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
                 "children": {
                     "items": {
                         "$ref": "#/definitions/Block"
@@ -2466,6 +2556,9 @@
                 "attributes": {
                     "$ref": "#/definitions/Attributes"
                 },
+                "autoAttributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
                 "children": {
                     "items": {
                         "$ref": "#/definitions/Inline"
@@ -2539,6 +2632,9 @@
             "additionalProperties": false,
             "properties": {
                 "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "autoAttributes": {
                     "$ref": "#/definitions/Attributes"
                 },
                 "pos": {
@@ -2629,6 +2725,9 @@
                 "attributes": {
                     "$ref": "#/definitions/Attributes"
                 },
+                "autoAttributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
                 "pos": {
                     "additionalProperties": false,
                     "properties": {
@@ -2695,6 +2794,9 @@
             "additionalProperties": false,
             "properties": {
                 "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "autoAttributes": {
                     "$ref": "#/definitions/Attributes"
                 },
                 "children": {
@@ -2772,6 +2874,9 @@
                 "attributes": {
                     "$ref": "#/definitions/Attributes"
                 },
+                "autoAttributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
                 "pos": {
                     "additionalProperties": false,
                     "properties": {
@@ -2842,6 +2947,9 @@
             "additionalProperties": false,
             "properties": {
                 "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "autoAttributes": {
                     "$ref": "#/definitions/Attributes"
                 },
                 "children": {
@@ -2919,6 +3027,9 @@
                 "attributes": {
                     "$ref": "#/definitions/Attributes"
                 },
+                "autoAttributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
                 "children": {
                     "items": {
                         "$ref": "#/definitions/Inline"
@@ -2992,6 +3103,9 @@
             "additionalProperties": false,
             "properties": {
                 "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "autoAttributes": {
                     "$ref": "#/definitions/Attributes"
                 },
                 "children": {
@@ -3072,6 +3186,9 @@
                 "attributes": {
                     "$ref": "#/definitions/Attributes"
                 },
+                "autoAttributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
                 "pos": {
                     "additionalProperties": false,
                     "properties": {
@@ -3139,6 +3256,9 @@
             "additionalProperties": false,
             "properties": {
                 "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "autoAttributes": {
                     "$ref": "#/definitions/Attributes"
                 },
                 "children": {
@@ -3222,6 +3342,9 @@
                 "attributes": {
                     "$ref": "#/definitions/Attributes"
                 },
+                "autoAttributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
                 "children": {
                     "items": {
                         "$ref": "#/definitions/TaskListItem"
@@ -3299,6 +3422,9 @@
             "additionalProperties": false,
             "properties": {
                 "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "autoAttributes": {
                     "$ref": "#/definitions/Attributes"
                 },
                 "checkbox": {
@@ -3380,6 +3506,9 @@
                 "attributes": {
                     "$ref": "#/definitions/Attributes"
                 },
+                "autoAttributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
                 "children": {
                     "items": {
                         "$ref": "#/definitions/Inline"
@@ -3455,6 +3584,9 @@
                 "attributes": {
                     "$ref": "#/definitions/Attributes"
                 },
+                "autoAttributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
                 "pos": {
                     "additionalProperties": false,
                     "properties": {
@@ -3521,6 +3653,9 @@
             "additionalProperties": false,
             "properties": {
                 "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "autoAttributes": {
                     "$ref": "#/definitions/Attributes"
                 },
                 "pos": {
@@ -3595,6 +3730,9 @@
                 "attributes": {
                     "$ref": "#/definitions/Attributes"
                 },
+                "autoAttributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
                 "pos": {
                     "additionalProperties": false,
                     "properties": {
@@ -3666,6 +3804,12 @@
         "attributes": {
             "$ref": "#/definitions/Attributes"
         },
+        "autoAttributes": {
+            "$ref": "#/definitions/Attributes"
+        },
+        "autoReferences": {
+            "$ref": "#/definitions/Record<string,Reference>"
+        },
         "children": {
             "items": {
                 "$ref": "#/definitions/Block"
@@ -3736,6 +3880,7 @@
         }
     },
     "required": [
+        "autoReferences",
         "children",
         "footnotes",
         "references",
