@@ -1,5 +1,31 @@
 # Changelog for djot.js
 
+## 0.3.0
+
+  * Djot renderer:
+    + Handle spans (#79).
+    + Adjust task_list indent to 6 (black-desk).
+    + Fix bug that introduced an extra newline before some blocks (black-desk).
+    + Omit auto generated attributes and references (#69, #75, black-desk).
+  * Types [API change]: The interface HasAttributes now contains an
+    optional `autoAttributes` field. This contains automatically
+    generated attributes (e.g., on section elements). The interface
+    Doc now contains an `autoReferences` field. This is like
+    `references` but is meant only for automatically generated
+    references to section headings. Now that these are distinguished
+    in the AST, the Djot writer can choose to omit attributes and
+    references that were auto-generated, enabling round-tripping.
+  * Re-export types from ast submodule (Alex Kladov).
+  * Add types to 'exports' field as well (#78, Sondre Aasemoen).
+  * parse: add source position to reference (black-desk).
+  * attributes: Change regex for identifiers so that non-ASCII
+    will work (black-desk).
+  * Fix task lists in pandoc renderer (#71).
+  * Remove most of the benchmark files. These were hastily converted
+    from commonmark.js benchmarks, and in many cases didn't even test
+    the same thing due to escaping.
+  * Add note on unpkg CDN (see #67).
+
 ## 0.2.5
 
   * HTML renderer: use a *single* variation selector in backlink (#65).
