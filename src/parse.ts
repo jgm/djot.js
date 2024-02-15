@@ -213,7 +213,10 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
       throw (new Error("Container stack is empty (popContainer)"));
     }
     if (pos && node.pos) {
-      node.pos.end = pos.end;
+      node.pos = {
+        start: node.pos.start,
+        end: pos.end,
+      }
     }
     return node;
   };
@@ -298,7 +301,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
       footnote_reference: (suffixes, startpos, endpos, pos) => {
         const fnref = input.substring(startpos + 2, endpos);
         addChildToTip({ tag: "footnote_reference",
-	  text: normalizeLabel(fnref), pos: pos});
+        text: normalizeLabel(fnref), pos: pos});
       },
 
       ["+reference_definition"]: (suffixes, startpos, endpos, pos) => {
@@ -729,26 +732,23 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
 
       ["-heading"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
-        if (!node.attributes) {
-          node.attributes = {};
-        }
 
-        if (!node.autoAttributes) {
-          node.autoAttributes = {}
-        }
         const headingStr = getStringContent(node).trim();
 
-        if (!node.attributes.id) {
+        if (!node.attributes || !node.attributes.id) {
+          if (!node.autoAttributes) {
+            node.autoAttributes = {}
+          }
           node.autoAttributes.id = getUniqueIdentifier(headingStr);
           identifiers[node.autoAttributes.id] = true;
         }
         // add implicit heading reference
-	const lab = normalizeLabel(headingStr);
+        const lab = normalizeLabel(headingStr);
         if (!references[lab] && !autoReferences[lab]) {
           autoReferences[lab] = {
             tag: "reference",
             label: lab,
-            destination: "#" + (node.attributes.id||node.autoAttributes.id)
+            destination: "#" + (node.attributes?.id||node.autoAttributes?.id)
           };
         }
 
@@ -769,7 +769,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
           }
           // now we know that pnode.data.headinglevel is either
           // undefined or < node.data.level
-          pushContainer(pos);
+          pushContainer(node.pos);
           topContainer().data.headinglevel = node.data.level;
           // move id attribute from heading to section
           if (node.autoAttributes && node.autoAttributes.id) {
@@ -1053,7 +1053,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
       ["-footnote"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         if (node.data.label) {
-	  const lab = normalizeLabel(node.data.label);
+          const lab = normalizeLabel(node.data.label);
           footnotes[lab] =
           {
             tag: "footnote",
