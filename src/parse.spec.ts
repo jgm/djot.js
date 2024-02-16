@@ -41,84 +41,25 @@ describe("Parser", () => {
   });
 
   it("includes source positions", () => {
-    const ast = parse("> testing _testing_", {sourcePositions: true});
+    const ast = parse("# testing\n\n> testing _testing_", {sourcePositions: true});
     expect(ast).toEqual(
 {
   "tag": "doc",
-  "autoReferences": {},
+  "autoReferences": {
+    "testing": {
+      "tag": "reference",
+      "destination": "#testing",
+      "label": "testing",
+    },
+  },
   "references": {},
   "footnotes": {},
   "children": [
     {
-      "tag": "block_quote",
-      "children": [
-        {
-          "tag": "para",
-          "children": [
-            {
-              "tag": "str",
-              "text": "testing ",
-              "pos": {
-                "start": {
-                  "line": 1,
-                  "col": 3,
-                  "offset": 2
-                },
-                "end": {
-                  "line": 1,
-                  "col": 10,
-                  "offset": 9
-                }
-              }
-            },
-            {
-              "tag": "emph",
-              "children": [
-                {
-                  "tag": "str",
-                  "text": "testing",
-                  "pos": {
-                    "start": {
-                      "line": 1,
-                      "col": 12,
-                      "offset": 11
-                    },
-                    "end": {
-                      "line": 1,
-                      "col": 18,
-                      "offset": 17
-                    }
-                  }
-                }
-              ],
-              "pos": {
-                "start": {
-                  "line": 1,
-                  "col": 11,
-                  "offset": 10
-                },
-                "end": {
-                  "line": 1,
-                  "col": 19,
-                  "offset": 18
-                }
-              }
-            }
-          ],
-          "pos": {
-            "start": {
-              "line": 1,
-              "col": 3,
-              "offset": 2
-            },
-            "end": {
-              "line": 1,
-              "col": 20,
-              "offset": 19
-            }
-          }
-        }
-      ],
+      "tag": "section",
+      "autoAttributes": {
+        "id": "testing",
+      },
       "pos": {
         "start": {
           "line": 1,
@@ -126,11 +67,130 @@ describe("Parser", () => {
           "offset": 0
         },
         "end": {
-          "line": 1,
+          "line": 3,
           "col": 20,
-          "offset": 19
+          "offset": 30
         }
-      }
+      },
+      "children": [
+        {
+          "tag": "heading",
+          "level": 1,
+          "pos": {
+            "start": {
+              "col": 1,
+              "line": 1,
+              "offset": 0,
+            },
+            "end": {
+              "col": 0,
+              "line": 2,
+              "offset": 9,
+            },
+          },
+          "children": [
+            {
+              "tag": "str",
+              "text": "testing",
+              "pos": {
+                "start":{
+                  "col": 3,
+                  "line": 1,
+                  "offset": 2
+                },
+                "end": {
+                  "col": 9,
+                  "line": 1,
+                  "offset": 8
+                }
+              }
+            }
+          ],
+        },
+        {
+          "tag": "block_quote",
+          "pos": {
+            "start": {
+              "line": 3,
+              "col": 1,
+              "offset": 11,
+            },
+            "end": {
+              "line": 3,
+              "col": 20,
+              "offset": 30,
+            }
+          },
+          "children": [
+            {
+              "tag": "para",
+              "pos": {
+                "start": {
+                  "line": 3,
+                  "col": 3,
+                  "offset": 13,
+                },
+                "end": {
+                  "line": 3,
+                  "col": 20,
+                  "offset": 30,
+                }
+              },
+              "children": [
+                {
+                  "tag": "str",
+                  "text": "testing ",
+                  "pos": {
+                    "start": {
+                      "line": 3,
+                      "col": 3,
+                       "offset": 13,
+                     },
+                     "end": {
+                       "line": 3,
+                       "col": 10,
+                       "offset": 20,
+                     }
+                   }
+                },
+                {
+                  "tag": "emph",
+                  "pos": {
+                    "start": {
+                      "line": 3,
+                      "col": 11,
+                      "offset": 21,
+                    },
+                    "end": {
+                      "line": 3,
+                      "col": 19,
+                      "offset": 29,
+                    }
+                  },
+                  "children": [
+                    {
+                      "tag": "str",
+                      "text": "testing",
+                      "pos": {
+                        "start": {
+                          "line": 3,
+                          "col": 12,
+                          "offset": 22,
+                        },
+                        "end": {
+                          "line": 3,
+                          "col": 18,
+                          "offset": 28,
+                        }
+                      }
+                    }
+                  ],
+                }
+              ],
+            },
+          ],
+        }
+      ],
     }
   ]
 }
