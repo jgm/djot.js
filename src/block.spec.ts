@@ -126,7 +126,7 @@ describe("EventParser", () => {
   it("parses list items", () => {
     const events = [];
     for (const event of parseEvents("- one\n- two\n1. three\n(iv) four\n\n - sub\n\n   two\n")) {
-      //                            01234 5678901 23456789012 3456789 0 1234567 890
+      //                             012345 678901 234567890 1234567890 1 2345678 9  123456
       events.push(event);
     }
     expect(events).toStrictEqual([
@@ -135,19 +135,19 @@ describe("EventParser", () => {
  { startpos: 2, endpos: 2, annot: "+para" },
  { startpos: 2, endpos: 4, annot: "str" },
  { startpos: 5, endpos: 5, annot: "-para" },
- { startpos: 6, endpos: 6, annot: "-list_item" },
+ { startpos: 5, endpos: 5, annot: "-list_item" },
  { startpos: 6, endpos: 6, annot: "+list_item|-" },
  { startpos: 8, endpos: 8, annot: "+para" },
  { startpos: 8, endpos: 10, annot: "str" },
  { startpos: 11, endpos: 11, annot: "-para" },
- { startpos: 12, endpos: 12, annot: "-list_item" },
+ { startpos: 11, endpos: 11, annot: "-list_item" },
  { startpos: 12, endpos: 12, annot: "-list" },
  { startpos: 12, endpos: 13, annot: "+list|1." },
  { startpos: 12, endpos: 13, annot: "+list_item|1." },
  { startpos: 15, endpos: 15, annot: "+para" },
  { startpos: 15, endpos: 19, annot: "str" },
  { startpos: 20, endpos: 20, annot: "-para" },
- { startpos: 21, endpos: 21, annot: "-list_item" },
+ { startpos: 20, endpos: 20, annot: "-list_item" },
  { startpos: 21, endpos: 21, annot: "-list" },
  { startpos: 21, endpos: 24, annot: "+list|(i)" },
  { startpos: 21, endpos: 24, annot: "+list_item|(i)" },
