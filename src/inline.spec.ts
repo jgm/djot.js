@@ -267,5 +267,32 @@ describe("InlineParser", () => {
       { annot: "footnote_reference", startpos: 0, endpos: 5 }
     ]);
   });
+  
+  it("parses file inclusions", () => {
+    const parser = new InlineParser('+[alt text](path/to/file)');
+    //                             012345678901234567890123456
+    parser.feed(0, 26);
+    expect(parser.getMatches()).toStrictEqual([
+      { annot: "file_inclusion", startpos: 0, endpos: 24, data: { altText: "alt text", filePath: "path/to/file" } },
+      { annot: "str", startpos: 25, endpos: 26 }
+    ]);
+  });
+
+  it("parses image inclusions", () => {
+    const parser = new InlineParser('![alt text](path/to/image)');
+    //                             012345678901234567890123456
+    parser.feed(0, 27);
+    expect(parser.getMatches()).toStrictEqual([
+      { annot: "image_marker", startpos: 0, endpos: 0 },
+      { annot: "+imagetext", startpos: 1, endpos: 1 },
+      { annot: "str", startpos: 2, endpos: 9 },
+      { annot: "-imagetext", startpos: 10, endpos: 10 },
+      { annot: "+destination", startpos: 11, endpos: 11 },
+      { annot: "str", startpos: 12, endpos: 24 },
+      { annot: "-destination", startpos: 25, endpos: 25 },
+      { annot: "str", startpos: 26, endpos: 27 }
+    ]);
+  });
+
 
 })

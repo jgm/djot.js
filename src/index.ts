@@ -6,6 +6,7 @@ export { fromPandoc, toPandoc } from "./pandoc";
 export { renderDjot } from "./djot-renderer";
 export { version } from "./version";
 export { isBlock, isInline } from "./ast";
+export { InlineParser } from "./inline"; // Ensure this line is present
 
 export type {
   Alignment,
