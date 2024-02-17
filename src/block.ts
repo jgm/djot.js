@@ -486,7 +486,7 @@ class EventParser {
         },
         close: () => {
           this.containers.pop();
-          this.addMatch(this.pos, this.pos, "-list_item");
+          this.addMatch(this.pos-1, this.pos-1, "-list_item");
         }
       },
 
