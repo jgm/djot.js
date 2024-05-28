@@ -64,6 +64,7 @@ interface Section extends HasAttributes {
 
 interface Div extends HasAttributes {
   tag: "div";
+  tag_name: string;
   children: Block[];
 }
 

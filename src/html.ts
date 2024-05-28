@@ -202,7 +202,7 @@ class HTMLRenderer {
         return this.inTags("blockquote", node, 2);
 
       case "div":
-        return this.inTags("div", node, 2);
+        return this.inTags(node.tag_name, node, 2);
 
       case "section":
         return this.inTags("section", node, 2);

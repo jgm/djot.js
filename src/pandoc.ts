@@ -713,7 +713,7 @@ class PandocParser {
           }
           return {tag: "section", attributes: attr, children: blocks};
         } else {
-          const div : Div = {tag: "div", children: blocks};
+          const div : Div = {tag: "div", tag_name: tag, children: blocks};
           if (attr) {
             div.attributes = attr;
           }
@@ -911,7 +911,7 @@ class PandocParser {
           blocks.push(...capt);
         }
 
-        const div : Div = {tag: "div", children: blocks};
+        const div : Div = {tag: "div", tag_name: tag, children: blocks};
         if (attr) {
           div.attributes = attr;
         }

@@ -1112,10 +1112,15 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
         pushContainer(pos);
       },
 
+      ["tag_name"]: (suffixes, startpos, endpos, pos) => {
+        topContainer().data.tag_name = input.substring(startpos, endpos + 1);
+      },
+
       ["-div"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         addChildToTip({
           tag: "div",
+          tag_name: node.data.tag_name ?? "div",
           children: node.children,
           attributes: node.attributes,
           autoAttributes: node.autoAttributes,

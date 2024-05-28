@@ -658,11 +658,11 @@ class EventParser {
             return false;
           }
           const clsp = m2.startpos;
-          const lang = m2.captures[0];
+          const tag_name = m2.captures[0];
           this.addContainer(new Container(spec, { colons: colons.length }));
           this.addMatch(m.startpos, m.endpos, "+div");
-          if (lang.length > 0) {
-            this.addMatch(clsp, clsp + lang.length - 1, "class");
+          if (tag_name.length > 0) {
+            this.addMatch(clsp, clsp + tag_name.length - 1, "tag_name");
           }
           this.pos = m2.endpos + 1;
           this.finishedLine = true;
