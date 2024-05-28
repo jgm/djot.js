@@ -3,7 +3,7 @@ export  { parseEvents } from "./block.ts";
 export  { renderHTML, HTMLRenderer } from "./html.ts";
 export  { applyFilter } from "./filter.ts";
 export  { fromPandoc, toPandoc } from "./pandoc.ts";
-export { renderDjot } from "./djot-renderer";
+export  { renderDjot } from "./djot-renderer.ts";
 export  { version } from "./version.ts";
 export  { isBlock, isInline } from "./ast.ts";
 
@@ -72,4 +72,4 @@ export type {
   Url,
   Verbatim,
   Visitor,
-} from "./ast";
+} from "./ast.ts";

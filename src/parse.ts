@@ -17,7 +17,7 @@ import {
   isBlock,
   isCaption,
   isInline,
-  Caption} from "./ast";
+  Caption} from "./ast.ts";
 
 /* Types not used for defining the AST but for processing */
 
