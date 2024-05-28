@@ -1,8 +1,8 @@
-import { Event } from "./event";
-import { Options, Warning } from "./options";
-import { AttributeParser } from "./attributes";
-import { pattern, find } from "./find";
-import { InlineParser } from "./inline";
+import  { Event } from "./event.ts";
+import  { Options, Warning } from "./options.ts";
+import  { AttributeParser } from "./attributes.ts";
+import  { pattern, find } from "./find.ts";
+import  { InlineParser } from "./inline.ts";
 
 // Return array of list styles that match a marker.
 // In ambiguous cases we return multiple values.

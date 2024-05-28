@@ -2,15 +2,15 @@
 
 import fs from "fs";
 import { performance } from "perf_hooks";
-import { parseEvents } from "./block";
-import { parse, renderAST } from "./parse";
-import { Doc } from "./ast";
-import { renderHTML } from "./html";
-import { applyFilter } from "./filter";
-import { fromPandoc, toPandoc } from "./pandoc";
+import  { parseEvents } from "./block.ts";
+import  { parse, renderAST } from "./parse.ts";
+import  { Doc } from "./ast.ts";
+import  { renderHTML } from "./html.ts";
+import  { applyFilter } from "./filter.ts";
+import  { fromPandoc, toPandoc } from "./pandoc.ts";
 import { renderDjot } from "./djot-renderer";
-import { version } from "./version";
-import { Warning } from "./options";
+import  { version } from "./version.ts";
+import  { Warning } from "./options.ts";
 
 const warn = function(warning: Warning) : void {
   process.stderr.write(warning.render() + "\n");

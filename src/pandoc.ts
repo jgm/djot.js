@@ -1,9 +1,9 @@
-import { AstNode, Doc, Block, Caption, Row, Cell, Alignment,
+import  { AstNode, Doc, Block, Caption, Row, Cell, Alignment,
          TaskListItem, OrderedListStyle, ListItem, Inline, Reference,
          Span, Verbatim, Image, Link,
          Attributes, CodeBlock, Heading, Div, Table, CheckboxStatus,
-         DefinitionListItem, Footnote } from "./ast";
-import { Options, Warning } from "./options";
+         DefinitionListItem, Footnote } from "./ast.ts";
+import  { Options, Warning } from "./options.ts";
 
 interface Pandoc {
   ["pandoc-api-version"]: number[],

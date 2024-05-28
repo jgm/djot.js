@@ -1,6 +1,6 @@
-import { Event } from "./event";
-import { parseEvents } from "./block";
-import { Options, Warning } from "./options";
+import  { Event } from "./event.ts";
+import  { parseEvents } from "./block.ts";
+import  { Options, Warning } from "./options.ts";
 import {
   Attributes,
   SourceLoc,

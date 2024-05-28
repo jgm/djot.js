@@ -1,7 +1,7 @@
-import { Doc, Reference, Footnote, Link, HasChildren,
-         HasAttributes, AstNode, Visitor } from "./ast";
-import { getStringContent } from "./parse";
-import { Options, Warning } from "./options";
+import  { Doc, Reference, Footnote, Link, HasChildren,
+         HasAttributes, AstNode, Visitor } from "./ast.ts";
+import  { getStringContent } from "./parse.ts";
+import  { Options, Warning } from "./options.ts";
 
 interface HTMLRenderOptions extends Options {
   overrides?: Visitor<HTMLRenderer, string>;

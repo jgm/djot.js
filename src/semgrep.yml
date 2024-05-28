@@ -1,0 +1,10 @@
+rules:
+- id: import-well
+  message: "a"
+  languages: [generic]
+  severity: WARNING
+  patterns:
+  - pattern: |
+      import $...X from "./$Y";
+  fix: |
+      import $...X from "./$Y.ts";

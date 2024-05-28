@@ -1,4 +1,4 @@
-import { parseEvents } from "./block";
+import  { parseEvents } from "./block.ts";
 
 describe("EventParser", () => {
   it("parses paragraphs", () => {

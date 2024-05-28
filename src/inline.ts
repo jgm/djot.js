@@ -1,7 +1,7 @@
-import { Event } from "./event";
-import { AttributeParser } from "./attributes";
-import { Options, Warning } from "./options";
-import { pattern, find } from "./find";
+import  { Event } from "./event.ts";
+import  { AttributeParser } from "./attributes.ts";
+import  { Options, Warning } from "./options.ts";
+import  { pattern, find } from "./find.ts";
 
 // General note on the parsing strategy:  our objective is to
 // parse without backtracking. To that end, we keep a stack of
