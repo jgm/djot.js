@@ -5,6 +5,6 @@ rules:
   severity: WARNING
   patterns:
   - pattern: |
-      import $...X from "./$Y";
+      export $...X from "./$Y";
   fix: |
-      import $...X from "./$Y.ts";
+      export $...X from "./$Y.ts";
