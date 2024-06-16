@@ -12,18 +12,18 @@ import { renderDjot } from "./djot-renderer";
 import { version } from "./version";
 import { Warning } from "./options";
 
-const warn = function(warning: Warning) : void {
+const warn = function(warning: Warning): void {
   process.stderr.write(warning.render() + "\n");
 }
 
 let timing = false;
-const options = {sourcePositions: false, warn: warn};
+const options = { sourcePositions: false, warn: warn };
 let to = 'html';
 let from = 'djot';
 let compact = false;
 let width = 72;
-const toFormats = ["html","ast","astpretty","events","djot","pandoc"];
-const fromFormats = ["djot","ast","pandoc"];
+const toFormats = ["html", "ast", "astpretty", "events", "djot", "pandoc"];
+const fromFormats = ["djot", "ast", "pandoc"];
 const filters = [];
 
 const usage = `djot [OPTIONS] FILE*
@@ -71,7 +71,7 @@ while (args[i]) {
     case "--filter": {
       i++;
       const fp = args[i];
-      if (typeof(fp) !== "string") {
+      if (typeof (fp) !== "string") {
         process.stderr.write("--filter expects a FILE argument\n");
         process.exit(1);
       }
@@ -80,9 +80,9 @@ while (args[i]) {
       try {
         const compiledFilter = Function(filterprog)();
         filters.push(compiledFilter);
-      } catch(err) {
+      } catch (err) {
         process.stderr.write("Error loading filter " + fp + ":\n");
-        throw(err);
+        throw (err);
       }
       break;
     }
@@ -107,7 +107,7 @@ while (args[i]) {
       break;
     case "--quiet":
     case "-q":
-      options.warn = () => {};
+      options.warn = () => { };
       break;
     case "--help":
     case "-h":
@@ -120,8 +120,8 @@ while (args[i]) {
       break;
     default:
       if (/^-[a-z]{2,}/.test(arg)) { // -ap = -a -p
-        for (let i=1; i < arg.length; i++) {
-          args.push("-" + arg.substring(i,i+1));
+        for (let i = 1; i < arg.length; i++) {
+          args.push("-" + arg.substring(i, i + 1));
         }
       } else if (/=/.test(arg)) { // --width=10
         for (const argpart in arg.split(/=/)) {
@@ -144,7 +144,7 @@ if (files.length === 0) {
 for (const file of files) {
   try {
     input = input + fs.readFileSync(file, "utf8");
-  } catch(err) {
+  } catch (err) {
     console.error(err);
     process.exit(1);
   }
@@ -153,7 +153,7 @@ for (const file of files) {
 try {
   if (to === "events") {
     let start = true;
-    for (const event of parseEvents(input, {warn: warn})) {
+    for (const event of parseEvents(input, { warn: warn })) {
       if (start) {
         process.stdout.write("[");
         start = false;
@@ -165,19 +165,19 @@ try {
     console.log("]");
   } else {
     let startTime = performance.now();
-    let ast : Doc | null = null;
+    let ast: Doc | null = null;
     if (from === "djot") {
-      ast = parse(input, options);
+      ast = parse(input, options) as Doc;
     } else if (from === "pandoc") {
-      ast = fromPandoc(JSON.parse(input));
+      ast = fromPandoc(JSON.parse(input)) as Doc;
     } else if (from === "ast") {
-      ast = JSON.parse(input);
+      ast = JSON.parse(input) as Doc;
     }
     let endTime = performance.now();
     const parseTime = (endTime - startTime).toFixed(1);
 
     if (!ast) {
-      throw(new Error("No AST was produced."));
+      throw (new Error("No AST was produced."));
     }
 
     startTime = performance.now();
@@ -185,7 +185,7 @@ try {
       if (ast) {
         applyFilter(ast, filter);
         if (!ast) {
-          throw(new Error("Filter destroyed AST."));
+          throw (new Error("Filter destroyed AST."));
         }
       }
     }
@@ -199,7 +199,7 @@ try {
         break;
       case "djot":
         process.stdout.write((renderDjot(ast,
-                                         {warn: warn, wrapWidth: width})));
+          { warn: warn, wrapWidth: width })));
         break;
       case "ast":
         process.stdout.write(JSON.stringify(ast, null, compact ? 0 : 2));
@@ -210,7 +210,7 @@ try {
         break;
       case "pandoc":
         process.stdout.write(
-          JSON.stringify(toPandoc(ast, {warn: warn}),
+          JSON.stringify(toPandoc(ast, { warn: warn }),
             null, compact ? 0 : 2));
         process.stdout.write("\n");
         break;
@@ -224,12 +224,12 @@ try {
     }
 
   }
-} catch(err : any) {
-    process.stderr.write("Error: " + err.toString() + "\n");
-    if (err.stack) {
-      process.stderr.write(err.stack);
-    }
-    process.exit(1);
+} catch (err: any) {
+  process.stderr.write("Error: " + err.toString() + "\n");
+  if (err.stack) {
+    process.stderr.write(err.stack);
+  }
+  process.exit(1);
 }
 
 // We set exitCode rather than using exit(0), because the latter

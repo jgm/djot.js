@@ -1,4 +1,6 @@
 import { parse, renderAST } from "./parse";
+import * as fs from 'fs';
+jest.mock('fs');
 
 describe("Parser", () => {
   it("parses paragraphs", () => {
@@ -209,6 +211,50 @@ describe("Parser", () => {
     str (4:1:17-4:8:24) text="new para"
 `);
   });
+
+  it("parses file inclusions", () => {
+    const mockFileContent = "This is the content of the included file.";
+    (fs.readFileSync as jest.Mock).mockReturnValue(mockFileContent);
+
+    const input = "This is a test +[alt text](path/to/file)";
+    const ast = parse(input, {});
+
+    expect(ast).toEqual({
+      tag: "doc",
+      autoReferences: {},
+      references: {},
+      footnotes: {},
+      children: [
+        {
+          tag: "para",
+          attributes: undefined,
+          pos: undefined,
+          children: [
+            {
+              tag: "str",
+              text: "This is a test ",
+              pos: undefined
+            },
+            {
+              tag: "para",
+              attributes: undefined,
+              pos: undefined,
+              children: [
+                {
+                  tag: "str",
+                  text: mockFileContent,
+                  pos: undefined
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    });
+  });
+
+
+
 
 
 

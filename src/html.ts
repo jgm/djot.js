@@ -2,13 +2,15 @@ import { Doc, Reference, Footnote, Link, HasChildren,
          HasAttributes, AstNode, Visitor } from "./ast";
 import { getStringContent } from "./parse";
 import { Options, Warning } from "./options";
-
 interface HTMLRenderOptions extends Options {
   overrides?: Visitor<HTMLRenderer, string>;
 }
 
 const reNeedsEscape = /[&<>]/;
 const reNeedsEscapeAttr = /[&<>"]/;
+declare global {
+  var ast_tree: any;
+}
 
 class HTMLRenderer {
   warn: (warning : Warning) => void;
@@ -18,8 +20,9 @@ class HTMLRenderer {
   nextFootnoteIndex: number;
   references: Record<string, Reference>;
   autoReferences: Record<string, Reference>;
+  footnotes: Record<string, Footnote>; // add this
 
-  constructor(options : HTMLRenderOptions) {
+  /*constructor(options : HTMLRenderOptions) {
     this.warn = options.warn || (() => {});
     this.options = options || {};
     this.tight = false;
@@ -27,7 +30,18 @@ class HTMLRenderer {
     this.nextFootnoteIndex = 1;
     this.references = {};
     this.autoReferences = {};
-  }
+  }*/
+  constructor(options : HTMLRenderOptions, private notes: Record<string, Footnote> = {}) {
+    this.warn = options.warn || (() => {});
+    this.options = options || {};
+    this.tight = false;
+    this.footnoteIndex = {};
+    this.nextFootnoteIndex = 1;
+    this.references = {};
+    this.autoReferences = {};
+    this.footnotes = {}; // Initialize footnotes
+
+}
 
   escape(s: string): string {
     if (reNeedsEscape.test(s)) {
@@ -108,99 +122,123 @@ class HTMLRenderer {
   }
 
   renderCloseTag(tag: string): string {
-    return `</${tag}>`
+    return `</${tag}>`;
   }
-
+  
   inTags(tag: string, node: HasChildren<AstNode>, newlines: number,
     extraAttrs?: Record<string, string>): string {
     const afterOpenSpace = newlines >= 2 ? "\n" : "";
     const afterCloseSpace = newlines >= 1 ? "\n" : "";
     return `${this.renderTag(tag, node as AstNode, extraAttrs)}${afterOpenSpace}${this.renderChildren(node)}</${tag}>${afterCloseSpace}`;
   }
-
-  addBacklink(note : string, ident: number): string {
-    const backlink  = `<a href="#fnref${ident}" role="doc-backlink">\u21A9\uFE0E</a>`;
+  
+  addBacklink(note: string, ident: string): string {
+    const backlink = `<a href="#fnref${ident}" role="doc-backlink">\u21A9\uFE0E</a>`;
     if (/\<\/p\>[\r\n]*$/.test(note)) {
       return note.replace(/\<\/p\>([\r\n]*)$/, backlink + "</p>$1");
     } else {
-      return note + `<p>${backlink}</p>\n`;
+      return note + backlink + "\n";
     }
   }
-
+  
   renderChildren(node: HasChildren<AstNode>): string {
-    let result = ""
+    let result = "";
     const oldtight = this.tight;
     if ("tight" in node) {
       this.tight = !!node.tight;
     }
     for (const child of node.children) {
-      result += this.renderAstNode(child);
+      const renderedChild = this.renderAstNode(child);
+      result += renderedChild;
     }
     if ("tight" in node) {
       this.tight = oldtight;
     }
-    return result
+    return result;
   }
-
+  
   renderAstNode(node: AstNode): string {
     const override = this.options.overrides?.[node.tag];
     if (override) {
-      return (override as (node: AstNode, context: HTMLRenderer) => string)(node, this);
+      const renderedNode = (override as (node: AstNode, context: HTMLRenderer) => string)(node, this);
+      return renderedNode;
     }
-    return this.renderAstNodeDefault(node);
+  
+    if (node.tag === 'footnote') {
+      let footnoteContent = '';
+      for (const child of node.children) {
+        footnoteContent += this.renderAstNode(child); // Render the child node
+      }
+      // Store the footnote content for later rendering
+      this.footnotes[node.label].content = footnoteContent;
+      return ''; // Don't render the footnote now
+    }
+  
+    if (node.tag === 'footnote_reference') {
+      // Just return the footnote reference, the actual footnote will be rendered later
+      return `<sup id="fnref${node.text}"><a href="#fn${node.text}" class="footnote-ref">${node.text}</a></sup>`;
+    }
+    const renderedNode = this.renderAstNodeDefault(node);
+    return renderedNode;
   }
-
+  
   renderNotes(notes: Record<string, Footnote>): string {
-    let result  = "";
-    const orderedFootnotes = [];
-    const renderedNotes : Record<string, string> = {};
+    let result = "";
+    const renderedNotes: Record<string, string> = {};
+    let tree_stringified = JSON.stringify(ast_tree, null, 2);
+  
     for (const k in notes) {
       renderedNotes[k] = this.renderChildren(notes[k]);
     }
-    // now this.footnoteIndex includes notes only indexed in other notes (#37)
     for (const k in this.footnoteIndex) {
-      const index = this.footnoteIndex[k];
-      if (index) {
-        orderedFootnotes[index] = renderedNotes[k];
-      }
+      const note = renderedNotes[k] || "";
+      // parse the notes from the stringified tree
+      let tree = JSON.parse(tree_stringified);
+      // get the footnote directly from the parsed tree
+      const footnote = tree.footnotes[k];
+  
+      const paraNode = footnote.children.find((child: any) => child.tag === 'para');
+      const textNode = paraNode.children.find((child: any) => child.tag === 'str');
+      const text = textNode.text;
+      // adding in \n is superfluous since it's done by browser's default CSS rules
+      result += `<li id="fn${k}">` + `<label>${k}.</label>` + text + this.addBacklink(note, k) + `</li>`;
     }
-    result += `<section role="doc-endnotes">\n<hr>\n<ol>\n`;
-    for (let i = 1; i < orderedFootnotes.length; i++) {
-      // note: there can be gaps in the sequence, so we
-      // want to insert a dummy note in that case
-      const note = orderedFootnotes[i] || "";
-      result += `<li id="fn${i}">\n`;
-      result += this.addBacklink(note, i);
-      result += `</li>\n`;
+    result += `<section role="doc-endnotes">\n<hr>\n\n`;
+    for (const key in notes) {
+      const note = renderedNotes[key] || "";
+      result += `<li id="fn${key}">` + `<label>${key}.</label>` + this.addBacklink(note, key) + `</li>`;
     }
-    result += `</ol>\n</section>\n`;
+    result += `</section>`;
+  
     return result;
   }
-
+  
   renderAstNodeDefault(node: AstNode): string {
     switch (node.tag) {
       case "doc": {
-        let result  = "";
+        let result = "";
         result += this.renderChildren(node);
-        if (this.nextFootnoteIndex > 1) {
-          // render notes
-          result += this.renderNotes(node.footnotes);
+  
+        // Render the footnotes at the end of the document
+        if (Object.keys(this.footnotes).length > 0) {
+          result += this.renderNotes(this.footnotes);
         }
+  
         return result;
       }
-
-
+  
       case "para": {
         if (this.tight) {
-          return `${this.renderChildren(node)}\n`;
+          return `${this.renderChildren(node)}`;
         } else {
           return this.inTags("p", node, 1);
         }
       }
-
-      case "block_quote":
+      
+      case "block_quote": {
         return this.inTags("blockquote", node, 2);
-
+      }
+        
       case "div":
         return this.inTags("div", node, 2);
 
@@ -257,15 +295,16 @@ class HTMLRenderer {
           this.nextFootnoteIndex++;
         }
         result += this.renderTag("a", node, {
-          id: "fnref" + index,
-          href: "#fn" + index,
+          id: "fnref" + label,
+          href: "#fn" + label,
           role: "doc-noteref"
         });
         result += "<sup>";
-        result += this.escape(index.toString());
+        result += this.escape(label);
         result += "</sup></a>";
         return result;
       }
+
 
       case "table":
         return this.inTags("table", node, 2);
@@ -492,12 +531,17 @@ class HTMLRenderer {
   render(doc: Doc): string {
     this.references = doc.references;
     this.autoReferences = doc.autoReferences;
+    this.footnotes = doc.footnotes; // Store the footnotes
+
     return this.renderAstNode(doc);
   }
 }
 
 const renderHTML = function(ast: Doc, options: HTMLRenderOptions = {}): string {
   const renderer = new HTMLRenderer(options);
+  // declare that ast variable ast_tree is global and equal to ast
+  
+  global.ast_tree = ast;
   return renderer.render(ast);
 }
 

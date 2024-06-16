@@ -24,4 +24,9 @@ module.exports = {
       type: 'umd'
     }
   },
+  externals: {
+    fs: 'commonjs fs', // Exclude the 'fs' module from the bundle
+    // Add other Node.js built-in modules as needed
+  },
 };
+

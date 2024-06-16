@@ -6,14 +6,9 @@ const pattern = function(patt : string) : RegExp {
   return new RegExp(patt, 'yd');
 }
 
-const find = function(subject : string,
-                      patt : RegExp,
-                      startpos : number,
-                      endpos ?: number) : null | { startpos : number,
-                                                   endpos : number,
-                                                   captures : string[] } {
+const find = function(subject: string, patt: RegExp, startpos: number, endpos?: number): null | { startpos: number, endpos: number, captures: string[], data?: Record<string, any> } {
   patt.lastIndex = startpos;
-  let subj : string;
+  let subj: string;
   if (endpos !== undefined) {
     subj = subject.substring(0, endpos + 1);
   } else {
@@ -29,12 +24,10 @@ const find = function(subject : string,
         capts.push(subj.substring(sp, ep));
       }
     }
-    return { startpos: result.indices[0][0],
-             endpos: result.indices[0][1] - 1,
-             captures: capts };
+    return { startpos: result.indices[0][0], endpos: result.indices[0][1] - 1, captures: capts };
   } else {
     return null;
   }
-}
+};
 
 export { pattern, find };

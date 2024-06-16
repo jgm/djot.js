@@ -355,7 +355,8 @@ interface Reference extends HasAttributes {
 interface Footnote extends HasAttributes {
   tag: "footnote";
   label: string;
-  children: Block[];
+  content?: string;
+  children: Block[]; // For nested footnotes
 }
 
 interface Doc extends HasAttributes {

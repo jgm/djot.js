@@ -18,8 +18,32 @@ import {
   isCaption,
   isInline,
   Caption} from "./ast";
+  import fs from 'fs';
+  import os from 'os'; // this is here for writing temp label files to preserve the labels through the recursive calls instead of normalizing. Preserving the labels is @smntov's request. Wasn't added to Pandoc since it doesn't seem to be how Pandoc does things anyway
 
-/* Types not used for defining the AST but for processing */
+  let counter = 0;
+  let labelsFilePath: string;
+  
+  do {
+    labelsFilePath = `${os.tmpdir()}/footnote_labels_${counter}.txt`;
+    counter++;
+  } while (fs.existsSync(labelsFilePath));
+
+let readFileSync: (path: string, options: { encoding: string }) => string;
+function isNodeJsErrnoException(error: unknown): error is NodeJS.ErrnoException {
+  return typeof error === 'object' && error !== null && 'code' in error;
+}
+  
+if (typeof window === 'undefined') {
+  const fs = require('fs');
+  readFileSync = fs.readFileSync;
+} else {
+  // Provide a mock or alternative implementation if needed
+  readFileSync = (path: string, options: { encoding: string }) => {
+    throw new Error('fs.readFileSync is not available in the browser');
+  };
+}
+  /* Types not used for defining the AST but for processing */
 
 interface Container {
   children: any[];
@@ -49,6 +73,7 @@ const addStringContent = function(node: (AstNode | Container),
     }
   }
 }
+let footnoteCounter = 1;
 
 // in verbatim text, trim one space next to ` at beginning or end:
 const trimVerbatim = function(s: string): string {
@@ -111,6 +136,8 @@ const getListStart = function(marker: string, style: string): number | undefined
 
 interface ParseOptions extends Options {
   sourcePositions?: boolean;
+  includedFiles?: string[]; // Track included files to detect cycles
+
 }
 
 // Parsing ocntext:
@@ -124,7 +151,7 @@ const normalizeLabel = function(label : string): string {
   return label.trim().replace(/[ \t\r\n]+/g, " ")
 }
 
-const parse = function(input: string, options: ParseOptions = {}): Doc {
+const parse = function(input: string, options: ParseOptions = {}, currentFile?: string): Doc {
 
   const linestarts: number[] = [-1];
 
@@ -245,12 +272,13 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
     }
   }
 
-
-  const handlers : Record<string, (suffixes : string[],
-                                   startpos : number,
-                                   endpos : number,
-                                   pos : Pos | undefined) => void> =
-   {  str: (suffixes, startpos, endpos, pos) => {
+  // change style of next line if this works
+  const handlers: Record<string, (suffixes: string[],
+                                  startpos: number,
+                                  endpos: number,
+                                  pos: Pos | undefined,
+                                  data?: Record<string, any>) => void> = 
+    { str: (suffixes, startpos, endpos, pos) => {
         const txt = input.substring(startpos, endpos + 1);
         if (context === Context.Normal) {
           addChildToTip({ tag: "str", text: txt, pos: pos});
@@ -297,7 +325,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
           accumulatedText += txt;
         }
       },
-
+      
       footnote_reference: (suffixes, startpos, endpos, pos) => {
         const fnref = input.substring(startpos + 2, endpos);
         addChildToTip({ tag: "footnote_reference",
@@ -1034,28 +1062,75 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
         if (!tip || ("tag" in tip && tip.tag !== "table")) {
           return;
         }
-        const capt =  {
-            tag: "caption",
-            children: node.children,
-            attributes: node.attributes,
-            autoAttributes: node.autoAttributes,
-            pos: node.pos
-          };
+        const capt = {
+          tag: "caption",
+          children: node.children,
+          attributes: node.attributes,
+          autoAttributes: node.autoAttributes,
+          pos: node.pos
+        };
         if (tip.children[0]?.tag === "caption") {
           tip.children[0] = capt;
         }
       },
-
+      
+      file_inclusion: (suffixes, startpos, endpos, pos, data = { altText: "", filePath: "" }) => {
+        if (data.altText && data.filePath) {
+          const { altText, filePath } = data;
+      
+          if (options.includedFiles?.includes(filePath)) {
+            const cycle = [...options.includedFiles, filePath].join(' -> ');
+            console.error(`Cyclic inclusion detected: ${cycle}`);
+            process.exit(1);
+          }
+      
+          try {
+            const fileContent = readFileSync(filePath, { encoding: 'utf-8' });
+            const newOptions = { ...options, includedFiles: [...(options.includedFiles || []), filePath] };
+            const includedDoc = parse(fileContent, newOptions, filePath);
+      
+            // Add the parsed content to the current document
+            includedDoc.children.forEach(child => {
+              addChildToTip(child);
+            });
+      
+            // Merge footnotes from the included document
+            for (const key in includedDoc.footnotes) {
+              const normalizedKey = `${key}`;
+      
+              if (!footnotes[normalizedKey]) {
+                footnotes[normalizedKey] = includedDoc.footnotes[key];
+                footnotes[normalizedKey].label = normalizedKey;
+              } else {
+                // Merge children of footnotes with the same key
+                footnotes[normalizedKey].children.push(...includedDoc.footnotes[key].children);
+              }
+            }
+          } catch (error) {
+            if (isNodeJsErrnoException(error) && error.code === 'ENOENT') {
+              // File not found, fall back to alt text
+              addChildToTip({ tag: "str", text: altText, pos });
+            } else {
+              throw error;
+            }
+          }
+        }
+      },
+      
       ["+footnote"]: (suffixes, startpos, endpos, pos) => {
         pushContainer(pos);
-      },
-
+      }
+      
+      
       ["-footnote"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         if (node.data.label) {
           const lab = normalizeLabel(node.data.label);
-          footnotes[lab] =
-          {
+          console.log(`Footnote label before normalization: ${node.data.label}`);
+          console.log(`Footnote label after normalization: ${lab}`);
+  
+          console.log(lab);
+          const footnote: Footnote = {
             tag: "footnote",
             label: lab || "",
             children: node.children,
@@ -1063,17 +1138,43 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
             autoAttributes: node.autoAttributes,
             pos: node.pos
           };
+      
+          // Check for duplicate labels
+          if (fs.existsSync(labelsFilePath)) {
+            const labels = fs.readFileSync(labelsFilePath, 'utf-8').split('\n');
+            if (labels.includes(lab)) {
+              console.warn(`Duplicate label "${lab}"`);
+              return;
+            }
+          }
+      
+          fs.appendFileSync(labelsFilePath, `${lab}\n`);
+      
+          if (footnotes[lab]) {
+            // Merge with existing footnote
+            footnotes[lab].children.push(...footnote.children);
+          } else {
+            footnotes[lab] = footnote;
+          }
+          
+            
         } else {
           warn(new Warning("Ignoring footnote without a label.",
-                          options.sourcePositions ?
-                            getSourceLoc(endpos) : endpos));
+            options.sourcePositions ?
+              getSourceLoc(endpos) : endpos));
         }
       },
 
+
       note_label: (suffixes, startpos, endpos, pos) => {
-        topContainer().data.label =
-          input.substring(startpos, endpos + 1);
+        topContainer().data.label = input.substring(startpos, endpos + 1);
+        console.log(`Assigned footnote label: ${topContainer().data.label}`);
+
       },
+            
+
+
+      
 
       ["+code_block"]: (suffixes, startpos, endpos, pos) => {
         pushContainer(pos);
@@ -1169,7 +1270,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
                         type: "em_dash",
                         text: "---", pos});
       },
-
+   
       // We set the blanklines property of a parent list or
       // sublist to aid with tight/loose list determination.
       blankline: (suffixes, startpos, endpos, pos) => {
@@ -1186,91 +1287,89 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
       }
 
     };
-
-  const handleEvent = function(containers: Container[], event: Event): void {
-    let sp ;
-    let ep ;
-    let pos ;
+    const handleEvent = function(containers: Container[], event: Event): void {
+      let sp;
+      let ep;
+      let pos;
+      if (options.sourcePositions) {
+        sp = getSourceLoc(event.startpos);
+        ep = getSourceLoc(event.endpos);
+        pos = { start: sp, end: ep };
+      }
+      let annot = event.annot;
+      let suffixes: string[] = [];
+      if (event.annot.includes("|")) {
+        const parts = event.annot.split("|");
+        annot = parts[0];
+        suffixes = parts.slice(1);
+      }
+  
+      // The following is for tight/loose determination.
+      // If blanklines have already been seen, and we're
+      // about to process something other than a blankline,
+      // the end of a list or list item, or the start of
+      // a list, then it's a loose list.
+      if (listDepth > 0 && annot !== "blankline") {
+        let ln;
+        const top = topContainer();
+        if (top) {
+          if (top.data && "tight" in top.data) {
+            ln = top;
+          } else if (containers.length >= 2 && "tight" in containers[containers.length - 2].data) {
+            ln = containers[containers.length - 2];
+          }
+        }
+        if (ln) {
+          if (!/^[+-]list/.test(annot) && ln.data.blanklines) {
+            ln.data.tight = false;
+          }
+          if (!/^[-+]list_item$/.test(annot)) {
+            ln.data.blanklines = false;
+          }
+        }
+      }
+  
+      const fn = handlers[annot];
+      if (fn) {
+        fn(suffixes, event.startpos, event.endpos, pos, event.data); // Pass event.data
+      }
+    }
+  
+    const containers: Container[] =
+      [{
+        children: [],
+        data: { headinglevel: 0 },
+        pos: {
+          start: { line: 0, col: 0, offset: 0 },
+          end: { line: 0, col: 0, offset: 0 }
+        }
+      }];
+  
+    let lastpos = 0;
+    for (const event of parser) {
+      handleEvent(containers, event);
+      lastpos = event.endpos;
+    }
+    let lastloc;
     if (options.sourcePositions) {
-      sp = getSourceLoc(event.startpos);
-      ep = getSourceLoc(event.endpos);
-      pos = { start: sp, end: ep };
+      lastloc = getSourceLoc(lastpos);
     }
-    let annot = event.annot;
-    let suffixes: string[] = [];
-    if (event.annot.includes("|")) {
-      const parts = event.annot.split("|");
-      annot = parts[0];
-      suffixes = parts.slice(1);
+  
+    // close any open sections:
+    let pnode = topContainer();
+    while (pnode && pnode.data.headinglevel > 0) {
+      // close sections til we get to the doc level
+      popContainer(lastloc && { start: lastloc, end: lastloc });
+      addChildToTip({
+        tag: "section",
+        children: pnode.children,
+        attributes: pnode.attributes,
+        autoAttributes: pnode.autoAttributes,
+        pos: pnode.pos
+      });
+      pnode = topContainer();
     }
-
-    // The following is for tight/loose determination.
-    // If blanklines have already been seen, and we're
-    // about to process something other than a blankline,
-    // the end of a list or list item, or the start of
-    // a list, then it's a loose list.
-    if (listDepth > 0 && annot !== "blankline") {
-      let ln;
-      const top = topContainer();
-      if (top) {
-        if (top.data && "tight" in top.data) {
-          ln = top;
-        } else if (containers.length >= 2 &&
-          "tight" in containers[containers.length - 2].data) {
-          ln = containers[containers.length - 2];
-        }
-      }
-      if (ln) {
-        if (!/^[+-]list/.test(annot) && ln.data.blanklines) {
-          ln.data.tight = false;
-        }
-        if (!/^[-+]list_item$/.test(annot)) {
-          ln.data.blanklines = false;
-        }
-      }
-    }
-
-    const fn = handlers[annot];
-    if (fn) {
-      fn(suffixes, event.startpos, event.endpos, pos);
-    }
-
-  }
-
-  const containers: Container[] =
-    [{
-      children: [],
-      data: { headinglevel: 0 },
-      pos: {
-        start: { line: 0, col: 0, offset: 0 },
-        end: { line: 0, col: 0, offset: 0 }
-      }
-    }];
-
-  let lastpos = 0;
-  for (const event of parser) {
-    handleEvent(containers, event);
-    lastpos = event.endpos;
-  }
-  let lastloc;
-  if (options.sourcePositions) {
-    lastloc = getSourceLoc(lastpos);
-  }
-
-  // close any open sections:
-  let pnode = topContainer();
-  while (pnode && pnode.data.headinglevel > 0) {
-    // close sections til we get to the doc level
-    popContainer(lastloc && {start: lastloc, end: lastloc});
-    addChildToTip({
-      tag: "section",
-      children: pnode.children,
-      attributes: pnode.attributes,
-      autoAttributes: pnode.autoAttributes,
-      pos: pnode.pos});
-    pnode = topContainer();
-  }
-
+  
   const doc: Doc =
   {
     tag: "doc",
@@ -1285,89 +1384,90 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
   if (containers[0].attributes) {
     doc.attributes = containers[0].attributes;
   }
+
   return doc;
 }
 
-const omitFields: Record<string, boolean> =
-{
-  children: true,
-  tag: true,
-  pos: true,
-  attributes: true,
-  autoAttributes: true,
-  references: true,
-  autoReferences: true,
-  footnotes: true
-};
+  
 
-const stringify = function(x : any) : string {
-  return JSON.stringify(x).replace(/\\\n/g,"\\n");
-}
-
-const renderAstNode = function(node: Record<string, any>, buff: string[], indent: number): void {
-  buff.push(" ".repeat(indent));
-  if (indent > 128) {
-    buff.push("(((DEEPLY NESTED CONTENT OMITTED)))\n");
-    return;
+  const omitFields: Record<string, boolean> = {
+    children: true,
+    tag: true,
+    pos: true,
+    attributes: true,
+    autoAttributes: true,
+    references: true,
+    autoReferences: true,
+    footnotes: true
+  };
+  
+  const stringify = function(x: any): string {
+    return JSON.stringify(x).replace(/\\\n/g, "\\n");
   }
-
-  buff.push(node.tag);
-  if (node.pos) {
-    buff.push(` (${node.pos.start.line}:${node.pos.start.col}:${node.pos.start.offset}-${node.pos.end.line}:${node.pos.end.col}:${node.pos.end.offset})`);
-  }
-  for (const k in node) {
-    if (!omitFields[k]) {
-      const v: AstNode = node[k];
-      if (v !== undefined && v !== null) {
-        buff.push(` ${k}=${stringify(v)}`);
+  
+  const renderAstNode = function(node: Record<string, any>, buff: string[], indent: number): void {
+    buff.push(" ".repeat(indent));
+    if (indent > 128) {
+      buff.push("(((DEEPLY NESTED CONTENT OMITTED)))\n");
+      return;
+    }
+  
+    buff.push(node.tag);
+    if (node.pos) {
+      buff.push(` (${node.pos.start.line}:${node.pos.start.col}:${node.pos.start.offset}-${node.pos.end.line}:${node.pos.end.col}:${node.pos.end.offset})`);
+    }
+    for (const k in node) {
+      if (!omitFields[k]) {
+        const v: AstNode = node[k];
+        if (v !== undefined && v !== null) {
+          buff.push(` ${k}=${stringify(v)}`);
+        }
+      }
+    }
+    if (node.attributes) {
+      for (const k in node.attributes) {
+        buff.push(` ${k}=${stringify(node.attributes[k])}`);
+      }
+    }
+    buff.push("\n");
+    if (node.children) {
+      for (const child of node.children) {
+        renderAstNode(child, buff, indent + 2);
       }
     }
   }
-  if (node.attributes) {
-    for (const k in node.attributes) {
-      buff.push(` ${k}=${stringify(node.attributes[k])}`);
+  
+  // Render an AST in human-readable form, with indentation
+  // showing the hierarchy.
+  const renderAST = function(doc: Doc): string {
+    const buff: string[] = [];
+    renderAstNode(doc, buff, 0)
+    if (Object.keys(doc.references).length > 0) {
+      buff.push("references\n");
+      for (const k in doc.references) {
+        buff.push(`  [${stringify(k)}] =\n`);
+        renderAstNode(doc.references[k], buff, 4);
+      }
     }
-  }
-  buff.push("\n");
-  if (node.children) {
-    for (const child of node.children) {
-      renderAstNode(child, buff, indent + 2);
+    if (Object.keys(doc.footnotes).length > 0) {
+      buff.push("footnotes\n")
+      for (const k in doc.footnotes) {
+        buff.push(`  [${stringify(k)}] =\n`);
+        renderAstNode(doc.footnotes[k], buff, 4)
+      }
     }
+    return buff.join("");
   }
-}
-
-// Render an AST in human-readable form, with indentation
-// showing the hierarchy.
-const renderAST = function(doc: Doc): string {
-  const buff: string[] = [];
-  renderAstNode(doc, buff, 0)
-  if (Object.keys(doc.references).length > 0) {
-    buff.push("references\n");
-    for (const k in doc.references) {
-      buff.push(`  [${stringify(k)}] =\n`);
-      renderAstNode(doc.references[k], buff, 4);
-    }
+  
+  export type {
+    ParseOptions,
   }
-  if (Object.keys(doc.footnotes).length > 0) {
-    buff.push("footnotes\n")
-    for (const k in doc.footnotes) {
-      buff.push(`  [${stringify(k)}] =\n`);
-      renderAstNode(doc.footnotes[k], buff, 4)
-    }
+  export {
+    parse,
+    renderAST,
+    getStringContent,
+    isBlock,
+    isRow,
+    isCaption,
+    isInline,
   }
-  return buff.join("");
-}
-
-
-export type {
-  ParseOptions,
-}
-export {
-  parse,
-  renderAST,
-  getStringContent,
-  isBlock,
-  isRow,
-  isCaption,
-  isInline,
-}

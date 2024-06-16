@@ -1,9 +1,10 @@
 import { AstNode, Doc, Block, Caption, Row, Cell, Alignment,
-         TaskListItem, OrderedListStyle, ListItem, Inline, Reference,
-         Span, Verbatim, Image, Link,
-         Attributes, CodeBlock, Heading, Div, Table, CheckboxStatus,
-         DefinitionListItem, Footnote } from "./ast";
+  TaskListItem, OrderedListStyle, ListItem, Inline, Reference,
+  Span, Verbatim, Image, Link,
+  Attributes, CodeBlock, Heading, Div, Table, CheckboxStatus,
+  DefinitionListItem, Footnote } from "./ast";
 import { Options, Warning } from "./options";
+
 
 interface Pandoc {
   ["pandoc-api-version"]: number[],
@@ -443,16 +444,16 @@ class PandocRenderer {
         elts.push({ t: "Strikeout", c: this.toPandocChildren(node) });
         break;
 
-      case "footnote_reference": {
-        const note = this.footnotes[node.text];
-        if (note) {
-          elts.push({ t: "Note", c: this.toPandocChildren(note) });
-        } else {
-          elts.push({ t: "Superscript", c: [{ t: "Str", c: node.text }]});
+        case "footnote_reference": {
+          const note = this.footnotes[node.text];
+          if (note) {
+            elts.push({ t: "Note", c: this.toPandocChildren(note) });
+          } else {
+            elts.push({ t: "Superscript", c: [{ t: "Str", c: node.text }]});
+          }
+          break;
         }
-        break;
-      }
-
+  
       default:
         this.warn(new Warning("Skipping unhandled node " + node.tag));
     }
@@ -1001,9 +1002,9 @@ class PandocParser {
   }
 }
 
-const toPandoc = function(doc : Doc, options ?: PandocRenderOptions) : Pandoc {
+const toPandoc = function(doc: Doc, options?: PandocRenderOptions): any {
   return new PandocRenderer(options).toPandoc(doc);
-}
+};
 
 const fromPandoc = function(pandoc : Pandoc, options ?: Options) : Doc {
   return new PandocParser(options).fromPandoc(pandoc);
