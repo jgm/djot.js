@@ -17,8 +17,8 @@
   "exports": {
     ".": {
       "require": "./dist/djot.js",
-      "default": "./lib/index.js",
-      "types": "./types/index.d.ts"
+      "types": "./types/index.d.ts",
+      "default": "./lib/index.js"
     }
   },
   "bin": {
