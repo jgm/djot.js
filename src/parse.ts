@@ -1,6 +1,6 @@
-import { Event } from "./event";
-import { parseEvents } from "./block";
-import { Options, Warning } from "./options";
+import  { Event } from "./event.ts";
+import  { parseEvents } from "./block.ts";
+import  { Options, Warning } from "./options.ts";
 import {
   Attributes,
   SourceLoc,
@@ -17,7 +17,7 @@ import {
   isBlock,
   isCaption,
   isInline,
-  Caption} from "./ast";
+  Caption} from "./ast.ts";
 
 /* Types not used for defining the AST but for processing */
 
@@ -1112,10 +1112,15 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
         pushContainer(pos);
       },
 
+      ["tag_name"]: (suffixes, startpos, endpos, pos) => {
+        topContainer().data.tag_name = input.substring(startpos, endpos + 1);
+      },
+
       ["-div"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         addChildToTip({
           tag: "div",
+          tag_name: node.data.tag_name ?? "div",
           children: node.children,
           attributes: node.attributes,
           autoAttributes: node.autoAttributes,

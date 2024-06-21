@@ -1,4 +1,4 @@
-import { SourceLoc } from "./ast";
+import  { SourceLoc } from "./ast.ts";
 
 class Warning {
   message : string;

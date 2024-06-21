@@ -1,5 +1,5 @@
-import { parse, renderAST } from "./parse";
-import { renderHTML } from "./html";
+import  { parse, renderAST } from "./parse.ts";
+import  { renderHTML } from "./html.ts";
 
 const ignoreWarnings = () => { /* do nothing */ };
 

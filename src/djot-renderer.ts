@@ -1,4 +1,4 @@
-import { Doc, AstNode, HasChildren,
+import  { Doc, AstNode, HasChildren,
          HasAttributes, Block, Para, Heading, Div, BulletList,
          OrderedList, TaskList,
          DefinitionList, Table, Caption, Row,
@@ -6,9 +6,9 @@ import { Doc, AstNode, HasChildren,
          Term, Definition, Footnote, Reference, Symb, Span,
          Link, Image, Email, Url, HasText, RawInline, FootnoteReference,
          Inline, Str, InlineMath, DisplayMath, Verbatim, SmartPunctuation,
-         isInline,  isBlock, isCaption, isRow } from "./ast";
-import { getStringContent } from "./parse";
-import { Options } from "./options";
+         isInline,  isBlock, isCaption, isRow } from "./ast.ts";
+import  { getStringContent } from "./parse.ts";
+import  { Options } from "./options.ts";
 
 const isWhitespace = function(node : Inline) : boolean {
   const tag : string = node.tag;
