@@ -1,0 +1,5 @@
+Example text with footnotes.[^x] More text with another footnote.[^y]
+
+[^x]: Footnote X explanation.
+[^y]: Footnote Y explanation.
+

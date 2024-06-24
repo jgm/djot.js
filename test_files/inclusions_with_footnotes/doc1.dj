@@ -1,0 +1,4 @@
+This is a test sentence with a footnote.[^1] Another footnote here.[^2]
+[^1]: This is the first footnote.
+[^2]: This is the second footnote.
+

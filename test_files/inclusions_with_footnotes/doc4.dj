@@ -1,0 +1,5 @@
+Sample text including a footnote.[^alpha] Additional footnote here.[^beta]
+
+[^alpha]: Explanation for footnote alpha.
+[^beta]: Explanation for footnote beta.
+

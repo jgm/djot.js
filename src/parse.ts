@@ -19,6 +19,10 @@ import {
   isInline,
   Caption} from "./ast";
 
+
+import { readFileSync,existsSync } from 'fs';
+import {  dirname ,join,extname} from 'path';
+
 /* Types not used for defining the AST but for processing */
 
 interface Container {
@@ -123,8 +127,110 @@ enum Context {
 const normalizeLabel = function(label : string): string {
   return label.trim().replace(/[ \t\r\n]+/g, " ")
 }
+function findFile(basePath: string, fileName: string): string | null {
+  const fullPath = join(basePath, fileName);
+  if (existsSync(fullPath)) {
+    return fullPath;
+  }
 
-const parse = function(input: string, options: ParseOptions = {}): Doc {
+  const parts = basePath.split('/');
+  while (parts.length > 1) {
+    parts.pop();
+    const newPath = join(parts.join('/'), fileName);
+    if (existsSync(newPath)) {
+      return newPath;
+    }
+  }
+
+  return null;
+}
+function processFileInclusionsEntryPoint(filePath: string, fileContent: string, visited: Set<string>, stack: Set<string>, footnotes: Map<string, string>): string {
+  let match;
+  var fileInclusionRegex = /\!\[([^\]]+)\]\(([^)]+)\)/g;
+
+  const footnoteRegex = /\[\^([^\]]+)\]: (.*)/g; // Regex to match footnotes
+
+  while ((match = fileInclusionRegex.exec(fileContent)) !== null) {
+    const altText = match[1];
+    const relativeFilePath = match[2];
+    
+    // Check if it's an image file
+    const fileExtension = extname(relativeFilePath).toLowerCase();
+    const imageExtensions = [
+      '.apng', '.avif', '.gif', '.jpg', '.jpeg', '.jfif', '.pjpeg', '.pjp',
+      '.png', '.svg', '.webp', '.bmp', '.ico', '.cur', '.tif', '.tiff'
+    ];
+    
+    if (imageExtensions.includes(fileExtension)) {
+      // It's an image, skip processing
+      continue;
+    }
+
+    const currentDir = filePath ? dirname(filePath) : process.cwd();
+    const includedFilePath = findFile(currentDir, relativeFilePath);
+    if (!includedFilePath) {
+      console.warn(`File not found: ${relativeFilePath}`);
+      continue;
+    }
+
+    if (stack.has(includedFilePath)) {
+      const cycle = [...stack, includedFilePath].join(' -> ');
+      throw new Error(`Infinite loop detected: ${cycle}`);
+    }
+
+    let includedFileContent;
+    try {
+      if (!visited.has(includedFilePath)) {
+        visited.add(includedFilePath); // Mark as visited before processing
+        stack.add(includedFilePath);
+        includedFileContent = readFileSync(includedFilePath, 'utf-8');
+
+        // Extract footnotes from included file content
+        let footnoteMatch;
+        while ((footnoteMatch = footnoteRegex.exec(includedFileContent)) !== null) {
+          const footnoteKey = footnoteMatch[1];
+          const footnoteContent = footnoteMatch[2];
+          if (!footnotes.has(footnoteKey)) {
+            footnotes.set(footnoteKey, footnoteContent);
+          }
+          includedFileContent = includedFileContent.replace(footnoteMatch[0], '');
+        }
+
+        includedFileContent = processFileInclusionsEntryPoint(includedFilePath, includedFileContent, visited, stack, footnotes);
+        stack.delete(includedFilePath);
+      } else {
+        includedFileContent = readFileSync(includedFilePath, 'utf-8');
+      }
+    } catch (error) {
+      if ((error as any).code === 'ENOENT') {
+        includedFileContent = altText;
+      } else {
+        throw error;
+      }
+    }
+
+    fileContent = fileContent.replace(match[0], includedFileContent);
+  }
+
+  // Append footnotes at the end
+  footnotes.forEach((content, key) => {
+    fileContent += `\n[^${key}]: ${content}`;
+  });
+
+  return fileContent;
+}
+
+function parse(input: string, options: ParseOptions = {}): Doc {
+  var fileInclusionRegex = /\!\[([^\]]+)\]\(([^)]+)\)/g;
+
+   
+  const finalContent = processFileInclusionsEntryPoint('', input, new Set(), new Set(), new Map());
+    
+  return processContent(finalContent, options);
+}
+
+
+const processContent = function(input: string, options: ParseOptions = {}): Doc {
 
   const linestarts: number[] = [-1];
 
@@ -1370,4 +1476,6 @@ export {
   isRow,
   isCaption,
   isInline,
+  processFileInclusionsEntryPoint,
+  processContent,
 }

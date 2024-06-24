@@ -105,11 +105,30 @@ class DjotRenderer {
   endOfPrefix  = 0;
   column  = 0;
   needsBlankLine  = false;
+  footnoteIndex: Record<string, number> = {};
+  nextFootnoteIndex: number = 1;
+  footnoteOrder: string[] = [];
+
 
   constructor(doc : Doc, options : DjotRenderOptions = {}) {
     this.doc = doc;
     this.wrapWidth = options?.wrapWidth || 0;
   }
+  renderNotes(notes: Record<string, Footnote>): void {
+  for (const label of this.footnoteOrder) {
+    if (notes[label]) {
+      this.blankline();
+      this.doBlankLines();
+      this.lit(`[^${label}]:`);
+      this.space();
+      this.needsBlankLine = false;
+      this.prefixes.push("  ");
+      this.renderChildren(notes[label].children);
+      this.prefixes.pop();
+      }
+    }
+  }
+
 
   escape (s : string) : string {
     s = s.replace(/([~`'"${}[\]^<>\\*_]|-(?=-)|!(=\[)|\.(?=\.))/g, "\\$1");
@@ -281,16 +300,16 @@ class DjotRenderer {
         this.cr();
         this.newline();
       }
-      for (const k in node.references) {
-        this.renderNode(node.references[k]);
-      }
-      const hasFootnotes = Object.keys(node.footnotes).length > 0;
-      for (const k in node.footnotes) {
-        this.renderNode(node.footnotes[k]);
-      }
-      this.prefixes = [];
-      this.cr();
+    for (const k in node.references) {
+      this.renderNode(node.references[k]);
+    }
+    if (this.footnoteOrder.length > 0) {
+      this.renderNotes(node.footnotes);
+    }
+    this.prefixes = [];
+    this.cr();
     },
+
     footnote: (node : Footnote) => {
       this.lit("[^" + node.label + "]:");
       this.space();
@@ -300,6 +319,7 @@ class DjotRenderer {
       this.prefixes.pop();
       this.blankline();
     },
+
     reference: (node : Reference) => {
       this.lit("[");
       this.lit(node.label);
@@ -534,9 +554,17 @@ class DjotRenderer {
     mark: this.inlineContainer("=", true),
     delete: this.inlineContainer("-", true),
     insert: this.inlineContainer("+", true),
+
     footnote_reference: (node : FootnoteReference) => {
-      this.lit("[^" + node.text + "]");
+      const label = node.text;
+      if (!this.footnoteIndex[label]) {
+        this.footnoteIndex[label] = this.nextFootnoteIndex++;
+        this.footnoteOrder.push(label);
+      }
+      this.lit(`[^${label}]`);
     },
+
+
     symb: (node : Symb) => {
       this.lit(":" + node.alias + ":");
     },

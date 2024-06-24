@@ -1,0 +1,6 @@
+Here is some text with a footnote reference.[^a] And another one here.[^b]
+
+[^a]: Footnote A content.
+[^b]: Footnote B content.
+
+![doc3](./doc3.dj)

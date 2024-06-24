@@ -1,0 +1,5 @@
+Testing footnotes in Djot.[^one] Another footnote example.[^two]
+
+[^one]: Details for footnote one.
+[^two]: Details for footnote two.
+
