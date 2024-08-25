@@ -11,7 +11,7 @@ djot [options] [file..]
 djot is a command-line parser for [djot markup](https://djot.net).
 It can produce
 
-- an HMTL document (default behavior or `-t html`)
+- an HTML document (default behavior or `-t html`)
 - a stream of annotated tokens with byte offsets (`-t events`)
 - an AST in either human-readable or JSON form (`-t ast`, `-t astpretty`).
 - a djot document (`-t djot`)
