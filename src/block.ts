@@ -109,10 +109,6 @@ class Container {
 export type BlockAnnot =
   | `+${BlockType}`
   | `-${BlockType}`
-  | `+list|${string}`
-  | `+list_item|${string}`
-  | "-list"
-  | "-list_item"
   | "blankline"
   | "checkbox_checked"
   | "checkbox_unchecked"
@@ -139,6 +135,8 @@ type BlockType =
   | "div"
   | "footnote"
   | "heading"
+  | "list"
+  | "list_item"
   | "para"
   | "reference_definition"
   | "row"
@@ -461,7 +459,7 @@ class EventParser {
           const data = { styles: styles, indent: this.indent };
           // adding container will close others
           this.addContainer(new Container(spec, data));
-          this.addMatch(sp, ep - 1, `+list|${styles.join("|")}`);
+          this.addMatch(sp, ep - 1, '+list', styles);
           return true;
         },
         close: () => {
@@ -502,7 +500,7 @@ class EventParser {
           const data = { styles: styles, indent: this.indent };
           // adding container will close others
           this.addContainer(new Container(spec, data));
-          this.addMatch(sp, ep - 1, `+list_item|${styles.join("|")}`);
+          this.addMatch(sp, ep - 1, '+list_item', styles);
           this.pos = ep;
 
           if (checkbox) {
@@ -783,12 +781,14 @@ class EventParser {
     }
   }
 
-  addMatch(startpos: number, endpos: number, annot: Annot): void {
-    this.matches.push({
-      startpos: Math.min(startpos, this.maxoffset),
-      endpos: Math.min(endpos, this.maxoffset),
-      annot: annot
-    });
+  addMatch(startpos: number, endpos: number, annot: Annot, listStyles?: string[]): void {
+    startpos = Math.min(startpos, this.maxoffset);
+    endpos = Math.min(endpos, this.maxoffset);
+    if (listStyles) {
+      this.matches.push({ startpos, endpos, annot: annot as '+list' | "+list_item", listStyles });
+    } else {
+      this.matches.push({ startpos, endpos, annot: annot as Exclude<Annot, '+list' | "+list_item"> });
+    }
   }
 
   getInlineMatches(): void {

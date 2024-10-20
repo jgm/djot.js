@@ -1,4 +1,4 @@
-import { Event } from "./event";
+import { Annot, Event } from "./event";
 import { parseEvents } from "./block";
 import { Options, Warning } from "./options";
 import {
@@ -246,10 +246,10 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
   }
 
 
-  const handlers : Record<string, (suffixes : string[],
+  const handlers : Partial<Record<Annot, (suffixes : string[],
                                    startpos : number,
                                    endpos : number,
-                                   pos : Pos | undefined) => void> =
+                                   pos : Pos | undefined) => void>> =
    {  str: (suffixes, startpos, endpos, pos) => {
         const txt = input.substring(startpos, endpos + 1);
         if (context === Context.Normal) {
@@ -1196,13 +1196,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
       ep = getSourceLoc(event.endpos);
       pos = { start: sp, end: ep };
     }
-    let annot: string = event.annot;
-    let suffixes: string[] = [];
-    if (event.annot.includes("|")) {
-      const parts = event.annot.split("|");
-      annot = parts[0];
-      suffixes = parts.slice(1);
-    }
+    const annot = event.annot;
 
     // The following is for tight/loose determination.
     // If blanklines have already been seen, and we're
@@ -1232,6 +1226,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
 
     const fn = handlers[annot];
     if (fn) {
+      const suffixes = 'listStyles' in event ? event.listStyles : [];
       fn(suffixes, event.startpos, event.endpos, pos);
     }
 

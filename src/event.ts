@@ -4,11 +4,14 @@ import { InlineAnnot } from "./inline";
 
 export type Annot = BlockAnnot | InlineAnnot | AttrAnnot;
 
-interface Event {
+type Event = {
   startpos : number;
   endpos : number;
-  annot : Annot;
-
-}
+} & ({
+  annot : Exclude<Annot, "+list" | "+list_item">;
+} | {
+  annot : "+list" | "+list_item";
+  listStyles: string[];
+});
 
 export type { Event }
