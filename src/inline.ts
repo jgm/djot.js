@@ -103,9 +103,9 @@ const alwaysTrue = function() { return true; };
 
 const betweenMatched = function(
   c: string,
-  annotation: string,
-  defaultmatchFirst: string,
-  defaultmatchAlt: string | null,
+  annotation: InlineType,
+  defaultmatchFirst: InlineAnnot,
+  defaultmatchAlt: InlineAnnot | null,
   opentest: ((self: InlineParser, pos: number) => boolean)) {
 
   let defaultmatch = defaultmatchFirst;
@@ -149,9 +149,9 @@ const betweenMatched = function(
       const opener = openers[openers.length - 1];
       if (opener.endpos !== pos - 1) { // exclude empty emph
         self.clearOpeners(opener.startpos, pos);
-        self.addMatch(opener.startpos, opener.endpos, "+" + annotation,
+        self.addMatch(opener.startpos, opener.endpos, `+${annotation}`,
                       opener.matchIndex);
-        self.addMatch(pos, endcloser, "-" + annotation);
+        self.addMatch(pos, endcloser, `-${annotation}`);
         return endcloser + 1;
       }
     }
@@ -526,6 +526,55 @@ const matchers = {
   }
 };
 
+export type InlineAnnot =
+  | `+${InlineType}`
+  | `-${InlineType}`
+  | "ellipses"
+  | "em_dash"
+  | "en_dash"
+  | "escape"
+  | "footnote_reference"
+  | "hard_break"
+  | "image_marker"
+  | "left_double_quote"
+  | "left_single_quote"
+  | "non_breaking_space"
+  | "open_marker"
+  | "raw_format"
+  | "right_double_quote"
+  | "right_single_quote"
+  | "soft_break"
+  | "str"
+  | "symb"
+  ;
+
+type InlineType =
+  | VerbatimType
+  | "attributes"
+  | "delete"
+  | "destination"
+  | "double_quoted"
+  | "email"
+  | "emph"
+  | "imagetext"
+  | "insert"
+  | "linktext"
+  | "mark"
+  | "reference"
+  | "single_quoted"
+  | "span"
+  | "strong"
+  | "subscript"
+  | "superscript"
+  | "url"
+  ;
+
+type VerbatimType =
+  | "display_math"
+  | "inline_math"
+  | "verbatim"
+  ;
+
 class InlineParser {
   options: Options;
   warn: (warning : Warning) => void;
@@ -533,7 +582,7 @@ class InlineParser {
   matches: Event[];
   openers: OpenerMap; // map from opener type to Opener[] in reverse order
   verbatim: number; // parsing a verbatim span to be ended by N backticks
-  verbatimType: string; // math or regular
+  verbatimType?: VerbatimType; // math or regular
   destination: boolean; // parsing link destination?
   firstpos: number; // position of first slice
   lastpos: number; // position of last slice
@@ -551,7 +600,6 @@ class InlineParser {
     this.matches = [];  // array of matches
     this.openers = {};
     this.verbatim = 0;
-    this.verbatimType = "";
     this.destination = false;
     this.firstpos = -1;
     this.lastpos = 0;
@@ -563,7 +611,7 @@ class InlineParser {
   }
 
   addMatch(startpos: number, endpos: number,
-           annot: string, matchIndex?: number): void {
+           annot: InlineAnnot, matchIndex?: number): void {
     const match = { startpos: startpos, endpos: endpos, annot: annot };
     if (matchIndex !== undefined) {
       // insert into the proper place, replacing placeholder
@@ -629,7 +677,7 @@ class InlineParser {
       this.matches.push({
         startpos: last.endpos,
         endpos: last.endpos,
-        annot: "-" + this.verbatimType
+        annot: `-${this.verbatimType!}`
       });
     }
     return this.matches;
@@ -638,7 +686,7 @@ class InlineParser {
   addOpener(name: string,
             startpos: number,
             endpos: number,
-            defaultAnnot: string) : void {
+            defaultAnnot: InlineAnnot) : void {
     if (!this.openers[name]) {
       this.openers[name] = [];
     }
@@ -727,7 +775,7 @@ class InlineParser {
           const attrMatches = this.attributeParser.matches;
           // add attribute matches
           for (const match of attrMatches) {
-            this.addMatch(match.startpos, match.endpos, match.annot);
+            this.matches.push(match);
           }
           this.addMatch(ep, ep, "-attributes");
           // restore state to prior to adding attribute parser
@@ -787,11 +835,11 @@ class InlineParser {
                 // check for raw attribute
                 const m2 = find(subject, pattRawAttribute, endchar + 1, endpos);
                 if (m2 && this.verbatimType === "verbatim") { // raw
-                  this.addMatch(pos, endchar, "-" + this.verbatimType);
+                  this.addMatch(pos, endchar, `-${this.verbatimType}`);
                   this.addMatch(m2.startpos, m2.endpos, "raw_format");
                   pos = m2.endpos + 1;
                 } else {
-                  this.addMatch(pos, endchar, "-" + this.verbatimType);
+                  this.addMatch(pos, endchar, `-${this.verbatimType!}`);
                   pos = endchar + 1;
                 }
                 this.verbatim = 0;

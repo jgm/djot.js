@@ -1196,7 +1196,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
       ep = getSourceLoc(event.endpos);
       pos = { start: sp, end: ep };
     }
-    let annot = event.annot;
+    let annot: string = event.annot;
     let suffixes: string[] = [];
     if (event.annot.includes("|")) {
       const parts = event.annot.split("|");

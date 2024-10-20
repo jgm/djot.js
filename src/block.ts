@@ -1,8 +1,8 @@
-import { Event } from "./event";
+import { Annot, Event } from "./event";
 import { Options, Warning } from "./options";
-import { AttributeParser } from "./attributes";
+import { AttrAnnot, AttributeParser } from "./attributes";
 import { pattern, find } from "./find";
-import { InlineParser } from "./inline";
+import { InlineAnnot, InlineParser } from "./inline";
 
 // Return array of list styles that match a marker.
 // In ambiguous cases we return multiple values.
@@ -59,7 +59,7 @@ const pattListMarker = pattern("(:?[-*+:]|\\([0-9]+\\)|[0-9]+[.)]|[ivxlcdmIVXLCD
 const pattTaskListMarker = pattern("[*+-] \\[[Xx ]\\][ \\t\\r\\n]");
 
 type EventIterator = {
-  next: () => { value: Event, done: boolean };
+  next: () => { done: false, value: Event } | { done: true, value: Omit<Event, "annot"> };
 }
 
 enum ContentType {
@@ -105,6 +105,45 @@ class Container {
     this.extra = extra;
   }
 }
+
+export type BlockAnnot =
+  | `+${BlockType}`
+  | `-${BlockType}`
+  | `+list|${string}`
+  | `+list_item|${string}`
+  | "-list"
+  | "-list_item"
+  | "blankline"
+  | "checkbox_checked"
+  | "checkbox_unchecked"
+  | "class"
+  | "code_language"
+  | "note_label"
+  | "raw_format"
+  | "reference_key"
+  | "reference_value"
+  | "separator_center"
+  | "separator_default"
+  | "separator_left"
+  | "separator_right"
+  | "str"
+  | "thematic_break"
+  ;
+
+type BlockType =
+  | "block_attributes"
+  | "block_quote"
+  | "caption"
+  | "cell"
+  | "code_block"
+  | "div"
+  | "footnote"
+  | "heading"
+  | "para"
+  | "reference_definition"
+  | "row"
+  | "table"
+  ;
 
 class EventParser {
   options: Options;
@@ -422,11 +461,7 @@ class EventParser {
           const data = { styles: styles, indent: this.indent };
           // adding container will close others
           this.addContainer(new Container(spec, data));
-          let annot = "+list";
-          for (const style of styles) {
-            annot = annot + "|" + style;
-          }
-          this.addMatch(sp, ep - 1, annot);
+          this.addMatch(sp, ep - 1, `+list|${styles.join("|")}`);
           return true;
         },
         close: () => {
@@ -467,11 +502,7 @@ class EventParser {
           const data = { styles: styles, indent: this.indent };
           // adding container will close others
           this.addContainer(new Container(spec, data));
-          let annot = "+list_item";
-          for (const style of styles) {
-            annot = annot + "|" + style;
-          }
-          this.addMatch(sp, ep - 1, annot);
+          this.addMatch(sp, ep - 1, `+list_item|${styles.join("|")}`);
           this.pos = ep;
 
           if (checkbox) {
@@ -752,7 +783,7 @@ class EventParser {
     }
   }
 
-  addMatch(startpos: number, endpos: number, annot: string): void {
+  addMatch(startpos: number, endpos: number, annot: Annot): void {
     this.matches.push({
       startpos: Math.min(startpos, this.maxoffset),
       endpos: Math.min(endpos, this.maxoffset),
@@ -884,7 +915,7 @@ class EventParser {
       const m = find(this.subject, pattRowSep, p);
       if (m !== null) {
         const [left, right, trailing] = m.captures;
-        let st = "separator_default";
+        let st: BlockAnnot = "separator_default";
         if (left.length > 0 && right.length > 0) {
           st = "separator_center";
         } else if (right.length > 0) {

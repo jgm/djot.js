@@ -246,6 +246,19 @@ handlers[State.SCANNING_QUOTED_VALUE_CONTINUATION] = function(parser : Attribute
   }
 }
 
+export type AttrAnnot =
+  | "attr_class_marker"
+  | "attr_equal_marker"
+  | "attr_id_marker"
+  | "attr_quote_marker"
+  | "attr_space"
+  | "class"
+  | "comment"
+  | "id"
+  | "key"
+  | "value"
+  ;
+
 class AttributeParser {
   subject : string;
   state : State;
@@ -261,7 +274,7 @@ class AttributeParser {
     this.matches = []
   }
 
-  addEvent(startpos : number, endpos : number, annot : string) {
+  addEvent(startpos : number, endpos : number, annot : AttrAnnot) {
     this.matches.push({ startpos: startpos, endpos: endpos, annot: annot });
   }
 
