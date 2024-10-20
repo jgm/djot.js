@@ -104,8 +104,12 @@ const alwaysTrue = function() { return true; };
 const betweenMatched = function(
   c: string,
   annotation: string,
-  defaultmatch: string,
+  defaultmatchFirst: string,
+  defaultmatchAlt: string | null,
   opentest: ((self: InlineParser, pos: number) => boolean)) {
+
+  let defaultmatch = defaultmatchFirst;
+
   return function(self: InlineParser, pos: number, endpos: number): number {
     const subject = self.subject;
     let can_open = find(subject, pattNonspace, pos + 1) !== null &&
@@ -130,10 +134,8 @@ const betweenMatched = function(
       endcloser = pos + 1;
     }
 
-    if (has_open_marker && defaultmatch.match(/^right/)) {
-      defaultmatch = defaultmatch.replace(/^right/, "left");
-    } else if (has_close_marker && defaultmatch.match(/^left/)) {
-      defaultmatch = defaultmatch.replace(/^left/, "right");
+    if (defaultmatchAlt && (has_open_marker || has_close_marker)) {
+      defaultmatch = defaultmatch == defaultmatchFirst ? defaultmatchAlt : defaultmatchFirst;
     }
 
     let d = c;
@@ -262,19 +264,19 @@ const matchers = {
     return null;
   },
 
-  [C_TILDE]: betweenMatched('~', 'subscript', 'str', alwaysTrue),
+  [C_TILDE]: betweenMatched('~', 'subscript', 'str', null, alwaysTrue),
 
-  [C_HAT]: betweenMatched('^', 'superscript', 'str', alwaysTrue),
+  [C_HAT]: betweenMatched('^', 'superscript', 'str', null, alwaysTrue),
 
-  [C_UNDERSCORE]: betweenMatched('_', 'emph', 'str', alwaysTrue),
+  [C_UNDERSCORE]: betweenMatched('_', 'emph', 'str', null, alwaysTrue),
 
-  [C_ASTERISK]: betweenMatched('*', 'strong', 'str', alwaysTrue),
+  [C_ASTERISK]: betweenMatched('*', 'strong', 'str', null, alwaysTrue),
 
-  [C_PLUS]: betweenMatched("+", "insert", "str", hasBrace),
+  [C_PLUS]: betweenMatched("+", "insert", "str", null, hasBrace),
 
-  [C_EQUALS]: betweenMatched("=", "mark", "str", hasBrace),
+  [C_EQUALS]: betweenMatched("=", "mark", "str", null, hasBrace),
 
-  [C_SINGLE_QUOTE]: betweenMatched("'", "single_quoted", "right_single_quote",
+  [C_SINGLE_QUOTE]: betweenMatched("'", "single_quoted", "right_single_quote", "left_single_quote",
     function(self: InlineParser, pos: number): boolean {
       if (pos === 0) {
         return true;
@@ -292,7 +294,7 @@ const matchers = {
       }
     }),
 
-  [C_DOUBLE_QUOTE]: betweenMatched('"', "double_quoted", "left_double_quote",
+  [C_DOUBLE_QUOTE]: betweenMatched('"', "double_quoted", "left_double_quote", "right_double_quote",
     alwaysTrue),
 
   [C_LEFT_BRACE]: function(self: InlineParser, pos: number, endpos: number): number | null {
@@ -475,7 +477,7 @@ const matchers = {
     if (subject.codePointAt(pos - 1) === C_LEFT_BRACE ||
       subject.codePointAt(pos + 1) === C_RIGHT_BRACE) {
       const newpos =
-            betweenMatched("-", "delete", "str", hasBrace)(self, pos, endpos);
+            betweenMatched("-", "delete", "str", null, hasBrace)(self, pos, endpos);
       if (newpos) {
         return newpos;
       }
