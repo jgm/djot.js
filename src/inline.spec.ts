@@ -13,7 +13,7 @@ describe("InlineParser", () => {
 
   it("parses verbatim", () => {
     const parser = new InlineParser("x ``` hello ``there ``` x");
-    //                             0123456789012345678901234
+    //                               0123456789012345678901234
     parser.feed(0,24);
     expect(parser.getMatches()).toStrictEqual([
       { annot: "str", startpos: 0, endpos: 1 },
@@ -45,7 +45,7 @@ describe("InlineParser", () => {
 
   it("parses autolinks", () => {
     const parser = new InlineParser('<http://example.com?foo=bar&baz=&amp;x2>');
-    //                             0123456789012345678901234567890123456789
+    //                               0123456789012345678901234567890123456789
     parser.feed(0,39);
     expect(parser.getMatches()).toStrictEqual([
       { annot: "+url", startpos: 0, endpos: 0 },
@@ -56,7 +56,7 @@ describe("InlineParser", () => {
 
   it("parses email autolinks", () => {
     const parser = new InlineParser('<me@example.com>');
-    //                             0123456789012345
+    //                               0123456789012345
     parser.feed(0,15);
     expect(parser.getMatches()).toStrictEqual([
       { annot: "+email", startpos: 0, endpos: 0 },
@@ -67,7 +67,7 @@ describe("InlineParser", () => {
 
   it("parses super/subscript", () => {
     const parser = new InlineParser('H~2~O e=mc^2^ test{^two words^}');
-    //                             0123456789012345678901234567890
+    //                               0123456789012345678901234567890
     parser.feed(0,30);
     expect(parser.getMatches()).toStrictEqual([
       { annot: "str", startpos: 0, endpos: 0 },
@@ -90,7 +90,7 @@ describe("InlineParser", () => {
 
   it("parses emphasis", () => {
     const parser = new InlineParser('_hello *there*_ world');
-    //                             012345678901234567890
+    //                               012345678901234567890
     parser.feed(0,20);
     expect(parser.getMatches()).toStrictEqual([
       { annot: "+emph", startpos: 0, endpos: 0 },
@@ -105,7 +105,7 @@ describe("InlineParser", () => {
 
   it("parses mark", () => {
     const parser = new InlineParser('{=hello=}');
-    //                             012345678
+    //                               012345678
     parser.feed(0,8);
     expect(parser.getMatches()).toStrictEqual([
       { annot: "open_marker", startpos: 0, endpos: 0 },
@@ -117,7 +117,7 @@ describe("InlineParser", () => {
 
   it("parses inserted", () => {
     const parser = new InlineParser('{+hello+}');
-    //                             012345678
+    //                               012345678
     parser.feed(0,8);
     expect(parser.getMatches()).toStrictEqual([
       { annot: "open_marker", startpos: 0, endpos: 0 },
@@ -129,7 +129,7 @@ describe("InlineParser", () => {
 
   it("parses quoted", () => {
     const parser = new InlineParser('"dog\'s breakfast"');
-    //                             0123 4567890123456
+    //                               01234 567890123456
     parser.feed(0,16);
     expect(parser.getMatches()).toStrictEqual([
       { annot: "+double_quoted", startpos: 0, endpos: 0 },
@@ -187,7 +187,7 @@ describe("InlineParser", () => {
 
   it("parses inline links", () => {
     const parser = new InlineParser('[foobar](url)');
-    //                             0123456789012
+    //                               0123456789012
     parser.feed(0,12);
     expect(parser.getMatches()).toStrictEqual([
       { annot: "+linktext", startpos: 0, endpos: 0 },
@@ -201,7 +201,7 @@ describe("InlineParser", () => {
 
   it("parses reference links", () => {
     const parser = new InlineParser('[foobar][1]');
-    //                             01234567890
+    //                               01234567890
     parser.feed(0,10);
     expect(parser.getMatches()).toStrictEqual([
       { annot: "+linktext", startpos: 0, endpos: 0 },
@@ -215,7 +215,7 @@ describe("InlineParser", () => {
 
   it("parses inline images", () => {
     const parser = new InlineParser('![foobar](url)');
-    //                             01234567890123
+    //                               01234567890123
     parser.feed(0,13);
     expect(parser.getMatches()).toStrictEqual([
       { annot: "image_marker", startpos: 0, endpos: 0 },
@@ -230,7 +230,7 @@ describe("InlineParser", () => {
 
   it("parses symbs", () => {
     const parser = new InlineParser(':+1:');
-    //                             0123
+    //                               0123
     parser.feed(0,3);
     expect(parser.getMatches()).toStrictEqual([
       { annot: "symb", startpos: 0, endpos: 3 }
@@ -239,7 +239,7 @@ describe("InlineParser", () => {
 
   it("parses ellipses", () => {
     const parser = new InlineParser('...');
-    //                             0123
+    //                               012
     parser.feed(0,2);
     expect(parser.getMatches()).toStrictEqual([
       { annot: "ellipses", startpos: 0, endpos: 2 }
@@ -248,7 +248,7 @@ describe("InlineParser", () => {
 
   it("parses dashes", () => {
     const parser = new InlineParser('a---b--c');
-    //                             01234567
+    //                               01234567
     parser.feed(0,7);
     expect(parser.getMatches()).toStrictEqual([
       { annot: "str", startpos: 0, endpos: 0 },
