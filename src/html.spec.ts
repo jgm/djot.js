@@ -1,5 +1,5 @@
-import { parse } from "./parse";
-import { renderHTML } from "./html";
+import  { parse } from "./parse.ts";
+import  { renderHTML } from "./html.ts";
 
 describe("Parser", () => {
   it("parses paragraphs", () => {

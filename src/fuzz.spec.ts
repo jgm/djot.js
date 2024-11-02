@@ -1,4 +1,4 @@
-import { parse } from "./parse";
+import  { parse } from "./parse.ts";
 import { performance } from "perf_hooks";
 
 const MAXLINES = 5;

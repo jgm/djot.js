@@ -1,4 +1,4 @@
-import { Doc, AstNode, HasChildren } from "./ast";
+import  { Doc, AstNode, HasChildren } from "./ast.ts";
 
 /* Support filters that walk the AST and transform a
  * document between parsing and rendering, like pandoc Lua filters.

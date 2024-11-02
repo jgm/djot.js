@@ -1,7 +1,7 @@
-import { Doc, Reference, Footnote, Link, HasChildren,
-         HasAttributes, AstNode, Visitor } from "./ast";
-import { getStringContent } from "./parse";
-import { Options, Warning } from "./options";
+import  { Doc, Reference, Footnote, Link, HasChildren,
+         HasAttributes, AstNode, Visitor } from "./ast.ts";
+import  { getStringContent } from "./parse.ts";
+import  { Options, Warning } from "./options.ts";
 
 interface HTMLRenderOptions extends Options {
   overrides?: Visitor<HTMLRenderer, string>;
@@ -202,7 +202,7 @@ class HTMLRenderer {
         return this.inTags("blockquote", node, 2);
 
       case "div":
-        return this.inTags("div", node, 2);
+        return this.inTags(node.tag_name, node, 2);
 
       case "section":
         return this.inTags("section", node, 2);

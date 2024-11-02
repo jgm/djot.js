@@ -1,5 +1,5 @@
-import { parse, renderAST } from "./parse";
-import { Filter, applyFilter } from "./filter";
+import  { parse, renderAST } from "./parse.ts";
+import  { Filter, applyFilter } from "./filter.ts";
 
 const capitalizeFilter : Filter = () => {
   return {

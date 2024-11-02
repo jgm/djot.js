@@ -1,9 +1,9 @@
-import { AstNode, Doc, Block, Caption, Row, Cell, Alignment,
+import  { AstNode, Doc, Block, Caption, Row, Cell, Alignment,
          TaskListItem, OrderedListStyle, ListItem, Inline, Reference,
          Span, Verbatim, Image, Link,
          Attributes, CodeBlock, Heading, Div, Table, CheckboxStatus,
-         DefinitionListItem, Footnote } from "./ast";
-import { Options, Warning } from "./options";
+         DefinitionListItem, Footnote } from "./ast.ts";
+import  { Options, Warning } from "./options.ts";
 
 interface Pandoc {
   ["pandoc-api-version"]: number[],
@@ -713,7 +713,7 @@ class PandocParser {
           }
           return {tag: "section", attributes: attr, children: blocks};
         } else {
-          const div : Div = {tag: "div", children: blocks};
+          const div : Div = {tag: "div", tag_name: tag, children: blocks};
           if (attr) {
             div.attributes = attr;
           }
@@ -911,7 +911,7 @@ class PandocParser {
           blocks.push(...capt);
         }
 
-        const div : Div = {tag: "div", children: blocks};
+        const div : Div = {tag: "div", tag_name: tag, children: blocks};
         if (attr) {
           div.attributes = attr;
         }
