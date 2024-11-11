@@ -4,9 +4,11 @@
 .
 <ul class="task-list">
 <li class="unchecked">
+<input disabled="" type="checkbox"/>
 an unchecked task list item
 </li>
 <li class="checked">
+<input disabled="" type="checkbox" checked=""/>
 checked item
 </li>
 </ul>
@@ -21,10 +23,12 @@ checked item
 .
 <ul class="task-list">
 <li class="unchecked">
+<input disabled="" type="checkbox"/>
 <p>an unchecked task list item</p>
 <p>with two paragraphs</p>
 </li>
 <li class="checked">
+<input disabled="" type="checkbox" checked=""/>
 <p>checked item</p>
 </li>
 </ul>
