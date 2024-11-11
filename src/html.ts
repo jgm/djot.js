@@ -212,11 +212,11 @@ class HTMLRenderer {
 
       case "task_list_item":
         let result = "";
-        result += "<li class=";
-        result += node.checkbox === "checked" ? '"checked">\n' : '"unchecked">\n';
         if (node.checkbox === "checked") {
+          result += '<li class="checked">\n';
           result += '<input disabled="" type="checkbox" checked=""/>\n';
         } else {
+          result += '<li class="unchecked">\n';
           result += '<input disabled="" type="checkbox"/>\n';
         }
         result += this.renderChildren(node);
