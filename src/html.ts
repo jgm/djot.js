@@ -211,12 +211,10 @@ class HTMLRenderer {
         return this.inTags("li", node, 2);
 
       case "task_list_item":
-        let result = "";
+        let result = "<li>\n";
         if (node.checkbox === "checked") {
-          result += '<li class="checked">\n';
           result += '<input disabled="" type="checkbox" checked=""/>\n';
         } else {
-          result += '<li class="unchecked">\n';
           result += '<input disabled="" type="checkbox"/>\n';
         }
         result += this.renderChildren(node);
