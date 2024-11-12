@@ -3,10 +3,12 @@
 - [x] checked item
 .
 <ul class="task-list">
-<li class="unchecked">
+<li>
+<input disabled="" type="checkbox"/>
 an unchecked task list item
 </li>
-<li class="checked">
+<li>
+<input disabled="" type="checkbox" checked=""/>
 checked item
 </li>
 </ul>
@@ -20,11 +22,13 @@ checked item
 * [x] checked item
 .
 <ul class="task-list">
-<li class="unchecked">
+<li>
+<input disabled="" type="checkbox"/>
 <p>an unchecked task list item</p>
 <p>with two paragraphs</p>
 </li>
-<li class="checked">
+<li>
+<input disabled="" type="checkbox" checked=""/>
 <p>checked item</p>
 </li>
 </ul>
