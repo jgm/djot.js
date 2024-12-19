@@ -1,11 +1,11 @@
-export { parse, renderAST } from "./parse";
-export { parseEvents } from "./block";
-export { renderHTML, HTMLRenderer } from "./html";
-export { applyFilter } from "./filter";
-export { fromPandoc, toPandoc } from "./pandoc";
-export { renderDjot } from "./djot-renderer";
-export { version } from "./version";
-export { isBlock, isInline } from "./ast";
+export  { parse, renderAST } from "./parse.ts";
+export  { parseEvents } from "./block.ts";
+export  { renderHTML, HTMLRenderer } from "./html.ts";
+export  { applyFilter } from "./filter.ts";
+export  { fromPandoc, toPandoc } from "./pandoc.ts";
+export  { renderDjot } from "./djot-renderer.ts";
+export  { version } from "./version.ts";
+export  { isBlock, isInline } from "./ast.ts";
 
 export type {
   Alignment,
@@ -72,4 +72,4 @@ export type {
   Url,
   Verbatim,
   Visitor,
-} from "./ast";
+} from "./ast.ts";

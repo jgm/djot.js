@@ -1,8 +1,8 @@
-import { Event } from "./event";
-import { Options, Warning } from "./options";
-import { AttributeParser } from "./attributes";
-import { pattern, find } from "./find";
-import { InlineParser } from "./inline";
+import  { Event } from "./event.ts";
+import  { Options, Warning } from "./options.ts";
+import  { AttributeParser } from "./attributes.ts";
+import  { pattern, find } from "./find.ts";
+import  { InlineParser } from "./inline.ts";
 
 // Return array of list styles that match a marker.
 // In ambiguous cases we return multiple values.
@@ -658,11 +658,11 @@ class EventParser {
             return false;
           }
           const clsp = m2.startpos;
-          const lang = m2.captures[0];
+          const tag_name = m2.captures[0];
           this.addContainer(new Container(spec, { colons: colons.length }));
           this.addMatch(m.startpos, m.endpos, "+div");
-          if (lang.length > 0) {
-            this.addMatch(clsp, clsp + lang.length - 1, "class");
+          if (tag_name.length > 0) {
+            this.addMatch(clsp, clsp + tag_name.length - 1, "tag_name");
           }
           this.pos = m2.endpos + 1;
           this.finishedLine = true;

@@ -1,4 +1,4 @@
-import { AttributeParser } from "./attributes";
+import  { AttributeParser } from "./attributes.ts";
 
 describe("AttributeParser", () => {
   it("properly parses attributes", () => {

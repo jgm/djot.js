@@ -41,9 +41,9 @@
     "./types/*.d.ts",
     "./doc/djot.1"
   ],
-  "dependencies": {},
   "devDependencies": {
     "@types/jest": "^29.2.4",
+    "@types/node": "^20.12.12",
     "@typescript-eslint/eslint-plugin": "^5.46.1",
     "@typescript-eslint/parser": "^5.46.1",
     "benchmark": "^2.1.4",
@@ -55,5 +55,6 @@
     "typescript-language-server": "^3.0.1",
     "webpack": "^5.75.0",
     "webpack-cli": "^5.0.1"
-  }
+  },
+  "packageManager": "pnpm@9.0.4+sha256.caa915eaae9d9aefccf50ee8aeda25a2f8684d8f9d5c6e367eaf176d97c1f89e"
 }

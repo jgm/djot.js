@@ -1,4 +1,4 @@
-import { parse, renderAST } from "./parse";
+import  { parse, renderAST } from "./parse.ts";
 
 describe("Parser", () => {
   it("parses paragraphs", () => {

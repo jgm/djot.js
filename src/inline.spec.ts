@@ -1,4 +1,4 @@
-import { InlineParser } from "./inline";
+import  { InlineParser } from "./inline.ts";
 
 describe("InlineParser", () => {
   it("does basic parsing", () => {

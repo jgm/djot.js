@@ -1,4 +1,4 @@
-import { pattern, find } from "./find";
+import  { pattern, find } from "./find.ts";
 
 describe("find", () => {
   it("finds a pattern at 0", () => {

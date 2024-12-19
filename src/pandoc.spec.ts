@@ -1,5 +1,5 @@
-import { parse } from "./parse";
-import { fromPandoc, toPandoc } from "./pandoc";
+import  { parse } from "./parse.ts";
+import  { fromPandoc, toPandoc } from "./pandoc.ts";
 
 describe("PandocParser", () => {
   it("parses some things", () => {
