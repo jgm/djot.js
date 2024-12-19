@@ -1,5 +1,22 @@
 # Changelog for djot.js
 
+## 0.3.2
+
+  * Use a checkbox input element to render checkboxes (#102, David Campbell).
+    Remove checked, unchecked class from li; this is no longer needed.
+    We still need custom CSS on ul.task-list to remove the redundant list
+    markers.
+
+  * Fix positions for list_item and section (#83, #82, black-desk).
+
+  * Test: fix and test number comments (#100, Martin Fischer).
+
+  * Update djot.md to fix a tiny typo (#97, Yuri).
+
+  * Move package.json exports "default" condition to last (#92, Fukuda Yuma).
+
+  * Add prepare and pretest scripts in package.json (#81, black-desk).
+
 ## 0.3.1
 
   * Update man page and schema.
