@@ -1119,4 +1119,4 @@ const parseEvents = function(input : string, options : Options = {}) {
   return new EventParser(input, options);
 }
 
-export { parseEvents }
+export { parseEvents, type Event }
