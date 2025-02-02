@@ -89,6 +89,19 @@ describe("EventParser", () => {
     ]);
   });
 
+  it("parses reference definition without space after colon as para", () => {
+    const events = [];
+    for (const event of parseEvents("[foo]:bar")) {
+      //                             012345678
+      events.push(event);
+    }
+    expect(events).toStrictEqual([
+      { startpos: 0, endpos: 0, annot: "+para" },
+      { startpos: 0, endpos: 8, annot: "str" },
+      { startpos: 9, endpos: 9, annot: "-para" }
+    ]);
+  });
+
   it("parses tables", () => {
     const events = [];
     for (const event of parseEvents("| a | b |\n|--|--:|\n|33|2| ")) {
