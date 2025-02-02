@@ -75,6 +75,20 @@ describe("EventParser", () => {
     ]);
   });
 
+  it("parses reference definition with URL on next line", () => {
+    const events = [];
+    for (const event of parseEvents("[foo]:\n bar")) {
+      //                             0123456 7890
+      events.push(event);
+    }
+    expect(events).toStrictEqual([
+      { startpos: 0, endpos: 0, annot: "+reference_definition" },
+      { startpos: 0, endpos: 4, annot: "reference_key" },
+      { startpos: 8, endpos: 10, annot: "reference_value" },
+      { startpos: 11, endpos: 11, annot: "-reference_definition" }
+    ]);
+  });
+
   it("parses tables", () => {
     const events = [];
     for (const event of parseEvents("| a | b |\n|--|--:|\n|33|2| ")) {
