@@ -53,7 +53,7 @@ const pattThematicBreak = pattern("[-*][ \t]*[-*][ \\t]*[-*][-* \\t]*\\r?\\n");
 const pattDivFence = pattern("(::::*)[ \\t]*\\r?\\n");
 const pattDivFenceStart = pattern("(::::*)[ \\t]*");
 const pattDivFenceEnd = pattern("([\\w_-]*)[ \\t]*\\r?\\n");
-const pattReferenceDefinition = pattern("\\[([^\\]\\r\\n]*)\\]:[ \\t]*([^ \\t\\r\\n]*)[\\r\\n]");
+const pattReferenceDefinition = pattern("\\[([^\\]\\r\\n]*)\\]:([ \\t]+[^ \\t\\r\\n]*|)[\\r\\n]");
 const pattTableRow = pattern("(\\|[^\\r\\n]*\\|)[ \\t]*\\r?\\n");
 const pattListMarker = pattern("(:?[-*+:]|\\([0-9]+\\)|[0-9]+[.)]|[ivxlcdmIVXLCDM]+[.)]|\\([ivxlcdmIVXLCDM]+\\)|[a-zA-Z][.)]|\\([a-zA-Z]\\))[ \\t\\r\\n]");
 const pattTaskListMarker = pattern("[*+-] \\[[Xx ]\\][ \\t\\r\\n]");
@@ -318,7 +318,7 @@ class EventParser {
           const m = this.find(pattReferenceDefinition);
           if (m) {
             const label = m.captures[0];
-            const value = m.captures[1];
+            const value = m.captures[1].trimStart();
             this.addContainer(new Container(spec,
               { key: label, indent: this.indent }));
             this.addMatch(m.startpos, m.startpos, "+reference_definition");
