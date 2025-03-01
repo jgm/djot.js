@@ -117,7 +117,7 @@ list to stderr.
 .EX
 return {
   link: (el) => {
-    process.stderr:write(el.destination + \[dq]\[rs]n\[dq])
+    process.stderr.write(el.destination + \[dq]\[rs]n\[dq])
   }
 }
 .EE
