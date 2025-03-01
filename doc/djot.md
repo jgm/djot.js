@@ -118,7 +118,7 @@ document at all; it just prints the list to stderr.
 ```
 return {
   link: (el) => {
-    process.stderr:write(el.destination + "\n")
+    process.stderr.write(el.destination + "\n")
   }
 }
 ```
