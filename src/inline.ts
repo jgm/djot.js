@@ -538,7 +538,7 @@ class InlineParser {
   allowAttributes: boolean; // allow parsing of attributes
   attributeParser: null | AttributeParser; // attribute parser
   attributeStart: null | number; // start pos of potential attribute
-  attributeSlices: null | { startpos: number, endpos: number }[]; // slices we've tried to parse as atttributes
+  attributeSlices: null | { startpos: number, endpos: number }[]; // slices we've tried to parse as attributes
   matchers: Record<number, (self: InlineParser, sp: number, ep: number) => null | number>; // functions to handle different code points
 
   constructor(subject: string,

@@ -374,5 +374,5 @@ definitions](https://github.com/jgm/djot.js/blob/main/src/ast.ts).
 
 There is also a [JSON
 schema](https://github.com/jgm/djot.js/blob/main/djot-schema.json)
-which can be used to verify conformity to the AST programatically.
+which can be used to verify conformity to the AST programmatically.
 
