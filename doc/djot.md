@@ -133,7 +133,7 @@ filter for a node is run after its children have been processed.
 It is possible to do a top-down travel, though, and even
 to run separate actions on entering a node (before processing the
 children) and on exiting (after processing the children). To do
-this, associate the node's tag with a table containing `enter` and/or
+this, associate the node's tag with an object containing `enter` and/or
 `exit` functions.  The `enter` function is run when we traverse
 *into* the node, before we traverse its children, and the `exit`
 function is run after we have traversed the node's children.
@@ -182,7 +182,7 @@ return {
 }
 ```
 
-A single filter may return a table with multiple tables, which will be
+A single filter may return an array with multiple objects, which will be
 applied sequentially:
 
 ```js
@@ -260,4 +260,3 @@ return {
 # AUTHORS
 
 John MacFarlane (<jgm@berkeley.edu>).
-
