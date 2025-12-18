@@ -109,6 +109,16 @@ A paragraph
 <p id="id" class="class">A paragraph</p>
 ```
 
+If there is a blank line between, the attributes won't be applied:
+
+```
+{#id .class}
+
+A paragraph
+.
+<p>A paragraph</p>
+```
+
 Use indentation if you need to continue the attributes over a line break.
 
 ```

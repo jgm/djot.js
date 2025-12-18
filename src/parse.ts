@@ -1204,6 +1204,14 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
       suffixes = parts.slice(1);
     }
 
+    // Attributes must come right before a block, so we
+    // reset them on blank lines.
+    if (annot === "blankline") {
+      for (const key in blockAttributes) {
+        delete blockAttributes[key];
+      }
+    }
+
     // The following is for tight/loose determination.
     // If blanklines have already been seen, and we're
     // about to process something other than a blankline,
