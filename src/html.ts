@@ -274,6 +274,12 @@ class HTMLRenderer {
         return result;
       }
 
+      case "figure":
+        return this.inTags("figure", node, 2);
+
+      case "figcaption":
+        return this.inTags("figcaption", node, 1);
+
       case "table":
         return this.inTags("table", node, 2);
 

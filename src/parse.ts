@@ -1031,18 +1031,51 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
       ["-caption"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
         const tip = getTip();
-        if (!tip || ("tag" in tip && tip.tag !== "table")) {
+        if (!tip || !("tag" in tip)) {
           return;
         }
-        const capt =  {
-            tag: "caption",
+        if (tip.tag === "table") {
+          // Table caption: replace the empty caption placeholder
+          const capt = {
+            tag: "caption" as const,
             children: node.children,
             attributes: node.attributes,
             autoAttributes: node.autoAttributes,
             pos: node.pos
           };
-        if (tip.children[0]?.tag === "caption") {
-          tip.children[0] = capt;
+          if (tip.children[0]?.tag === "caption") {
+            tip.children[0] = capt;
+          }
+          return;
+        }
+        // Image caption: para containing only an image
+        const isImagePara = tip.tag === "para" &&
+          tip.children.length === 1 &&
+          tip.children[0].tag === "image";
+        // Block quote caption
+        const isBlockQuote = tip.tag === "block_quote";
+        if (isImagePara || isBlockQuote) {
+          const top = topContainer();
+          const figcaption = {
+            tag: "figcaption" as const,
+            children: node.children,
+            attributes: node.attributes,
+            autoAttributes: node.autoAttributes,
+            pos: node.pos
+          };
+          const figureContent = isImagePara ? tip.children[0] : tip;
+          const figurePos = (tip.pos && node.pos)
+            ? { start: tip.pos.start, end: node.pos.end }
+            : undefined;
+          const figure = {
+            tag: "figure" as const,
+            children: [figureContent, figcaption],
+            attributes: tip.attributes,
+            autoAttributes: tip.autoAttributes,
+            pos: figurePos
+          };
+          // Replace the tip (last child of parent) with the figure
+          top.children[top.children.length - 1] = figure;
         }
       },
 

@@ -123,3 +123,51 @@ determines the alignment for following cells, until the next header.
 </tr>
 </table>
 ```
+
+Image caption:
+
+```
+![Alt text](url.jpg)
+
+^ Image caption
+.
+<figure>
+<img alt="Alt text" src="url.jpg"><figcaption>Image caption</figcaption>
+</figure>
+```
+
+Image caption with formatting:
+
+```
+![Photo](photo.png)
+
+^ A _beautiful_ photo
+.
+<figure>
+<img alt="Photo" src="photo.png"><figcaption>A <em>beautiful</em> photo</figcaption>
+</figure>
+```
+
+Block quote caption:
+
+```
+> To be or not to be.
+^ William Shakespeare
+.
+<figure>
+<blockquote>
+<p>To be or not to be.</p>
+</blockquote>
+<figcaption>William Shakespeare</figcaption>
+</figure>
+```
+
+Caption after non-captionable element is ignored:
+
+```
+A paragraph.
+^ Not a caption
+.
+<p>A paragraph.
+^ Not a caption</p>
+```
