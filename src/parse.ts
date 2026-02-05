@@ -38,6 +38,9 @@ const getStringContent = function(node: (AstNode | Container)): string {
 
 const addStringContent = function(node: (AstNode | Container),
   buffer: string[]): void {
+  if ("tag" in node && node.tag === "footnote_reference") {
+    return; // exclude footnote references from heading IDs
+  }
   if ("text" in node) {
     buffer.push(node.text);
   } else if ("tag" in node &&
