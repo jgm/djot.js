@@ -143,6 +143,26 @@ Paragraph
 </section>
 ```
 
+Footnote references in headings should be excluded from auto-identifiers:
+
+```
+# Introduction[^1]
+
+[^1]: A note.
+.
+<section id="Introduction">
+<h1>Introduction<a id="fnref1" href="#fn1" role="doc-noteref"><sup>1</sup></a></h1>
+</section>
+<section role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn1">
+<p>A note.<a href="#fnref1" role="doc-backlink">↩︎</a></p>
+</li>
+</ol>
+</section>
+```
+
 Implicit header references:
 
 ```
