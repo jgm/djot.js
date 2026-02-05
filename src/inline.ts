@@ -477,7 +477,40 @@ const matchers = {
       const newpos =
             betweenMatched("-", "delete", "str", hasBrace)(self, pos, endpos);
       if (newpos) {
-        return newpos;
+        // If only an opener was added (newpos === pos + 1) and more hyphens
+        // follow, check if there's a potential -} closer ahead. If not,
+        // undo the opener and fall through to dash conversion.
+        // This allows {--- to produce { + em-dash instead of {- + en-dash.
+        if (newpos === pos + 1 &&
+            subject.codePointAt(pos - 1) === C_LEFT_BRACE &&
+            subject.codePointAt(pos + 1) === C_HYPHEN) {
+          let hasCloser = false;
+          for (let i = pos + 1; i <= endpos; i++) {
+            if (subject.codePointAt(i) === C_HYPHEN &&
+                i + 1 <= endpos &&
+                subject.codePointAt(i + 1) === C_RIGHT_BRACE) {
+              hasCloser = true;
+              break;
+            }
+          }
+          if (!hasCloser) {
+            const openerKey = "{-";
+            if (self.openers[openerKey] && self.openers[openerKey].length > 0) {
+              self.openers[openerKey].pop();
+            }
+            self.matches.pop(); // remove default match from addOpener
+            // convert open_marker to str so { is preserved in output
+            const lastMatch = self.matches[self.matches.length - 1];
+            if (lastMatch && lastMatch.annot === "open_marker") {
+              lastMatch.annot = "str";
+            }
+            // fall through to dash handling below
+          } else {
+            return newpos;
+          }
+        } else {
+          return newpos;
+        }
       }
     }
     // didn't match a del, try for smart hyphens:
