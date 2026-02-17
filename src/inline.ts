@@ -146,6 +146,20 @@ const betweenMatched = function(
       // check openers for a match
       const opener = openers[openers.length - 1];
       if (opener.endpos !== pos - 1) { // exclude empty emph
+        // When inside a link destination, don't match openers from outside
+        // the link construct (before the [ that started this link)
+        if (self.destination) {
+          const linkOpeners = self.openers["["];
+          if (linkOpeners && linkOpeners.length > 0) {
+            const linkOpener = linkOpeners[linkOpeners.length - 1];
+            if (linkOpener.annot === "explicit_link" &&
+                opener.startpos < linkOpener.startpos) {
+              // opener is outside the link, don't match
+              self.addMatch(pos, endcloser, defaultmatch);
+              return endcloser + 1;
+            }
+          }
+        }
         self.clearOpeners(opener.startpos, pos);
         self.addMatch(opener.startpos, opener.endpos, "+" + annotation,
                       opener.matchIndex);
