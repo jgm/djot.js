@@ -46,6 +46,12 @@ const tests : Record<string, string> = {
     "[a](<b".repeat(30 * n),
   ["unclosed attributes"]:
     "a{#id k=".repeat(30 * n),
+  ["unclosed link destinations"]:
+    "[label](blah  ".repeat(30 * n),
+  ["unbalanced paren in link label"]:
+    "[label)](foo ".repeat(30 * n),
+  ["balanced nested parens in destinations"]:
+    "[label](foo (bar (baz)) ".repeat(30 * n),
 };
 
 describe("Pathological tests", () => {
