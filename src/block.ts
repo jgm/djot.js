@@ -50,6 +50,7 @@ const pattNextBarOrTicks = pattern("[^`|\\r\\n]*(?:[|]|`+)");
 const pattCaptionStart = pattern("\\^[ \\t]+");
 const pattFootnoteStart = pattern("\\[\\^([^\\]]+)\\]:[ \\t\\r\\n]");
 const pattThematicBreak = pattern("[-*][ \t]*[-*][ \\t]*[-*][-* \\t]*\\r?\\n");
+const pattCommentFence = pattern("(%%%%*)[ \\t]*\\r?\\n");
 const pattDivFence = pattern("(::::*)[ \\t]*\\r?\\n");
 const pattDivFenceStart = pattern("(::::*)[ \\t]*");
 const pattDivFenceEnd = pattern("([\\w_-]*)[ \\t]*\\r?\\n");
@@ -622,6 +623,50 @@ class EventParser {
               }
             }
             this.addMatch(this.pos, this.pos, "-block_attributes");
+          }
+        }
+      },
+
+      {
+        name: "fenced_comment",
+        type: ContentType.Block,
+        content: ContentType.Text,
+        continue: (container) => {
+          const m = this.find(container.extra.closePattern);
+          if (m) {
+            container.extra.endFenceStartpos = m.startpos;
+            container.extra.endFenceEndpos = m.startpos + m.captures[0].length - 1;
+            this.pos = m.endpos;
+            this.finishedLine = true;
+            return false;
+          } else {
+            return true;
+          }
+        },
+        open: (spec) => {
+          const m = this.find(pattCommentFence);
+          if (m) {
+            const border = m.captures[0];
+            const closePattern = pattern("(" + border +
+                              "%*)[ \\t]*[\\r\\n]");
+            this.addContainer(new Container(spec, { closePattern: closePattern }));
+            this.addMatch(m.startpos, m.startpos + border.length - 1,
+              "+comment");
+            this.pos = m.endpos;
+            this.finishedLine = true;
+            return true;
+          } else {
+            return false;
+          }
+        },
+        close: () => {
+          const container = this.containers.pop();
+          if (!container) return;
+          const sp = container.extra.endFenceStartpos || this.pos;
+          const ep = container.extra.endFenceEndpos || this.pos;
+          this.addMatch(sp, ep, "-comment");
+          if (sp === ep) {
+            this.warn(new Warning("Unclosed comment block", this.pos));
           }
         }
       },
