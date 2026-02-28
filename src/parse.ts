@@ -127,7 +127,9 @@ const normalizeLabel = function(label : string): string {
   return label.trim().replace(/[ \t\r\n]+/g, " ")
 }
 
-const parse = function(input: string, options: ParseOptions = {}): Doc {
+const parseFromEvents = function(events: Event[],
+                                 input: string,
+                                 options: ParseOptions = {}): Doc {
 
   const linestarts: number[] = [-1];
 
@@ -175,7 +177,6 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
   const identifiers: Record<string, boolean> = {}; // identifiers used
   const blockAttributes: Attributes = {}; // accumulated block attributes
   let listDepth = 0;
-  const parser = parseEvents(input, options);
   const warn = options.warn || (() => {});
   const addBlockAttributes = function(container: HasAttributes) {
     if (Object.keys(blockAttributes).length > 0) {
@@ -1259,7 +1260,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
     }];
 
   let lastpos = 0;
-  for (const event of parser) {
+  for (const event of events) {
     handleEvent(containers, event);
     lastpos = event.endpos;
   }
@@ -1369,11 +1370,16 @@ const renderAST = function(doc: Doc): string {
   return buff.join("");
 }
 
+const parse = function(input: string, options: ParseOptions = {}): Doc {
+  const parser = parseEvents(input, options);
+  return parseFromEvents(Array.from(parser), input, options);
+}
 
 export type {
   ParseOptions,
 }
 export {
+  parseFromEvents,
   parse,
   renderAST,
   getStringContent,
