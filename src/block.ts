@@ -543,12 +543,15 @@ class EventParser {
               === null) {
               return false;
             } else {
+              // Check if this is a comment-only block (starts with {%)
+              const isCommentBlock = this.subject.charAt(this.pos + 1) === '%';
               const container = this.addContainer(new Container(spec,
                 {
                   status: res.status,
                   indent: this.indent,
                   startpos: this.pos,
-                  slices: []
+                  slices: [],
+                  isCommentBlock: isCommentBlock,
                 }));
               container.attributeParser = attributeParser;
               container.extra.slices =
@@ -564,7 +567,11 @@ class EventParser {
           if (container.extra.status === "done") {
             return false;
           }
-          if (container.attributeParser && this.indent > container.extra.indent) {
+          // For comment blocks, allow continuation at same indentation level
+          const indentOk = container.extra.isCommentBlock
+            ? this.indent >= container.extra.indent
+            : this.indent > container.extra.indent;
+          if (container.attributeParser && indentOk) {
             container.extra.slices.push({
               startpos: this.pos,
               endpos: this.starteol

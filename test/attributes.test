@@ -236,12 +236,21 @@ foo{#ident % this is a comment}
 <p><span id="ident">foo</span></p>
 ```
 
-In block-level comment, subsequent lines must
-be indented, as with attributes:
+Block-level comments can span multiple lines
+with or without indentation:
 
 ```
 {% This is  a comment before a
   block-level item. %}
+Paragraph.
+.
+<p>Paragraph.</p>
+```
+
+```
+{% This is a comment
+spanning multiple lines
+without indentation %}
 Paragraph.
 .
 <p>Paragraph.</p>
