@@ -816,7 +816,7 @@ const parse = function(input: string, options: ParseOptions = {}): Doc {
             attributes: node.attributes,
             autoAttributes: node.autoAttributes,
             pos: node.pos});
-        } else if (listStyle === "X") {
+        } else if (listStyle.endsWith("X")) {
           addChildToTip({
             tag: "task_list",
             tight: node.data.tight,

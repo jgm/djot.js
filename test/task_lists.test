@@ -33,3 +33,29 @@ checked item
 </li>
 </ul>
 ```
+
+Different markers create separate task lists (consistent with regular lists):
+```
+- [ ] foo
++ [ ] bar
+* [ ] baz
+.
+<ul class="task-list">
+<li>
+<input disabled="" type="checkbox"/>
+foo
+</li>
+</ul>
+<ul class="task-list">
+<li>
+<input disabled="" type="checkbox"/>
+bar
+</li>
+</ul>
+<ul class="task-list">
+<li>
+<input disabled="" type="checkbox"/>
+baz
+</li>
+</ul>
+```
