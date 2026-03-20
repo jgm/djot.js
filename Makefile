@@ -1,7 +1,7 @@
 VERSION=$(shell grep '\"version\":' package.json | sed -e 's/.*: \"\([^"]*\)".*/\1/')
 
 test: build
-	npm test --noStackTrace
+	npm test
 .PHONY: test
 
 node_modules:
