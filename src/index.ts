@@ -1,4 +1,4 @@
-export { parse, renderAST } from "./parse";
+export { parse, parseFromEvents, renderAST } from "./parse";
 export { parseEvents, type Event } from "./block";
 export { renderHTML, HTMLRenderer } from "./html";
 export { applyFilter, type Filter } from "./filter";
