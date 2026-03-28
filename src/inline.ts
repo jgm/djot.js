@@ -103,9 +103,13 @@ const alwaysTrue = function() { return true; };
 
 const betweenMatched = function(
   c: string,
-  annotation: string,
-  defaultmatch: string,
+  annotation: InlineType,
+  defaultmatchFirst: InlineAnnot,
+  defaultmatchAlt: InlineAnnot | null,
   opentest: ((self: InlineParser, pos: number) => boolean)) {
+
+  let defaultmatch = defaultmatchFirst;
+
   return function(self: InlineParser, pos: number, endpos: number): number {
     const subject = self.subject;
     let can_open = find(subject, pattNonspace, pos + 1) !== null &&
@@ -130,10 +134,8 @@ const betweenMatched = function(
       endcloser = pos + 1;
     }
 
-    if (has_open_marker && defaultmatch.match(/^right/)) {
-      defaultmatch = defaultmatch.replace(/^right/, "left");
-    } else if (has_close_marker && defaultmatch.match(/^left/)) {
-      defaultmatch = defaultmatch.replace(/^left/, "right");
+    if (defaultmatchAlt && (has_open_marker || has_close_marker)) {
+      defaultmatch = defaultmatch == defaultmatchFirst ? defaultmatchAlt : defaultmatchFirst;
     }
 
     let d = c;
@@ -161,9 +163,9 @@ const betweenMatched = function(
           }
         }
         self.clearOpeners(opener.startpos, pos);
-        self.addMatch(opener.startpos, opener.endpos, "+" + annotation,
+        self.addMatch(opener.startpos, opener.endpos, `+${annotation}`,
                       opener.matchIndex);
-        self.addMatch(pos, endcloser, "-" + annotation);
+        self.addMatch(pos, endcloser, `-${annotation}`);
         return endcloser + 1;
       }
     }
@@ -276,19 +278,19 @@ const matchers = {
     return null;
   },
 
-  [C_TILDE]: betweenMatched('~', 'subscript', 'str', alwaysTrue),
+  [C_TILDE]: betweenMatched('~', 'subscript', 'str', null, alwaysTrue),
 
-  [C_HAT]: betweenMatched('^', 'superscript', 'str', alwaysTrue),
+  [C_HAT]: betweenMatched('^', 'superscript', 'str', null, alwaysTrue),
 
-  [C_UNDERSCORE]: betweenMatched('_', 'emph', 'str', alwaysTrue),
+  [C_UNDERSCORE]: betweenMatched('_', 'emph', 'str', null, alwaysTrue),
 
-  [C_ASTERISK]: betweenMatched('*', 'strong', 'str', alwaysTrue),
+  [C_ASTERISK]: betweenMatched('*', 'strong', 'str', null, alwaysTrue),
 
-  [C_PLUS]: betweenMatched("+", "insert", "str", hasBrace),
+  [C_PLUS]: betweenMatched("+", "insert", "str", null, hasBrace),
 
-  [C_EQUALS]: betweenMatched("=", "mark", "str", hasBrace),
+  [C_EQUALS]: betweenMatched("=", "mark", "str", null, hasBrace),
 
-  [C_SINGLE_QUOTE]: betweenMatched("'", "single_quoted", "right_single_quote",
+  [C_SINGLE_QUOTE]: betweenMatched("'", "single_quoted", "right_single_quote", "left_single_quote",
     function(self: InlineParser, pos: number): boolean {
       if (pos === 0) {
         return true;
@@ -306,7 +308,7 @@ const matchers = {
       }
     }),
 
-  [C_DOUBLE_QUOTE]: betweenMatched('"', "double_quoted", "left_double_quote",
+  [C_DOUBLE_QUOTE]: betweenMatched('"', "double_quoted", "left_double_quote", "right_double_quote",
     alwaysTrue),
 
   [C_LEFT_BRACE]: function(self: InlineParser, pos: number, endpos: number): number | null {
@@ -489,7 +491,7 @@ const matchers = {
     if (subject.codePointAt(pos - 1) === C_LEFT_BRACE ||
       subject.codePointAt(pos + 1) === C_RIGHT_BRACE) {
       const newpos =
-            betweenMatched("-", "delete", "str", hasBrace)(self, pos, endpos);
+            betweenMatched("-", "delete", "str", null, hasBrace)(self, pos, endpos);
       if (newpos) {
         return newpos;
       }
@@ -538,6 +540,55 @@ const matchers = {
   }
 };
 
+export type InlineAnnot =
+  | `+${InlineType}`
+  | `-${InlineType}`
+  | "ellipses"
+  | "em_dash"
+  | "en_dash"
+  | "escape"
+  | "footnote_reference"
+  | "hard_break"
+  | "image_marker"
+  | "left_double_quote"
+  | "left_single_quote"
+  | "non_breaking_space"
+  | "open_marker"
+  | "raw_format"
+  | "right_double_quote"
+  | "right_single_quote"
+  | "soft_break"
+  | "str"
+  | "symb"
+  ;
+
+type InlineType =
+  | VerbatimType
+  | "attributes"
+  | "delete"
+  | "destination"
+  | "double_quoted"
+  | "email"
+  | "emph"
+  | "imagetext"
+  | "insert"
+  | "linktext"
+  | "mark"
+  | "reference"
+  | "single_quoted"
+  | "span"
+  | "strong"
+  | "subscript"
+  | "superscript"
+  | "url"
+  ;
+
+type VerbatimType =
+  | "display_math"
+  | "inline_math"
+  | "verbatim"
+  ;
+
 class InlineParser {
   options: Options;
   warn: (warning : Warning) => void;
@@ -545,7 +596,7 @@ class InlineParser {
   matches: Event[];
   openers: OpenerMap; // map from opener type to Opener[] in reverse order
   verbatim: number; // parsing a verbatim span to be ended by N backticks
-  verbatimType: string; // math or regular
+  verbatimType?: VerbatimType; // math or regular
   destination: boolean; // parsing link destination?
   firstpos: number; // position of first slice
   lastpos: number; // position of last slice
@@ -563,7 +614,6 @@ class InlineParser {
     this.matches = [];  // array of matches
     this.openers = {};
     this.verbatim = 0;
-    this.verbatimType = "";
     this.destination = false;
     this.firstpos = -1;
     this.lastpos = 0;
@@ -575,7 +625,7 @@ class InlineParser {
   }
 
   addMatch(startpos: number, endpos: number,
-           annot: string, matchIndex?: number): void {
+           annot: InlineAnnot, matchIndex?: number): void {
     const match = { startpos: startpos, endpos: endpos, annot: annot };
     if (matchIndex !== undefined) {
       // insert into the proper place, replacing placeholder
@@ -641,7 +691,7 @@ class InlineParser {
       this.matches.push({
         startpos: last.endpos,
         endpos: last.endpos,
-        annot: "-" + this.verbatimType
+        annot: `-${this.verbatimType!}`
       });
     }
     return this.matches;
@@ -650,7 +700,7 @@ class InlineParser {
   addOpener(name: string,
             startpos: number,
             endpos: number,
-            defaultAnnot: string) : void {
+            defaultAnnot: InlineAnnot) : void {
     if (!this.openers[name]) {
       this.openers[name] = [];
     }
@@ -739,7 +789,7 @@ class InlineParser {
           const attrMatches = this.attributeParser.matches;
           // add attribute matches
           for (const match of attrMatches) {
-            this.addMatch(match.startpos, match.endpos, match.annot);
+            this.matches.push(match);
           }
           this.addMatch(ep, ep, "-attributes");
           // restore state to prior to adding attribute parser
@@ -799,11 +849,11 @@ class InlineParser {
                 // check for raw attribute
                 const m2 = find(subject, pattRawAttribute, endchar + 1, endpos);
                 if (m2 && this.verbatimType === "verbatim") { // raw
-                  this.addMatch(pos, endchar, "-" + this.verbatimType);
+                  this.addMatch(pos, endchar, `-${this.verbatimType}`);
                   this.addMatch(m2.startpos, m2.endpos, "raw_format");
                   pos = m2.endpos + 1;
                 } else {
-                  this.addMatch(pos, endchar, "-" + this.verbatimType);
+                  this.addMatch(pos, endchar, `-${this.verbatimType!}`);
                   pos = endchar + 1;
                 }
                 this.verbatim = 0;
