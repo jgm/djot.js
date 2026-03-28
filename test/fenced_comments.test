@@ -1,0 +1,54 @@
+Basic fenced comment:
+
+```
+Before.
+
+%%%
+This is a comment.
+%%%
+
+After.
+.
+<p>Before.</p>
+<p>After.</p>
+```
+
+Fenced comment with blank lines:
+
+```
+%%%
+First line.
+
+Second line.
+%%%
+.
+```
+
+Fenced comment with longer fence:
+
+```
+%%%%
+%%% not the end
+still inside
+%%%%
+.
+```
+
+Closing fence must match length:
+
+```
+%%%%
+comment
+%%%
+still comment
+%%%%
+.
+```
+
+Unclosed fenced comment consumes rest of document:
+
+```
+%%%
+This comment never closes.
+.
+```

@@ -1079,6 +1079,18 @@ const parseFromEvents = function(events: Event[],
           input.substring(startpos, endpos + 1);
       },
 
+      ["+comment"]: (suffixes, startpos, endpos, pos) => {
+        pushContainer(pos);
+        context = Context.Verbatim;
+      },
+
+      ["-comment"]: (suffixes, startpos, endpos, pos) => {
+        popContainer(pos);
+        // Discard content - comments are not rendered
+        context = Context.Normal;
+        accumulatedText = "";
+      },
+
       ["+code_block"]: (suffixes, startpos, endpos, pos) => {
         pushContainer(pos);
         context = Context.Verbatim;
