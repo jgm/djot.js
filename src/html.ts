@@ -207,6 +207,13 @@ class HTMLRenderer {
       case "section":
         return this.inTags("section", node, 2);
 
+      case "inclusion":
+        return this.inTags("div", node, 2,
+          { class: "inclusion", "data-path": node.resolvedPath });
+
+      case "inclusion_boundary_span":
+        return this.renderChildren(node);
+
       case "list_item":
         return this.inTags("li", node, 2);
 

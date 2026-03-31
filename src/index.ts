@@ -6,6 +6,9 @@ export { fromPandoc, toPandoc } from "./pandoc";
 export { renderDjot } from "./djot-renderer";
 export { version } from "./version";
 export { isBlock, isInline } from "./ast";
+export { preprocessInclusions, mergeInclusionEvents, isImageFile, isBinaryContent, buildEventStreams } from "./include";
+export type { IncludeOptions } from "./options";
+export type { InclusionRecord, PreprocessResult, EventStreams } from "./include";
 
 export type {
   Alignment,
@@ -37,6 +40,9 @@ export type {
   HasText,
   Heading,
   Image,
+  Inclusion,
+  InclusionRef,
+  InclusionBoundarySpan,
   Inline,
   InlineMath,
   Insert,

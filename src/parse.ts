@@ -177,6 +177,78 @@ const parseFromEvents = function(events: Event[],
   const identifiers: Record<string, boolean> = {}; // identifiers used
   const blockAttributes: Attributes = {}; // accumulated block attributes
   let listDepth = 0;
+  const inclusionStack: { resolvedPath: string; containerDepth: number; childStartIndex: number; startOffset: number; containerRef: any; docChildStartIndex: number }[] = [];
+  // Accumulate InclusionRefs from entangled inclusions (mid-block or
+  // depth-mismatch). Flushed as a single inclusion_boundary_span when
+  // a clean inclusion fires or at end-of-doc.
+  const pendingBoundaryRefs: { resolvedPath: string; resultOffset: number; resultLength: number }[] = [];
+  let pendingBoundaryChildStart = -1;  // doc child index when first ref was pushed
+  let pendingBoundaryTargetDepth = -1; // container depth to restore when flushing
+  let pendingBoundaryContainerRef: any = null; // container at starting depth when first ref was pushed
+  const pendingCleanTails: { resolvedPath: string; children: any[]; pos: any }[] = [];
+  const addPendingBoundaryRef = (ref: { resolvedPath: string; resultOffset: number; resultLength: number }, targetDepth: number, containerRef: any) => {
+    if (pendingBoundaryRefs.length === 0) {
+      pendingBoundaryChildStart = containers[0].children.length;
+      pendingBoundaryTargetDepth = targetDepth;
+      pendingBoundaryContainerRef = containerRef;
+    }
+    pendingBoundaryRefs.push(ref);
+  };
+  const closeSectionsToDepth = (targetDepth: number, pos?: Pos) => {
+    while (containers.length > targetDepth) {
+      const snode = topContainer();
+      if (snode.data.headinglevel !== undefined && snode.data.headinglevel > 0) {
+        popContainer(pos);
+        addChildToTip({
+          tag: "section",
+          children: snode.children,
+          attributes: snode.attributes,
+          autoAttributes: snode.autoAttributes,
+          pos: snode.pos,
+        });
+      } else {
+        break;
+      }
+    }
+  };
+  const flushPendingBoundary = (pos?: Pos) => {
+    if (pendingBoundaryRefs.length === 0) return;
+    let targetDepth = pendingBoundaryTargetDepth;
+    // If the section at the starting depth was replaced by an inclusion
+    // heading (different container object), close it too.
+    if (targetDepth > 1 &&
+        containers.length >= targetDepth &&
+        containers[targetDepth - 1] !== pendingBoundaryContainerRef) {
+      targetDepth = targetDepth - 1;
+    }
+    if (targetDepth > 0) {
+      closeSectionsToDepth(targetDepth, pos);
+    }
+    const doc = containers[0];
+    const startIdx = Math.min(pendingBoundaryChildStart, doc.children.length);
+    const children = doc.children.splice(startIdx, doc.children.length - startIdx);
+    doc.children.push({
+      tag: "inclusion_boundary_span",
+      children: children,
+      inclusions: pendingBoundaryRefs.slice(),
+      pos: pos,
+    });
+    // Append any clean inclusion tails that were extracted before flush
+    for (const tail of pendingCleanTails) {
+      doc.children.push({
+        tag: "inclusion",
+        destination: tail.resolvedPath,
+        resolvedPath: tail.resolvedPath,
+        children: tail.children,
+        pos: tail.pos,
+      });
+    }
+    pendingCleanTails.length = 0;
+    pendingBoundaryRefs.length = 0;
+    pendingBoundaryChildStart = -1;
+    pendingBoundaryTargetDepth = -1;
+    pendingBoundaryContainerRef = null;
+  };
   const warn = options.warn || (() => {});
   const addBlockAttributes = function(container: HasAttributes) {
     if (Object.keys(blockAttributes).length > 0) {
@@ -1126,6 +1198,116 @@ const parseFromEvents = function(events: Event[],
           pos: node.pos});
       },
 
+      ["+inclusion"]: (suffixes, startpos, endpos, pos) => {
+        // Record the container depth and child count for later wrapping
+        inclusionStack.push({
+          resolvedPath: suffixes.length > 0 ? suffixes.join("|") : "",
+          containerDepth: containers.length,
+          childStartIndex: topContainer().children.length,
+          startOffset: startpos,
+          containerRef: containers.length > 1 ? containers[containers.length - 1] : null,
+          docChildStartIndex: containers[0].children.length,
+        });
+      },
+
+      ["-inclusion"]: (suffixes, startpos, endpos, pos) => {
+        if (inclusionStack.length === 0) return;
+        const info = inclusionStack.pop()!;
+        const inclusionRef = {
+          resolvedPath: info.resolvedPath,
+          resultOffset: info.startOffset,
+          resultLength: startpos - info.startOffset,
+        };
+        // If the container stack shrank below the starting depth,
+        // the containers were closed by other constructs (e.g., a strong
+        // that began inside one inclusion and ended inside another).
+        // Accumulate as entangled boundary ref.
+        if (containers.length < info.containerDepth) {
+          // Close sections opened by this inclusion that are still on the stack
+          if (pendingBoundaryRefs.length > 0 && pendingBoundaryTargetDepth > 0) {
+            closeSectionsToDepth(pendingBoundaryTargetDepth, pos);
+          }
+          // The entangled containers have fully resolved. Any blocks
+          // added to doc AFTER the resolved entangled block are clean.
+          // The entangled chain produces exactly 1 block at doc level.
+          const doc = containers[0];
+          const cleanTailStart = info.docChildStartIndex + 1;
+          if (cleanTailStart < doc.children.length) {
+            const cleanTailChildren = doc.children.splice(
+              cleanTailStart, doc.children.length - cleanTailStart
+            );
+            pendingCleanTails.push({
+              resolvedPath: info.resolvedPath,
+              children: cleanTailChildren,
+              pos: pos,
+            });
+          }
+          addPendingBoundaryRef(inclusionRef, info.containerDepth, info.containerRef);
+          return;
+        }
+        // Close any sections that were opened inside the inclusion
+        // (similar to end-of-doc section closing)
+        let midBlock = false;
+        while (containers.length > info.containerDepth) {
+          const snode = topContainer();
+          if (snode.data.headinglevel !== undefined) {
+            popContainer(pos);
+            addChildToTip({
+              tag: "section",
+              children: snode.children,
+              attributes: snode.attributes,
+              autoAttributes: snode.autoAttributes,
+              pos: snode.pos,
+            });
+          } else {
+            // Non-section container still open (e.g., para, list, strong) —
+            // the inclusion boundary falls mid-block.
+            midBlock = true;
+            break;
+          }
+        }
+        if (midBlock) {
+          // Split: any completed block-level children before the
+          // entangled inline belong to a clean inclusion prefix.
+          const container = containers[info.containerDepth - 1];
+          const cleanEndIdx = container.children.length;
+          if (cleanEndIdx > info.childStartIndex) {
+            const cleanChildren = container.children.splice(
+              info.childStartIndex, cleanEndIdx - info.childStartIndex
+            );
+            container.children.push({
+              tag: "inclusion",
+              destination: info.resolvedPath,
+              resolvedPath: info.resolvedPath,
+              children: cleanChildren,
+              pos: pos,
+            });
+          }
+          // Accumulate the entangled portion as a boundary ref.
+          addPendingBoundaryRef(inclusionRef, info.containerDepth, info.containerRef);
+          return;
+        }
+        // Clean case: boundaries align with block structure.
+        if (pendingBoundaryRefs.length > 0) {
+          // A prior inclusion was entangled; add this one to the group.
+          addPendingBoundaryRef(inclusionRef, info.containerDepth, info.containerRef);
+          return;
+        }
+        const top = topContainer();
+        const startIdx = info.childStartIndex;
+        const endIdx = top.children.length;
+        if (endIdx > startIdx) {
+          const children = top.children.splice(startIdx, endIdx - startIdx);
+          top.children.push({
+            tag: "inclusion",
+            destination: info.resolvedPath,
+            resolvedPath: info.resolvedPath,
+            children: children,
+            pos: pos,
+          });
+        }
+      },
+
       thematic_break: (suffixes, startpos, endpos, pos) => {
         const tb: ThematicBreak = { tag: "thematic_break", pos: pos };
         addBlockAttributes(tb);
@@ -1242,6 +1424,17 @@ const parseFromEvents = function(events: Event[],
       }
     }
 
+    // If there are pending entangled boundary refs and we're outside
+    // all inclusions AND back at block level, flush before processing
+    // the next event. The depth check prevents flushing while still
+    // inside an inline container shared by entangled inclusions.
+    if (pendingBoundaryRefs.length > 0 &&
+        inclusionStack.length === 0 &&
+        annot !== "+inclusion" &&
+        containers.length <= pendingBoundaryTargetDepth) {
+      flushPendingBoundary(pos);
+    }
+
     const fn = handlers[annot];
     if (fn) {
       fn(suffixes, event.startpos, event.endpos, pos);
@@ -1282,6 +1475,9 @@ const parseFromEvents = function(events: Event[],
       pos: pnode.pos});
     pnode = topContainer();
   }
+
+  // Flush any remaining entangled inclusion refs as a boundary span.
+  flushPendingBoundary(lastloc && {start: lastloc, end: lastloc});
 
   const doc: Doc =
   {

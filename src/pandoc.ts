@@ -145,12 +145,24 @@ class PandocRenderer {
   addToPandocElts (elts : PandocElt[], node : any, ) : void {
     switch (node.tag) {
       case "section":
-      case "div": {
+      case "div":
+      case "inclusion": {
         const attrs = toPandocAttr(node);
         if (node.tag === "section") {
           attrs[1].unshift("section");
         }
+        if (node.tag === "inclusion") {
+          attrs[1].unshift("inclusion");
+        }
         elts.push({ t: "Div", c: [attrs, this.toPandocChildren(node)] });
+        break;
+      }
+
+      case "inclusion_boundary_span": {
+        const children = this.toPandocChildren(node);
+        for (const child of children) {
+          elts.push(child);
+        }
         break;
       }
 

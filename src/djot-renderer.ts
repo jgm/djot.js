@@ -345,6 +345,12 @@ class DjotRenderer {
     section: (node : Section) => {
       this.renderChildren<Block>(node.children);
     },
+    inclusion: (node : any) => {
+      this.renderChildren<Block>(node.children);
+    },
+    inclusion_boundary_span: (node : any) => {
+      this.renderChildren<Block>(node.children);
+    },
     code_block: (node : CodeBlock) => {
       const ticks = verbatimDelim(node, 3);
       this.lit(ticks);

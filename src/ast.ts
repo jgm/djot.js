@@ -40,6 +40,8 @@ type Block =
   | TaskList
   | DefinitionList
   | Table
+  | Inclusion
+  | InclusionBoundarySpan
   ;
 
 interface Para extends HasAttributes {
@@ -366,6 +368,25 @@ interface Doc extends HasAttributes {
   children: Block[];
 }
 
+interface Inclusion extends HasAttributes {
+  tag: "inclusion";
+  destination: string;
+  resolvedPath: string;
+  children: Block[];
+}
+
+interface InclusionRef {
+  resolvedPath: string;
+  resultOffset: number;
+  resultLength: number;
+}
+
+interface InclusionBoundarySpan extends HasAttributes {
+  tag: "inclusion_boundary_span";
+  children: Block[];
+  inclusions: InclusionRef[];
+}
+
 type AstNode =
   | Doc
   | Block
@@ -379,7 +400,9 @@ type AstNode =
   | Cell
   | Caption
   | Footnote
-  | Reference 
+  | Reference
+  | Inclusion
+  | InclusionBoundarySpan
   ;
 
 type Visitor<C, R> = {
@@ -432,6 +455,8 @@ type Visitor<C, R> = {
   caption?: (node: Caption, context: C) => R;
   footnote?: (node: Footnote, context: C) => R;
   reference?: (node: Reference, context: C) => R;
+  inclusion?: (node: Inclusion, context: C) => R;
+  inclusion_boundary_span?: (node: InclusionBoundarySpan, context: C) => R;
 };
 
 /* Type predicates */
@@ -451,7 +476,9 @@ const blockTags : Record<string, boolean> = {
   definition_list: true,
   table: true,
   reference: true,
-  footnote: true
+  footnote: true,
+  inclusion: true,
+  inclusion_boundary_span: true
 };
 
 function isBlock(node : AstNode) : node is Block {
@@ -563,6 +590,9 @@ export type {
   Doc,
   Reference,
   Footnote,
+  Inclusion,
+  InclusionRef,
+  InclusionBoundarySpan,
   Visitor,
 }
 export {
