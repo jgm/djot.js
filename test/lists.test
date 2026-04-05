@@ -12,6 +12,8 @@ two
 </ul>
 ```
 
+Sublists can interrupt single-line items without a blank line.
+
 ```
 - one
  - two
@@ -20,8 +22,16 @@ two
 <ul>
 <li>
 one
-- two
-- three
+<ul>
+<li>
+two
+<ul>
+<li>
+three
+</li>
+</ul>
+</li>
+</ul>
 </li>
 </ul>
 ```
@@ -128,6 +138,8 @@ c
 </ul>
 ```
 
+Sublist without blank line; inner list is loose (blank line between b and c).
+
 ```
 - a
   - b
@@ -138,10 +150,12 @@ c
 <ul>
 <li>
 a
-- b
 <ul>
 <li>
-c
+<p>b</p>
+</li>
+<li>
+<p>c</p>
 </li>
 </ul>
 </li>
@@ -151,6 +165,10 @@ d
 </ul>
 ```
 
+Same, but outer list stays tight (no blank between a-group and d in the
+outer list's items — the blank line before d closes the inner list's item,
+not the outer list's item).
+
 ```
 - a
   - b
@@ -162,10 +180,12 @@ d
 <ul>
 <li>
 a
-- b
 <ul>
 <li>
-c
+<p>b</p>
+</li>
+<li>
+<p>c</p>
 </li>
 </ul>
 </li>
@@ -507,4 +527,174 @@ The civil war ended in
 .
 <p>The civil war ended in
 1865. And this should not start a list.</p>
+```
+
+Sublist interruption rule: a block-level element can interrupt a list
+item only if the item has no continuation lines yet.
+
+Single-line item immediately followed by a sublist.
+
+```
+- foo
+  - bar
+.
+<ul>
+<li>
+foo
+<ul>
+<li>
+bar
+</li>
+</ul>
+</li>
+</ul>
+```
+
+Multi-line item: sublist without blank line is treated as continuation.
+
+```
+- foo
+  bar
+  - baz
+.
+<ul>
+<li>
+foo
+bar
+- baz
+</li>
+</ul>
+```
+
+Three levels of nesting, each item single-line.
+
+```
+- a
+  - b
+    - c
+.
+<ul>
+<li>
+a
+<ul>
+<li>
+b
+<ul>
+<li>
+c
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+```
+
+Blockquote interrupts a single-line list item.
+
+```
+- foo
+  > bar
+.
+<ul>
+<li>
+foo
+<blockquote>
+bar
+</blockquote>
+</li>
+</ul>
+```
+
+Blockquote blocked by continuation lines.
+
+```
+- foo
+  bar
+  > baz
+.
+<ul>
+<li>
+foo
+bar
+&gt; baz
+</li>
+</ul>
+```
+
+Mixed ordered and unordered sublists.
+
+```
+- foo
+  1. bar
+.
+<ul>
+<li>
+foo
+<ol>
+<li>
+bar
+</li>
+</ol>
+</li>
+</ul>
+```
+
+Lazy continuation counts as a continuation line, blocking sublist.
+
+```
+- foo
+bar
+  - baz
+.
+<ul>
+<li>
+foo
+bar
+- baz
+</li>
+</ul>
+```
+
+Multi-line item with blank line then sublist (still works via blank line).
+
+```
+- foo
+  bar
+
+  - sub
+.
+<ul>
+<li>
+foo
+bar
+<ul>
+<li>
+sub
+</li>
+</ul>
+</li>
+</ul>
+```
+
+Tight sublist (no blank lines between sub-items).
+
+```
+- a
+  - b
+  - c
+.
+<ul>
+<li>
+a
+<ul>
+<li>
+b
+</li>
+<li>
+c
+</li>
+</ul>
+</li>
+</ul>
 ```

@@ -440,8 +440,12 @@ class EventParser {
         type: ContentType.ListItem,
         content: ContentType.Block,
         continue: (container) => {
-          return (this.indent > container.extra.indent ||
+          const result = (this.indent > container.extra.indent ||
             this.pos === this.starteol);
+          if (result && this.pos !== this.starteol) {
+            container.extra.linesSeen = (container.extra.linesSeen || 0) + 1;
+          }
+          return result;
         },
         open: (spec) => {
           const m = this.find(pattListMarker);
@@ -464,7 +468,7 @@ class EventParser {
           if (styles.length === 0) {
             return false;
           }
-          const data = { styles: styles, indent: this.indent };
+          const data = { styles: styles, indent: this.indent, linesSeen: 0 };
           // adding container will close others
           this.addContainer(new Container(spec, data));
           let annot = "+list_item";
@@ -815,6 +819,16 @@ class EventParser {
     this.pos = newpos;
   }
 
+  // Returns the nearest parent list_item container, or null if none.
+  parentListItem(): Container | null {
+    for (let i = this.containers.length - 1; i >= 0; i--) {
+      if (this.containers[i].name === "list_item") {
+        return this.containers[i];
+      }
+    }
+    return null;
+  }
+
   // set this.starteol, this.endeol
   getEol(): void {
     const subject = this.subject;
@@ -1011,16 +1025,24 @@ class EventParser {
             let isBlank = (self.pos === self.starteol);
             let newStarts = false;
             let lastMatch = self.containers[self.lastMatchedContainer];
+            const parentItem = self.parentListItem();
+            const canInterruptPara = parentItem !== null &&
+              (parentItem.extra.linesSeen || 0) <= 1;
             let checkStarts = !isBlank &&
               (!lastMatch ||
                 lastMatch.content === ContentType.Block ||
-                lastMatch.content === ContentType.ListItem) &&
+                lastMatch.content === ContentType.ListItem ||
+                (lastMatch.content === ContentType.Inline &&
+                 canInterruptPara)) &&
               !self.find(pattWord); // optimization
             while (checkStarts) {
               checkStarts = false;
               for (const spec of specs) {
                 if ((!lastMatch && spec.type === ContentType.Block) ||
-                  (lastMatch && lastMatch.content === spec.type)) {
+                  (lastMatch && lastMatch.content === spec.type) ||
+                  (lastMatch && lastMatch.content === ContentType.Inline &&
+                   spec.type === ContentType.Block &&
+                   canInterruptPara)) {
                   if (spec.open(spec)) {
                     const tip = self.tip();
                     if (tip) {
@@ -1055,7 +1077,15 @@ class EventParser {
                 tip &&
                 tip.content === ContentType.Inline;
 
-              if (!isLazy) {
+              if (isLazy) {
+                // Track lazy continuation for sublist interruption rule:
+                // a lazy line counts as a continuation of the list item.
+                const item = self.parentListItem();
+                if (item) {
+                  item.extra.linesSeen =
+                    (item.extra.linesSeen || 0) + 1;
+                }
+              } else {
                 self.closeUnmatchedContainers();
               }
               tip = self.tip();
