@@ -86,6 +86,14 @@ Here `bar` is a lazy continuation of `foo`'s paragraph. The `list_item.continue`
 
 The fix: when `isLazy` is true, walk the container stack to find the parent `list_item` and increment its `linesSeen`. This makes `- foo\nbar\n  - baz` correctly treat `- baz` as paragraph continuation.
 
+## Ordered list restriction
+
+When interrupting a paragraph in a single-line list item, only **bullet markers** (`-`, `*`, `+`, `:`) and **ordered lists starting at 1** are allowed. Other ordered markers (e.g., `277.`, `p.`) are rejected.
+
+This was discovered during regression testing: a converted Wikipedia article contained lines like `277. Cognate words...` as paragraph continuation inside numbered list items. Without the restriction, these were misinterpreted as ordered sublist starts.
+
+The restriction is implemented via an `interruptingPara` flag on `EventParser`, set to `true` only when the `canInterruptPara` path is active during container opening. Both the `list` and `list_item` spec `open` functions check this flag and reject non-bullet, non-`1`-starting markers.
+
 ## Test Results
 
 - **3 existing tests changed** (all in `lists.test`): lines 15, 131, 154. All three previously asserted that sublist markers without blank lines are treated as paragraph text. They now assert nested list output.
@@ -93,16 +101,38 @@ The fix: when `isLazy` is true, walk the container stack to find the parent `lis
 - **All 356 tests pass** across all 13 test suites. No other tests were affected.
 - The `block.spec.ts`, `parse.spec.ts`, `pandoc.spec.ts`, `djot-renderer.spec.ts`, and all other spec files pass unchanged.
 
+## Regression Testing Against Real-World Corpus
+
+Parsed **284 real-world `.dj` files** with both `main` and the branch, comparing HTML output. The corpus was drawn from three sources:
+
+| Source | Files | Size | Description |
+|--------|-------|------|-------------|
+| matklad/matklad.github.io | 193 | ~1.7 MB | Blog posts (Rust, parsing, Zig, etc.) |
+| dcampbell24/djot-implementations | 2 | ~1.5 MB | Wikipedia article + Pandoc manual |
+| treeman/jonashietala | 89 | ~906 KB | Blog posts (Neovim, Elixir, etc.) |
+
+### Results: 283 identical, 1 intentional change, 0 regressions
+
+The single difference is in `jonashietala/drafts/7_sso_with_authentik.dj`, where bullet markers (`- Name:`, `- Scope name:`, `- Expression:`) inside an ordered list item are now correctly parsed as a sublist — the intended new behavior.
+
+An earlier version of the branch (before the ordered list restriction) had **2 regressions**, both caused by ordered markers being misinterpreted as sublists:
+
+- **tartan-wikipedia.dj**: 46 locations where continuation text like `277.`, `2007.`, `1979.` was parsed as `<ol start="277">` etc. Also affected were single-letter markers like `p.` being treated as alphabetic ordered lists.
+- **7_sso_with_authentik.dj**: the intentional change (unaffected by the restriction since it uses bullet markers).
+
+Adding the ordered list restriction eliminated all 46 false positives in the Wikipedia article while preserving the intended sublist interruption behavior.
+
 ## Assessment
 
 The rule change is clean and well-contained. The implementation:
 
-- Touches only `block.ts` (5 localized changes)
+- Touches only `block.ts`
 - Introduces no new data structures; uses the existing `container.extra` mechanism
 - Does not affect parsing outside of list items
 - Preserves all existing behavior when blank lines are present
 - Handles all examined edge cases correctly without special-casing
+- Produces zero regressions across 284 real-world djot files (~4.1 MB)
 
-No fundamental problems were encountered. The only refinement (lazy continuation tracking) was a natural consequence of the parser's existing lazy continuation mechanism and was straightforward to address.
+No fundamental problems were encountered. The two refinements discovered during development — lazy continuation tracking and the ordered list restriction — were natural consequences of how the parser works and were straightforward to address.
 
 The change makes djot's list syntax more intuitive for the common case (single-line items with sublists) while preserving the safety of requiring blank lines when intent is ambiguous (multi-line items).

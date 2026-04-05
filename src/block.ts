@@ -123,6 +123,7 @@ class EventParser {
   returned: number;
   specs: BlockSpec[];
   paraSpec: BlockSpec;
+  interruptingPara: boolean;
 
   constructor(subject: string, options: Options = {}) {
     // Ensure the subject ends with a newline character
@@ -143,6 +144,7 @@ class EventParser {
     this.lastMatchedContainer = 0;
     this.finishedLine = false;
     this.returned = 0;
+    this.interruptingPara = false;
     this.paraSpec =
     {
       name: "para",
@@ -419,6 +421,16 @@ class EventParser {
           if (styles.length === 0) {
             return false;
           }
+          // When interrupting a paragraph in a single-line list item,
+          // only allow bullet lists and ordered lists starting at 1;
+          // other ordered markers like "277." are likely continuation text.
+          if (this.interruptingPara) {
+            const isUnordered = /^[-*+:]/.test(marker);
+            const isOrderedStartingAtOne = /^[(]?1[).]/.test(marker);
+            if (!isUnordered && !isOrderedStartingAtOne) {
+              return false;
+            }
+          }
           const data = { styles: styles, indent: this.indent };
           // adding container will close others
           this.addContainer(new Container(spec, data));
@@ -467,6 +479,16 @@ class EventParser {
           const styles = getListStyles(marker);
           if (styles.length === 0) {
             return false;
+          }
+          // When interrupting a paragraph in a single-line list item,
+          // only allow bullet lists and ordered lists starting at 1;
+          // other ordered markers like "277." are likely continuation text.
+          if (this.interruptingPara) {
+            const isUnordered = /^[-*+:]/.test(marker);
+            const isOrderedStartingAtOne = /^[(]?1[).]/.test(marker);
+            if (!isUnordered && !isOrderedStartingAtOne) {
+              return false;
+            }
           }
           const data = { styles: styles, indent: this.indent, linesSeen: 0 };
           // adding container will close others
@@ -1043,7 +1065,11 @@ class EventParser {
                   (lastMatch && lastMatch.content === ContentType.Inline &&
                    spec.type === ContentType.Block &&
                    canInterruptPara)) {
+                  self.interruptingPara = lastMatch !== undefined &&
+                    lastMatch.content === ContentType.Inline &&
+                    canInterruptPara;
                   if (spec.open(spec)) {
+                    self.interruptingPara = false;
                     const tip = self.tip();
                     if (tip) {
                       self.lastMatchedContainer = self.containers.length - 1;
@@ -1061,6 +1087,7 @@ class EventParser {
                     }
                     break;
                   }
+                  self.interruptingPara = false;
                 }
               }
             }
