@@ -166,6 +166,14 @@ Attributes on the link override those on references:
 <p><a href="url"><img alt="image" src="img.jpg"></a></p>
 ```
 
+Inline attributes on images go on the <img> tag:
+
+```
+![alt](img.jpg){.photo}
+.
+<p><img alt="alt" src="img.jpg" class="photo"></p>
+```
+
 ```
 [unclosed](hello *a
 b*

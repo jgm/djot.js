@@ -77,6 +77,35 @@ a list
 </ul>
 ```
 
+In a loose list, all items get <p> wrapping, including items
+that appear before the blank line that makes the list loose:
+
+```
+- a
+- b
+- c
+
+  more
+
+- d
+.
+<ul>
+<li>
+<p>a</p>
+</li>
+<li>
+<p>b</p>
+</li>
+<li>
+<p>c</p>
+<p>more</p>
+</li>
+<li>
+<p>d</p>
+</li>
+</ul>
+```
+
 ```
 - one
 lazy

@@ -247,6 +247,16 @@ Paragraph.
 <p>Paragraph.</p>
 ```
 
+An attribute specifier containing only a comment is stripped
+from the output:
+
+```
+Foo bar {% This is a comment, spanning
+multiple lines %} baz.
+.
+<p>Foo bar  baz.</p>
+```
+
 Inline attributes can be empty:
 
 ```
