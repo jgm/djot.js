@@ -50,6 +50,15 @@ andurl)
 <p><a href="urlandurl">link</a></p>
 ```
 
+Leading/trailing whitespace on continuation lines is stripped:
+
+```
+[link](http://example.com?n=123
+    456)
+.
+<p><a href="http://example.com?n=123456">link</a></p>
+```
+
 ```
 [link][]
 

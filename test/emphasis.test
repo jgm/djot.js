@@ -222,6 +222,23 @@ _[bar_](url)
 <p>_<a href="url">bar_</a></p>
 ```
 
+Closest opener wins (spec: "When there are multiple openers that
+might be matched with a given closer, the closest one is used"):
+
+```
+*not strong *strong*
+.
+<p>*not strong <strong>strong</strong></p>
+```
+
+Nested emphasis with non-consecutive closers:
+
+```
+__emphasis inside_ emphasis_
+.
+<p><em><em>emphasis inside</em> emphasis</em></p>
+```
+
 Code takes precedence:
 
 ```
