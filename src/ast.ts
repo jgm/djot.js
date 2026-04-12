@@ -40,6 +40,7 @@ type Block =
   | TaskList
   | DefinitionList
   | Table
+  | Comment
   ;
 
 interface Para extends HasAttributes {
@@ -81,6 +82,11 @@ interface CodeBlock extends HasAttributes {
 interface RawBlock extends HasAttributes {
   tag: "raw_block";
   format: string;
+  text: string;
+}
+
+interface Comment extends HasAttributes {
+  tag: "comment";
   text: string;
 }
 
@@ -397,6 +403,7 @@ type Visitor<C, R> = {
   task_list?: (node: TaskList, context: C) => R;
   definition_list?: (node: DefinitionList, context: C) => R;
   table?: (node: Table, context: C) => R;
+  comment?: (node: Comment, context: C) => R;
   str?: (node: Str, context: C) => R;
   soft_break?: (node: SoftBreak, context: C) => R;
   hard_break?: (node: HardBreak, context: C) => R;
@@ -450,6 +457,7 @@ const blockTags : Record<string, boolean> = {
   task_list: true,
   definition_list: true,
   table: true,
+  comment: true,
   reference: true,
   footnote: true
 };
@@ -514,6 +522,7 @@ export type {
   Div,
   CodeBlock,
   RawBlock,
+  Comment,
   BlockQuote,
   BulletList,
   BulletListStyle,

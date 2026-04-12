@@ -504,7 +504,11 @@ const parseFromEvents = function(events: Event[],
 
       ["-block_attributes"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
-        if (node.attributes && containers.length > 0) {
+        if (node.data.comment !== undefined && !node.attributes) {
+          // standalone block comment: {% ... %}
+          addChildToTip({ tag: "comment", text: node.data.comment,
+                          pos: node.pos });
+        } else if (node.attributes && containers.length > 0) {
           if (node.attributes.id) {
             identifiers[node.attributes.id] = true;
           }
@@ -521,6 +525,11 @@ const parseFromEvents = function(events: Event[],
             }
           }
         }
+      },
+
+      comment: (suffixes, startpos, endpos, pos) => {
+        const top = topContainer();
+        top.data.comment = input.substring(startpos + 1, endpos).trim();
       },
 
       class: (suffixes, startpos, endpos, pos) => {

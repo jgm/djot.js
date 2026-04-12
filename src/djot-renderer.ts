@@ -2,7 +2,7 @@ import { Doc, AstNode, HasChildren,
          HasAttributes, Block, Para, Heading, Div, BulletList,
          OrderedList, TaskList,
          DefinitionList, Table, Caption, Row,
-         BlockQuote, Section, CodeBlock, RawBlock,
+         BlockQuote, Section, CodeBlock, RawBlock, Comment,
          Term, Definition, Footnote, Reference, Symb, Span,
          Link, Image, Email, Url, HasText, RawInline, FootnoteReference,
          Inline, Str, InlineMath, DisplayMath, Verbatim, SmartPunctuation,
@@ -365,6 +365,12 @@ class DjotRenderer {
       this.litlines(node.text);
       this.cr();
       this.lit(ticks);
+      this.blankline();
+    },
+    comment: (node : Comment) => {
+      this.lit("{% ");
+      this.lit(node.text);
+      this.lit(" %}");
       this.blankline();
     },
     definition_list: (node : DefinitionList) => {

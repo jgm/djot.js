@@ -55,6 +55,9 @@
                 },
                 {
                     "$ref": "#/definitions/Table"
+                },
+                {
+                    "$ref": "#/definitions/Comment"
                 }
             ]
         },
@@ -466,6 +469,81 @@
                 "tag": {
                     "enum": [
                         "code_block"
+                    ],
+                    "type": "string"
+                },
+                "text": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "tag",
+                "text"
+            ],
+            "type": "object"
+        },
+        "Comment": {
+            "additionalProperties": false,
+            "properties": {
+                "attributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "autoAttributes": {
+                    "$ref": "#/definitions/Attributes"
+                },
+                "pos": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "end": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        },
+                        "start": {
+                            "additionalProperties": false,
+                            "properties": {
+                                "col": {
+                                    "type": "number"
+                                },
+                                "line": {
+                                    "type": "number"
+                                },
+                                "offset": {
+                                    "type": "number"
+                                }
+                            },
+                            "required": [
+                                "col",
+                                "line",
+                                "offset"
+                            ],
+                            "type": "object"
+                        }
+                    },
+                    "required": [
+                        "end",
+                        "start"
+                    ],
+                    "type": "object"
+                },
+                "tag": {
+                    "enum": [
+                        "comment"
                     ],
                     "type": "string"
                 },

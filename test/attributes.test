@@ -244,7 +244,25 @@ be indented, as with attributes:
   block-level item. %}
 Paragraph.
 .
+<!-- This is  a comment before a
+  block-level item. -->
 <p>Paragraph.</p>
+```
+
+Block comment, single line:
+
+```
+{% This is a comment %}
+.
+<!-- This is a comment -->
+```
+
+Block comment with double hyphens (security):
+
+```
+{% foo -- bar %}
+.
+<!-- foo - - bar -->
 ```
 
 Inline attributes can be empty:

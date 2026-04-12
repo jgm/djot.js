@@ -328,6 +328,11 @@ class HTMLRenderer {
         return result;
       }
 
+      case "comment": {
+        const safeText = node.text.replace(/--/g, "- -");
+        return `<!-- ${safeText} -->\n`;
+      }
+
       case "str": {
         if (node.attributes || node.autoAttributes) {
           return `${this.renderTag("span", node)}${this.escape(node.text)}</span>`;

@@ -208,6 +208,12 @@ class PandocRenderer {
         elts.push({ t: "RawBlock", c: [node.format, node.text] });
         break;
 
+      case "comment": {
+        const safeText = node.text.replace(/--/g, "- -");
+        elts.push({ t: "RawBlock", c: ["html", `<!--${safeText}-->`] });
+        break;
+      }
+
       case "thematic_break":
         elts.push({ t: "HorizontalRule" });
         break;
