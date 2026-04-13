@@ -50,6 +50,15 @@ andurl)
 <p><a href="urlandurl">link</a></p>
 ```
 
+Leading/trailing whitespace on continuation lines is stripped:
+
+```
+[link](http://example.com?n=123
+    456)
+.
+<p><a href="http://example.com?n=123456">link</a></p>
+```
+
 ```
 [link][]
 
@@ -155,6 +164,14 @@ Attributes on the link override those on references:
 [![image](img.jpg)](url)
 .
 <p><a href="url"><img alt="image" src="img.jpg"></a></p>
+```
+
+Inline attributes on images go on the <img> tag:
+
+```
+![alt](img.jpg){.photo}
+.
+<p><img alt="alt" src="img.jpg" class="photo"></p>
 ```
 
 ```
