@@ -371,7 +371,9 @@ class DjotRenderer {
       this.lit("{% ");
       this.lit(node.text);
       this.lit(" %}");
-      this.blankline();
+      if (node.block) {
+        this.blankline();
+      }
     },
     definition_list: (node : DefinitionList) => {
       const items = node.children;

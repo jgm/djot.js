@@ -265,6 +265,14 @@ Block comment with double hyphens (security):
 <!-- foo - - bar -->
 ```
 
+Inline standalone comment:
+
+```
+Hello {% a comment %} world.
+.
+<p>Hello <!-- a comment --> world.</p>
+```
+
 Inline attributes can be empty:
 
 ```

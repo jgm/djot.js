@@ -210,7 +210,8 @@ class PandocRenderer {
 
       case "comment": {
         const safeText = node.text.replace(/--/g, "- -");
-        elts.push({ t: "RawBlock", c: ["html", `<!--${safeText}-->`] });
+        const rawType = node.block ? "RawBlock" : "RawInline";
+        elts.push({ t: rawType, c: ["html", `<!-- ${safeText} -->`] });
         break;
       }
 

@@ -330,7 +330,8 @@ class HTMLRenderer {
 
       case "comment": {
         const safeText = node.text.replace(/--/g, "- -");
-        return `<!-- ${safeText} -->\n`;
+        const nl = node.block ? "\n" : "";
+        return `<!-- ${safeText} -->${nl}`;
       }
 
       case "str": {

@@ -88,6 +88,7 @@ interface RawBlock extends HasAttributes {
 interface Comment extends HasAttributes {
   tag: "comment";
   text: string;
+  block?: boolean;
 }
 
 interface BulletList extends HasAttributes {
@@ -170,6 +171,7 @@ type Inline =
   | Delete
   | DoubleQuoted
   | SingleQuoted
+  | Comment
   ;
 
 

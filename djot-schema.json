@@ -549,6 +549,9 @@
                 },
                 "text": {
                     "type": "string"
+                },
+                "block": {
+                    "type": "boolean"
                 }
             },
             "required": [
@@ -1648,6 +1651,9 @@
                 },
                 {
                     "$ref": "#/definitions/SingleQuoted"
+                },
+                {
+                    "$ref": "#/definitions/Comment"
                 }
             ]
         },
