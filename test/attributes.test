@@ -271,14 +271,17 @@ Inline standalone comment:
 Hello {% a comment %} world.
 .
 <p>Hello <!-- a comment --> world.</p>
-An attribute specifier containing only a comment is stripped
-from the output:
+```
+
+An inline comment spanning multiple lines is rendered
+as an HTML comment:
 
 ```
 Foo bar {% This is a comment, spanning
 multiple lines %} baz.
 .
-<p>Foo bar  baz.</p>
+<p>Foo bar <!-- This is a comment, spanning
+multiple lines --> baz.</p>
 ```
 
 Inline attributes can be empty:
