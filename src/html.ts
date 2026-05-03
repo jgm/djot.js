@@ -16,6 +16,7 @@ class HTMLRenderer {
   private tight: boolean;
   footnoteIndex: Record<string, number>;
   nextFootnoteIndex: number;
+  fnrefIdEmitted: Record<string, boolean>;
   references: Record<string, Reference>;
   autoReferences: Record<string, Reference>;
 
@@ -25,6 +26,7 @@ class HTMLRenderer {
     this.tight = false;
     this.footnoteIndex = {};
     this.nextFootnoteIndex = 1;
+    this.fnrefIdEmitted = {};
     this.references = {};
     this.autoReferences = {};
   }
@@ -263,11 +265,14 @@ class HTMLRenderer {
           this.footnoteIndex[label] = index;
           this.nextFootnoteIndex++;
         }
-        result += this.renderTag("a", node, {
-          id: "fnref" + index,
-          href: "#fn" + index,
-          role: "doc-noteref"
-        });
+        const extraAttrs: Record<string, string> = {};
+        if (!this.fnrefIdEmitted[label]) {
+          extraAttrs.id = "fnref" + index;
+          this.fnrefIdEmitted[label] = true;
+        }
+        extraAttrs.href = "#fn" + index;
+        extraAttrs.role = "doc-noteref";
+        result += this.renderTag("a", node, extraAttrs);
         result += "<sup>";
         result += this.escape(index.toString());
         result += "</sup></a>";
