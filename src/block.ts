@@ -123,6 +123,8 @@ class EventParser {
   returned: number;
   specs: BlockSpec[];
   paraSpec: BlockSpec;
+  hasUnmatchedOpeners: boolean;
+  hasUnmatchedClosers: boolean;
 
   constructor(subject: string, options: Options = {}) {
     // Ensure the subject ends with a newline character
@@ -143,6 +145,8 @@ class EventParser {
     this.lastMatchedContainer = 0;
     this.finishedLine = false;
     this.returned = 0;
+    this.hasUnmatchedOpeners = false;
+    this.hasUnmatchedClosers = false;
     this.paraSpec =
     {
       name: "para",
@@ -773,6 +777,18 @@ class EventParser {
           this.matches.push(match);
         }
         last = match;
+      }
+      // Check for unmatched openers left in the inline parser
+      if (!this.hasUnmatchedOpeners) {
+        for (const k in ilparser.openers) {
+          if (ilparser.openers[k].length > 0) {
+            this.hasUnmatchedOpeners = true;
+            break;
+          }
+        }
+      }
+      if (!this.hasUnmatchedClosers && ilparser.hasUnmatchedClosers) {
+        this.hasUnmatchedClosers = true;
       }
     }
   }

@@ -379,7 +379,7 @@ type AstNode =
   | Cell
   | Caption
   | Footnote
-  | Reference 
+  | Reference
   ;
 
 type Visitor<C, R> = {
@@ -451,7 +451,7 @@ const blockTags : Record<string, boolean> = {
   definition_list: true,
   table: true,
   reference: true,
-  footnote: true
+  footnote: true,
 };
 
 function isBlock(node : AstNode) : node is Block {
