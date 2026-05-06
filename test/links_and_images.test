@@ -263,6 +263,20 @@ Autolinks:
 <a href="mailto:me@example.com">me@example.com</a></p>
 ```
 
+Inline attributes attach to the autolink's `<a>` element:
+
+```
+<https://example.com>{.a}
+.
+<p><a href="https://example.com" class="a">https://example.com</a></p>
+```
+
+```
+<https://example.com>{#id .cls}
+.
+<p><a href="https://example.com" id="id" class="cls">https://example.com</a></p>
+```
+
 Openers inside `[..](` or `[..][` or `[..]{` can't match
 outside them, even if the construction doesn't turn out to be
 a link or span or image.
