@@ -146,6 +146,20 @@ Attributes on the link override those on references:
 <p><a href="/url" title="bar">ref</a></p>
 ```
 
+Inline attributes on inline links go on the `<a>` element:
+
+```
+[a](b){rel=me}
+.
+<p><a href="b" rel="me">a</a></p>
+```
+
+```
+[a](b){rel="me"}
+.
+<p><a href="b" rel="me">a</a></p>
+```
+
 ```
 [link _and_ link][]
 
