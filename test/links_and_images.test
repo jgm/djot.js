@@ -306,6 +306,28 @@ Autolinks:
 <a href="mailto:me@example.com">me@example.com</a></p>
 ```
 
+A literal `<` or `>` in a link destination must be HTML-escaped
+in the emitted href/src so it can't break out of the attribute
+context. The same applies to backslash-escaped `<`:
+
+```
+[a](http://x.com/<script>)
+.
+<p><a href="http://x.com/&lt;script&gt;">a</a></p>
+```
+
+```
+![alt](/img/<svg)
+.
+<p><img alt="alt" src="/img/&lt;svg"></p>
+```
+
+```
+[a](x\<y)
+.
+<p><a href="x&lt;y">a</a></p>
+```
+
 Inline attributes attach to the autolink's `<a>` element:
 
 ```
