@@ -294,6 +294,21 @@ hi{}
 <p>hi</p>
 ```
 
+Empty attributes after a span or link are consumed silently and
+no attributes are emitted on the element:
+
+```
+[text]{}
+.
+<p><span>text</span></p>
+```
+
+```
+[link](url){}
+.
+<p><a href="url">link</a></p>
+```
+
 Block attributes can be empty:
 
 ```
