@@ -188,6 +188,25 @@ Inline attributes on images go on the <img> tag:
 <p><img alt="alt" src="img.jpg" class="photo"></p>
 ```
 
+Reference links inside image alt text are flattened to their
+label text rather than being emitted literally:
+
+```
+[foo]: http://example.com/foo
+
+![alt with [foo][] text](/img.png)
+.
+<p><img alt="alt with foo text" src="/img.png"></p>
+```
+
+```
+[foo]: http://example.com/foo
+
+![alt [foo][foo] here](/img.png)
+.
+<p><img alt="alt foo here" src="/img.png"></p>
+```
+
 ```
 [unclosed](hello *a
 b*
