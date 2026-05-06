@@ -303,6 +303,20 @@ hi
 <p>hi</p>
 ```
 
+Identifiers and class names accept only ASCII alphanumerics, `_`,
+`:`, and `-` (the same rule as for unquoted key=value values).
+Any other character invalidates the entire attribute spec, which
+then renders as literal text. This rules out smuggling
+HTML-significant characters like `<` into attribute contexts:
+
+```
+{#a<b}
+foo
+.
+<p>{#a&lt;b}
+foo</p>
+```
+
 Non-attributes:
 
 ```
