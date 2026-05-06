@@ -247,6 +247,35 @@ Paragraph.
 <p>Paragraph.</p>
 ```
 
+Without the indented continuation, the `{% ... %}` is not a valid
+block comment and renders as an ordinary paragraph:
+
+```
+{%
+SPDX-FileCopyrightText: 2025
+%}
+
+Hello.
+.
+<p>{%
+SPDX-FileCopyrightText: 2025
+%}</p>
+<p>Hello.</p>
+```
+
+With indented continuation lines, it parses as a block comment
+and is stripped from the output:
+
+```
+{%
+  SPDX-FileCopyrightText: 2025
+  %}
+
+Hello.
+.
+<p>Hello.</p>
+```
+
 An attribute specifier containing only a comment is stripped
 from the output:
 
