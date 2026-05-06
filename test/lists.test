@@ -106,6 +106,39 @@ that appear before the blank line that makes the list loose:
 </ul>
 ```
 
+Tight/loose detection must not look past the end of the current
+list. A later loose list in the same document does not retroactively
+make an earlier (already-closed) tight list loose:
+
+```
+- a
+- b
+
+text
+
+- x
+
+- y
+.
+<ul>
+<li>
+a
+</li>
+<li>
+b
+</li>
+</ul>
+<p>text</p>
+<ul>
+<li>
+<p>x</p>
+</li>
+<li>
+<p>y</p>
+</li>
+</ul>
+```
+
 ```
 - one
 lazy
