@@ -188,6 +188,30 @@ Inline attributes on images go on the <img> tag:
 <p><img alt="alt" src="img.jpg" class="photo"></p>
 ```
 
+A reference definition's URL may not contain internal whitespace
+("None of the chunks of the URL may contain internal whitespace").
+If the line has any non-whitespace content after the URL, the line
+is not a valid reference definition and renders as a paragraph,
+leaving subsequent reference uses unresolved:
+
+```
+[foo]: http://example.com "title"
+
+[foo][]
+.
+<p>[foo]: http://example.com “title”</p>
+<p><a>foo</a></p>
+```
+
+```
+[foo]: http://example.com extra
+
+[foo][]
+.
+<p>[foo]: http://example.com extra</p>
+<p><a>foo</a></p>
+```
+
 Reference links inside image alt text are flattened to their
 label text rather than being emitted literally:
 
