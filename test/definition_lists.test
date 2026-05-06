@@ -93,3 +93,20 @@ list
 </dd>
 </dl>
 ````
+
+Block attributes on the line above a definition list attach to
+the `<dl>`:
+
+```
+{variant=Simple}
+: term
+
+  definition
+.
+<dl variant="Simple">
+<dt>term</dt>
+<dd>
+<p>definition</p>
+</dd>
+</dl>
+```
