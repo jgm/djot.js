@@ -106,6 +106,32 @@ that appear before the blank line that makes the list loose:
 </ul>
 ```
 
+Without a blank line before a nested marker, an indented `-` is
+literal continuation of the parent item, not a sub-list. A
+paragraph following the parent list's blank line must not be
+absorbed into the last item as lazy continuation:
+
+```
+- a
+    - sub
+- b
+    - sub
+
+Para.
+.
+<ul>
+<li>
+a
+- sub
+</li>
+<li>
+b
+- sub
+</li>
+</ul>
+<p>Para.</p>
+```
+
 Tight/loose detection must not look past the end of the current
 list. A later loose list in the same document does not retroactively
 make an earlier (already-closed) tight list loose:
