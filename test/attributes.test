@@ -247,6 +247,35 @@ Paragraph.
 <p>Paragraph.</p>
 ```
 
+Without the indented continuation, the `{% ... %}` is not a valid
+block comment and renders as an ordinary paragraph:
+
+```
+{%
+SPDX-FileCopyrightText: 2025
+%}
+
+Hello.
+.
+<p>{%
+SPDX-FileCopyrightText: 2025
+%}</p>
+<p>Hello.</p>
+```
+
+With indented continuation lines, it parses as a block comment
+and is stripped from the output:
+
+```
+{%
+  SPDX-FileCopyrightText: 2025
+  %}
+
+Hello.
+.
+<p>Hello.</p>
+```
+
 An attribute specifier containing only a comment is stripped
 from the output:
 
@@ -265,6 +294,21 @@ hi{}
 <p>hi</p>
 ```
 
+Empty attributes after a span or link are consumed silently and
+no attributes are emitted on the element:
+
+```
+[text]{}
+.
+<p><span>text</span></p>
+```
+
+```
+[link](url){}
+.
+<p><a href="url">link</a></p>
+```
+
 Block attributes can be empty:
 
 ```
@@ -272,6 +316,20 @@ Block attributes can be empty:
 hi
 .
 <p>hi</p>
+```
+
+Identifiers and class names accept only ASCII alphanumerics, `_`,
+`:`, and `-` (the same rule as for unquoted key=value values).
+Any other character invalidates the entire attribute spec, which
+then renders as literal text. This rules out smuggling
+HTML-significant characters like `<` into attribute contexts:
+
+```
+{#a<b}
+foo
+.
+<p>{#a&lt;b}
+foo</p>
 ```
 
 Non-attributes:

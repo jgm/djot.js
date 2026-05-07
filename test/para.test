@@ -5,3 +5,16 @@ there
 <p>hi  
 there</p>
 ```
+
+A line that contains only whitespace counts as blank and ends
+the preceding block. (The line between the two paragraphs below
+is a single space, not empty.)
+
+```
+para
+ 
+para2
+.
+<p>para</p>
+<p>para2</p>
+```

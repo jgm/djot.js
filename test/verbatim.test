@@ -54,3 +54,17 @@ c
 <p><code> a
 c</code></p>
 ```
+
+Inline attributes attach to the code element:
+
+```
+`code`{.a}
+.
+<p><code class="a">code</code></p>
+```
+
+```
+`code`{key="value"}
+.
+<p><code key="value">code</code></p>
+```

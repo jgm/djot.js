@@ -93,3 +93,34 @@ list
 </dd>
 </dl>
 ````
+
+A bare `:` marker followed by end-of-input produces an empty
+term and empty definition rather than failing or reading past
+the end of the buffer:
+
+```
+:
+.
+<dl>
+<dt></dt>
+<dd>
+</dd>
+</dl>
+```
+
+Block attributes on the line above a definition list attach to
+the `<dl>`:
+
+```
+{variant=Simple}
+: term
+
+  definition
+.
+<dl variant="Simple">
+<dt>term</dt>
+<dd>
+<p>definition</p>
+</dd>
+</dl>
+```
