@@ -369,8 +369,7 @@ const matchers = {
           subject.codePointAt(opener.startpos - 1) === C_BANG &&
           subject.codePointAt(opener.startpos - 2) !== C_BACKSLASH;
         if (isImage) {
-          self.addMatch(opener.startpos - 1, opener.startpos - 1,
-            "image_marker", opener.matchIndex - 1);
+          self.addImageMarker(opener);
           self.addMatch(opener.startpos, opener.endpos, "+imagetext",
                         opener.matchIndex);
           self.addMatch(opener.substartpos || opener.startpos,
@@ -457,8 +456,7 @@ const matchers = {
           subject.codePointAt(opener.startpos - 1) === C_BANG &&
           subject.codePointAt(opener.startpos - 2) !== C_BACKSLASH;
         if (isImage) {
-          self.addMatch(opener.startpos - 1, opener.startpos - 1,
-                        "image_marker", opener.matchIndex - 1);
+          self.addImageMarker(opener);
           self.addMatch(opener.startpos, opener.endpos, "+imagetext",
                         opener.matchIndex);
           self.addMatch(opener.substartpos || opener.startpos,
@@ -582,6 +580,29 @@ class InlineParser {
       this.matches.splice(matchIndex, 1, match);
     } else {
       this.matches.push(match);
+    }
+  }
+
+  addImageMarker(opener: Opener): void {
+    const prevIdx = opener.matchIndex - 1;
+    const prevMatch = this.matches[prevIdx];
+    if (prevMatch && prevMatch.annot === "str" &&
+        prevMatch.startpos < opener.startpos - 1) {
+      // '!' is grouped with preceding text in a single str match.
+      // Truncate the str to end before '!' and insert image_marker.
+      prevMatch.endpos = opener.startpos - 2;
+      this.matches.splice(prevIdx + 1, 0, {
+        startpos: opener.startpos - 1,
+        endpos: opener.startpos - 1,
+        annot: "image_marker"
+      });
+      // Adjust indices since we inserted a new element
+      opener.matchIndex += 1;
+      opener.subMatchIndex += 1;
+    } else {
+      // '!' is alone in its str match, replace it directly
+      this.addMatch(opener.startpos - 1, opener.startpos - 1,
+        "image_marker", prevIdx);
     }
   }
 
