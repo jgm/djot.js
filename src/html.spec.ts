@@ -29,4 +29,11 @@ rendering the light markup format <a href="https://djot.net">djot</a>.</p>
 
   })
 
+  it("preserves text before inline image", () => {
+    expect(renderHTML(parse('hello ![alt](img.png) world'))).toEqual(
+`<p>hello <img alt="alt" src="img.png"> world</p>
+`
+    );
+  });
+
 });
