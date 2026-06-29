@@ -148,14 +148,13 @@ djot.renderHTML(
 
 This yields: `<span class="emphasized">hi</span>`.
 
-### Security
+### A note on HTML output
 
-`renderHTML` output is not sanitized. Do not render untrusted
-djot input to HTML without downstream sanitization. In particular,
-raw HTML, attributes such as `onclick` or `srcdoc`, and unsafe URL
-schemes such as `javascript:` or `data:` can produce unsafe HTML.
-See the Security section in the
-[djot syntax reference](https://htmlpreview.github.io/?https://github.com/jgm/djot/blob/master/doc/syntax.html).
+`renderHTML` output is not sanitized. When rendering untrusted djot input
+to HTML, sanitize it downstream before serving it in a browser. In
+particular, raw HTML, attributes such as `onclick` or `srcdoc`, and
+unsafe URL schemes such as `javascript:` or `data:` can produce unsafe
+HTML.
 
 ### Rendering djot
 
