@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
 import fs from "fs";
+import path from "path";
 import { performance } from "perf_hooks";
 import { parseEvents } from "./block";
-import { parse, renderAST } from "./parse";
+import { parse, renderAST, parseFromEvents } from "./parse";
 import { Doc } from "./ast";
 import { renderHTML } from "./html";
 import { applyFilter } from "./filter";
@@ -11,6 +12,7 @@ import { fromPandoc, toPandoc } from "./pandoc";
 import { renderDjot } from "./djot-renderer";
 import { version } from "./version";
 import { Warning } from "./options";
+import { preprocessInclusions, mergeInclusionEvents } from "./include";
 
 const warn = function(warning: Warning) : void {
   process.stderr.write(warning.render() + "\n");
@@ -150,10 +152,27 @@ for (const file of files) {
   }
 }
 
+const basePath = files[0] !== "/dev/stdin"
+  ? path.dirname(path.resolve(files[0]))
+  : process.cwd();
+
+const ppResult = preprocessInclusions(input, {
+  readFile: (p) => {
+    try { return fs.readFileSync(p, "utf8"); }
+    catch { return null; }
+  },
+  basePath,
+  warn,
+});
+input = ppResult.text;
+const inclusionRecords = ppResult.inclusions;
+
 try {
   if (to === "events") {
+    const rawEvents = Array.from(parseEvents(input, {warn: warn}));
+    const mergedEvents = mergeInclusionEvents(rawEvents, inclusionRecords);
     let start = true;
-    for (const event of parseEvents(input, {warn: warn})) {
+    for (const event of mergedEvents) {
       if (start) {
         process.stdout.write("[");
         start = false;
@@ -167,7 +186,9 @@ try {
     let startTime = performance.now();
     let ast : Doc | null = null;
     if (from === "djot") {
-      ast = parse(input, options);
+      const rawEvents = Array.from(parseEvents(input, options));
+      const mergedEvents = mergeInclusionEvents(rawEvents, inclusionRecords);
+      ast = parseFromEvents(mergedEvents, input, options);
     } else if (from === "pandoc") {
       ast = fromPandoc(JSON.parse(input));
     } else if (from === "ast") {
