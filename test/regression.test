@@ -61,3 +61,12 @@ doc
         str text="2"
 ```
 
+Allow . in identifiers:
+```
+{#sec.1.a .class}
+# Section
+.
+<section id="sec.1.a" class="class">
+<h1>Section</h1>
+</section>
+```
