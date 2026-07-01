@@ -29,6 +29,21 @@ continued</h1>
 </section>
 ```
 
+A bare `#` heading-marker line in the middle of a heading
+contributes no content; the surrounding marker lines join
+with a single newline:
+
+```
+# h
+#
+# x
+.
+<section id="h-x">
+<h1>h
+x</h1>
+</section>
+```
+
 ```
 ##
 heading

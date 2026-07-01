@@ -146,6 +146,20 @@ Attributes on the link override those on references:
 <p><a href="/url" title="bar">ref</a></p>
 ```
 
+Inline attributes on inline links go on the `<a>` element:
+
+```
+[a](b){rel=me}
+.
+<p><a href="b" rel="me">a</a></p>
+```
+
+```
+[a](b){rel="me"}
+.
+<p><a href="b" rel="me">a</a></p>
+```
+
 ```
 [link _and_ link][]
 
@@ -172,6 +186,49 @@ Inline attributes on images go on the <img> tag:
 ![alt](img.jpg){.photo}
 .
 <p><img alt="alt" src="img.jpg" class="photo"></p>
+```
+
+A reference definition's URL may not contain internal whitespace
+("None of the chunks of the URL may contain internal whitespace").
+If the line has any non-whitespace content after the URL, the line
+is not a valid reference definition and renders as a paragraph,
+leaving subsequent reference uses unresolved:
+
+```
+[foo]: http://example.com "title"
+
+[foo][]
+.
+<p>[foo]: http://example.com “title”</p>
+<p><a>foo</a></p>
+```
+
+```
+[foo]: http://example.com extra
+
+[foo][]
+.
+<p>[foo]: http://example.com extra</p>
+<p><a>foo</a></p>
+```
+
+Reference links inside image alt text are flattened to their
+label text rather than being emitted literally:
+
+```
+[foo]: http://example.com/foo
+
+![alt with [foo][] text](/img.png)
+.
+<p><img alt="alt with foo text" src="/img.png"></p>
+```
+
+```
+[foo]: http://example.com/foo
+
+![alt [foo][foo] here](/img.png)
+.
+<p><img alt="alt foo here" src="/img.png"></p>
 ```
 
 ```
@@ -247,6 +304,42 @@ Autolinks:
 .
 <p><a href="http://example.com/foo">http://example.com/foo</a>
 <a href="mailto:me@example.com">me@example.com</a></p>
+```
+
+A literal `<` or `>` in a link destination must be HTML-escaped
+in the emitted href/src so it can't break out of the attribute
+context. The same applies to backslash-escaped `<`:
+
+```
+[a](http://x.com/<script>)
+.
+<p><a href="http://x.com/&lt;script&gt;">a</a></p>
+```
+
+```
+![alt](/img/<svg)
+.
+<p><img alt="alt" src="/img/&lt;svg"></p>
+```
+
+```
+[a](x\<y)
+.
+<p><a href="x&lt;y">a</a></p>
+```
+
+Inline attributes attach to the autolink's `<a>` element:
+
+```
+<https://example.com>{.a}
+.
+<p><a href="https://example.com" class="a">https://example.com</a></p>
+```
+
+```
+<https://example.com>{#id .cls}
+.
+<p><a href="https://example.com" id="id" class="cls">https://example.com</a></p>
 ```
 
 Openers inside `[..](` or `[..][` or `[..]{` can't match

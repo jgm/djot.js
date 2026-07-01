@@ -254,3 +254,26 @@ _<http://example.com/a_b>
 .
 <p>_<a href="http://example.com/a_b">http://example.com/a_b</a></p>
 ```
+
+Inline attributes after the closing delimiter attach to the
+emphasis or strong element rather than wrapping it in a span:
+
+```
+_emph_{.a}
+.
+<p><em class="a">emph</em></p>
+```
+
+```
+*strong*{.a}
+.
+<p><strong class="a">strong</strong></p>
+```
+
+Combined id, class, and key=value attributes on emphasis:
+
+```
+_emph_{#id .cls key=val}
+.
+<p><em id="id" class="cls" key="val">emph</em></p>
+```

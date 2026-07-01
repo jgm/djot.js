@@ -21,3 +21,17 @@ H{~2 ~}O
 .
 <p>H<sub>2 </sub>O</p>
 ```
+
+Inline attributes attach to the sub/sup element:
+
+```
+~sub~{.a}
+.
+<p><sub class="a">sub</sub></p>
+```
+
+```
+^sup^{.a}
+.
+<p><sup class="a">sup</sup></p>
+```

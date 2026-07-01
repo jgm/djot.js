@@ -24,6 +24,16 @@ c
 c</p>
 ```
 
+A backslash immediately before end-of-input still produces a
+hard break, with no following content:
+
+```
+para\
+.
+<p>para<br>
+</p>
+```
+
 There can be spaces and tabs between the backslash and the newline:
 
 ```

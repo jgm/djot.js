@@ -27,3 +27,23 @@ This is {=marked *text*=}.
 .
 <p>This is <mark>marked <strong>text</strong></mark>.</p>
 ```
+
+Inline attributes attach to the ins/del/mark element:
+
+```
+{+ins+}{.a}
+.
+<p><ins class="a">ins</ins></p>
+```
+
+```
+{-del-}{.a}
+.
+<p><del class="a">del</del></p>
+```
+
+```
+{=mark=}{.a}
+.
+<p><mark class="a">mark</mark></p>
+```
