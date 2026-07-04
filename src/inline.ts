@@ -92,7 +92,6 @@ const pattDoubleDollars = pattern("\\$\\$");
 const pattSingleDollar = pattern("\\$");
 const pattBackslash = pattern("\\\\");
 const pattRawAttribute = pattern("\\{=[^\\s{}`]+\\}");
-const pattNoteReference = pattern("\\^([^\\]]+)\\]");
 
 const hasBrace = function(self: InlineParser, pos: number): boolean {
   return ((pos > 0 && self.subject.codePointAt(pos - 1) === C_LEFT_BRACE) ||
@@ -345,14 +344,8 @@ const matchers = {
   },
 
   [C_LEFT_BRACKET]: function(self: InlineParser, pos: number, endpos: number): number {
-    const m = find(self.subject, pattNoteReference, pos + 1, endpos);
-    if (m) { // footnote ref
-      self.addMatch(pos, m.endpos, "footnote_reference");
-      return m.endpos + 1;
-    } else {
-      self.addOpener("[", pos, pos, "str");
-      return pos + 1;
-    }
+    self.addOpener("[", pos, pos, "str");
+    return pos + 1;
   },
 
   [C_RIGHT_BRACKET]: function(self: InlineParser, pos: number, endpos: number): number | null {
@@ -360,7 +353,19 @@ const matchers = {
     const subject = self.subject;
     if (openers && openers.length > 0) {
       const opener = openers[openers.length - 1];
-      if (opener.annot === "reference_link") {
+      const isNoteRef = subject.codePointAt(opener.startpos + 1) === C_HAT;
+      if (isNoteRef) {
+        // remove matches back to start
+        let i = self.matches.length - 1;
+        while (i > 0 && self.matches[i].startpos > opener.startpos) {
+          self.matches.pop();
+          i--;
+        }
+        self.clearOpeners(opener.startpos, pos);
+        self.matches[i].annot = "footnote_reference";
+        self.matches[i].endpos = pos;
+        return pos + 1;
+      } else if (opener.annot === "reference_link") {
         // found a reference link
         // convert all matches inside reference to str
         self.strMatches((opener.subendpos || opener.endpos) + 1, pos - 1);

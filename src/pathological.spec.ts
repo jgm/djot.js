@@ -52,6 +52,8 @@ const tests : Record<string, string> = {
     "[label)](foo ".repeat(30 * n),
   ["balanced nested parens in destinations"]:
     "[label](foo (bar (baz)) ".repeat(30 * n),
+  ["footnote reference starts"]:
+    "[^".repeat(200 * n),
 };
 
 describe("Pathological tests", () => {
