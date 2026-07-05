@@ -42,3 +42,19 @@ $`e=\text{the number $\pi$}`
 .
 <p><span class="math inline">\(e=\text{the number $\pi$}\)</span></p>
 ```
+
+A backslash-escaped `$` is not a math prefix:
+
+```
+\$`e=mc^2`
+.
+<p>$<code>e=mc^2</code></p>
+```
+
+But a `$` after an escaped backslash is:
+
+```
+\\$`e=mc^2`
+.
+<p>\<span class="math inline">\(e=mc^2\)</span></p>
+```

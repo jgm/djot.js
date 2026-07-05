@@ -191,13 +191,19 @@ const matchers = {
       return null;
     }
     const endchar = m.endpos;
+    // a $ immediately before the backticks is a math prefix, unless
+    // it was backslash-escaped (in which case the preceding match is
+    // an "escape" at the backslash's position):
+    const prevMatch = self.matches[self.matches.length - 2];
+    const dollarEscaped = prevMatch !== undefined &&
+      prevMatch.annot === "escape" && prevMatch.endpos === pos - 2;
     if (find(subject, pattDoubleDollars, pos - 2) &&
       !find(subject, pattBackslash, pos - 3)) {
       self.matches.pop(); // remove first $
       self.matches.pop(); // remove second $
       self.addMatch(pos - 2, endchar, "+display_math");
       self.verbatimType = "display_math"
-    } else if (find(subject, pattSingleDollar, pos - 1)) {
+    } else if (find(subject, pattSingleDollar, pos - 1) && !dollarEscaped) {
       self.matches.pop(); // remove $
       self.addMatch(pos - 1, endchar, "+inline_math");
       self.verbatimType = "inline_math";
