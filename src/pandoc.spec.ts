@@ -1065,4 +1065,53 @@ describe("PandocRenderer", () => {
     );
 
   });
+
+  it("renders task list items with empty content", () => {
+    const ast = parse("- [x]\n- [ ] done\n", {});
+    expect(toPandoc(ast)).toStrictEqual(
+      {
+        "pandoc-api-version": [
+          1,
+          23,
+        ],
+        "meta": {},
+        "blocks": [
+          {
+            "t": "BulletList",
+            "c": [
+              [
+                {
+                  "t": "Plain",
+                  "c": [
+                    {
+                      "t": "Str",
+                      "c": "☒"
+                    }
+                  ]
+                }
+              ],
+              [
+                {
+                  "t": "Plain",
+                  "c": [
+                    {
+                      "t": "Str",
+                      "c": "☐"
+                    },
+                    {
+                      "t": "Space"
+                    },
+                    {
+                      "t": "Str",
+                      "c": "done"
+                    }
+                  ]
+                }
+              ]
+            ]
+          }
+        ]
+      }
+    );
+  });
 });

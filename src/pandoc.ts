@@ -134,11 +134,14 @@ class PandocRenderer {
       const self = this;
     return function(item : AstNode) : PandocElt[] {
       let elts = self.toPandocChildren(item);
-      if ("checkbox" in item && item.checkbox && elts[0].t === "Para") {
-        if (item.checkbox === "checked") {
-          elts[0].c.unshift({t: "Str", c: "☒"}, {t: "Space"});
+      if ("checkbox" in item && item.checkbox) {
+        const box : PandocElt =
+          {t: "Str", c: item.checkbox === "checked" ? "☒" : "☐"};
+        if (elts[0] && elts[0].t === "Para") {
+          elts[0].c.unshift(box, {t: "Space"});
         } else {
-          elts[0].c.unshift({t: "Str", c: "☐"}, {t: "Space"});
+          // e.g. a task list item with no content:
+          elts.unshift({t: "Para", c: [box]});
         }
       }
       if ("tight" in list && list.tight) {
