@@ -140,6 +140,8 @@ class Walker {
   current: AstNode;
   stack: {node : HasChildren<AstNode>, childIndex: number}[] = [];
   enter = true;
+  advance = true; // if set to false by the callback, don't move on
+                  // (the callback has already repositioned the walker)
 
   constructor(node : AstNode) {
     this.top = node;
@@ -149,6 +151,10 @@ class Walker {
   walk(callback : (walker : Walker) => void) {
     while (!this.finished) {
       callback(this); // apply the action to current this state
+      if (!this.advance) {
+        this.advance = true;
+        continue;
+      }
       const topStack = this.stack && this.stack[this.stack.length - 1];
       if (this.enter) {
         if ("children" in this.current &&
@@ -215,7 +221,8 @@ const traverse = function(node : AstNode, filterpart : FilterPart) : AstNode {
     let result = applyFilterPartToNode(walker.current, walker.enter,
                                        filterpart);
     const stackTop = walker.stack[walker.stack.length - 1];
-    if (typeof result === "object" && "stop" in result && result.stop) {
+    if (result && typeof result === "object" &&
+        "stop" in result && result.stop) {
       result = result.stop;
       walker.enter = false; // set to exit, which stops traversal of children
     }
@@ -223,11 +230,27 @@ const traverse = function(node : AstNode, filterpart : FilterPart) : AstNode {
       if (Array.isArray(result)) {
         if (stackTop) {
           stackTop.node.children.splice(stackTop.childIndex, 1, ...result);
-          // next line is needed for cases where we delete an element
-          walker.current = stackTop.node.children[stackTop.childIndex];
-          // adjust childIndex to skip multiple items added;
-          if (result.length > 1) {
-            stackTop.childIndex += result.length - 1;
+          if (result.length === 0) {
+            // we deleted the current node; the node now at childIndex
+            // (if any) is the old next sibling, which still needs to
+            // be traversed, so tell the walker not to move on:
+            const next = stackTop.node.children[stackTop.childIndex];
+            if (next) {
+              walker.current = next;
+              walker.enter = true;
+            } else {
+              // we deleted the last child; move up to exit the parent:
+              walker.stack.pop();
+              walker.current = stackTop.node as AstNode;
+              walker.enter = false;
+            }
+            walker.advance = false;
+          } else {
+            walker.current = stackTop.node.children[stackTop.childIndex];
+            // adjust childIndex to skip multiple items added;
+            if (result.length > 1) {
+              stackTop.childIndex += result.length - 1;
+            }
           }
         } else {
           throw(Error("Cannot replace top node with multiple nodes"));

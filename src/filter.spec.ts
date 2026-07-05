@@ -1,5 +1,5 @@
 import { parse, renderAST } from "./parse";
-import { Filter, applyFilter } from "./filter";
+import { Action, Filter, applyFilter } from "./filter";
 
 const capitalizeFilter : Filter = () => {
   return {
@@ -47,6 +47,32 @@ const imagesToDescriptions : Filter = () => {
 const deleteEmph : Filter = () => {
   return {
     emph: (e) => []
+  }
+}
+
+const deleteEmphAndCapitalize : Filter = () => {
+  return {
+    emph: () => [],
+    str: (e) => {
+      e.text = e.text.toUpperCase();
+    }
+  }
+}
+
+const deleteEmphOnEnterAndCapitalize : Filter = () => {
+  return {
+    emph: { enter: () => [] },
+    str: (e) => {
+      e.text = e.text.toUpperCase();
+    }
+  }
+}
+
+// Returning null isn't part of the Transform type, but untyped JS
+// filters (e.g. loaded by the CLI) may do it; it should be a no-op:
+const nullFilter : Filter = () => {
+  return {
+    str: (() => null) as unknown as Action
   }
 }
 
@@ -192,6 +218,49 @@ footnotes
   para
     str text="Hello "
     str text=" friend"
+`);
+  });
+
+  it("visits the sibling after a deleted node", () => {
+    const ast = parse("Hello _x_ there _y_ friend");
+    applyFilter(ast, deleteEmphAndCapitalize);
+    expect(renderAST(ast)).toEqual(
+`doc
+  para
+    str text="HELLO "
+    str text=" THERE "
+    str text=" FRIEND"
+`);
+  });
+
+  it("visits the sibling after a node deleted on enter", () => {
+    const ast = parse("Hello _x_ there");
+    applyFilter(ast, deleteEmphOnEnterAndCapitalize);
+    expect(renderAST(ast)).toEqual(
+`doc
+  para
+    str text="HELLO "
+    str text=" THERE"
+`);
+  });
+
+  it("exits the parent after deleting its last child", () => {
+    const ast = parse("Hello _x_");
+    applyFilter(ast, deleteEmphAndCapitalize);
+    expect(renderAST(ast)).toEqual(
+`doc
+  para
+    str text="HELLO "
+`);
+  });
+
+  it("treats a null return value as a no-op", () => {
+    const ast = parse("hi");
+    expect(() => applyFilter(ast, nullFilter)).not.toThrow();
+    expect(renderAST(ast)).toEqual(
+`doc
+  para
+    str text="hi"
 `);
   });
 
