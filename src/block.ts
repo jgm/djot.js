@@ -39,7 +39,8 @@ const isEolChar = function(cp?: number) : boolean {
 }
 
 const pattEndline = pattern("[ \\t]*\\r?\\n");
-const pattWord = pattern("^\\w+\\s");
+// no "^" needed: the sticky flag anchors the match at the search position
+const pattWord = pattern("\\w+\\s");
 const pattWhitespace = pattern("[ \\t\\r\\n]");
 const pattNonWhitespace = pattern("[^ \\t\\r\\n]+");
 const pattBlockquotePrefix = pattern("[>][ \\t\\r\\n]");
