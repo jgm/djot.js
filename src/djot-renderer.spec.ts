@@ -1,4 +1,4 @@
-import { Doc, Block } from "./ast";
+import { Doc, Block, OrderedListStyle } from "./ast";
 import { parse } from "./parse";
 import { renderDjot } from "./djot-renderer";
 
@@ -436,6 +436,86 @@ etc.
 |g|h|
 `);
    });
+
+  it("emits a separator after a head row at the end of a table", () => {
+    const tbl : Doc = mkdoc([
+    {
+      "tag": "table",
+      "children": [
+        {
+          "tag": "caption",
+          "children": []
+        },
+        {
+          "tag": "row",
+          "children": [
+            {
+              "tag": "cell",
+              "children": [ { "tag": "str", "text": "a" } ],
+              "head": true,
+              "align": "left"
+            },
+            {
+              "tag": "cell",
+              "children": [ { "tag": "str", "text": "b" } ],
+              "head": true,
+              "align": "right"
+            }
+          ],
+          "head": true
+        }
+      ]
+    }]);
+    expect(renderDjot(tbl, {wrapWidth: 30})).toEqual(
+`|a|b|
+|:--|--:|
+`);
+  });
+
+  it("escapes pipes and image openers", () => {
+    const doc : Doc = mkdoc([
+      { tag: "para",
+        children: [ { tag: "str", text: "a|b ![x](y)" } ] }]);
+    expect(renderDjot(doc)).toEqual("a\\|b \\!\\[x\\](y)\n");
+  });
+
+  it("uses correct letters for alphabetic list markers", () => {
+    const mklist = function(style : OrderedListStyle) : Doc {
+      return mkdoc([
+        { tag: "ordered_list",
+          style: style,
+          start: 26,
+          tight: true,
+          children: [
+            { tag: "list_item",
+              children: [
+                { tag: "para",
+                  children: [ { tag: "str", text: "hi" } ] } ] } ] }]);
+    }
+    expect(renderDjot(mklist("a."))).toEqual("z. hi\n");
+    expect(renderDjot(mklist("A."))).toEqual("Z. hi\n");
+  });
+
+  it("preserves start 0 in ordered lists", () => {
+    const doc : Doc = mkdoc([
+      { tag: "ordered_list",
+        style: "1)",
+        start: 0,
+        tight: true,
+        children: [
+          { tag: "list_item",
+            children: [
+              { tag: "para",
+                children: [ { tag: "str", text: "zero" } ] } ] } ] }]);
+    expect(renderDjot(doc)).toEqual("0) zero\n");
+  });
+
+  it("does not emit a spurious newline before an unbreakable first word", () => {
+    const doc : Doc = mkdoc([
+      { tag: "para",
+        children: [ { tag: "str", text: "averyverylongword" } ] }]);
+    expect(renderDjot(doc, {wrapWidth: 5})).toEqual("averyverylongword\n");
+  });
 
    const readme = `# djot.js
 

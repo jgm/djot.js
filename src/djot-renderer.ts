@@ -72,10 +72,10 @@ const formatNumber = function(num : number, style : string) : string {
       numStr = num.toString();
       break;
     case "a":
-      numStr = String.fromCodePoint(96 + (num % 26));
+      numStr = String.fromCodePoint(97 + ((num - 1) % 26));
       break;
     case "A":
-      numStr = String.fromCodePoint(64 + (num % 26));
+      numStr = String.fromCodePoint(65 + ((num - 1) % 26));
       break;
     case "i":
       numStr = toRoman(num).toLowerCase();
@@ -112,7 +112,7 @@ class DjotRenderer {
   }
 
   escape (s : string) : string {
-    s = s.replace(/([~`'"${}[\]^<>\\*_]|-(?=-)|!(=\[)|\.(?=\.))/g, "\\$1");
+    s = s.replace(/([~`'"${}[\]^<>\\*_|]|-(?=-)|!(?=\[)|\.(?=\.))/g, "\\$1");
     if (this.column === 0 || this.column === this.endOfPrefix) {
       s = s.replace(/^#/, "\\#");
     }
@@ -188,6 +188,9 @@ class DjotRenderer {
           return; // can't wrap
         }
         idx--;
+      }
+      if (idx < 0) {
+        return; // no space to break at
       }
     }
 
@@ -384,7 +387,7 @@ class DjotRenderer {
     },
     ordered_list: (node : OrderedList)  => {
       const style = node.style;
-      const start = node.start || 1;
+      const start = node.start ?? 1;
       const items = node.children;
       const tight = node.tight;
       for (let i=0; i < items.length; i++) {
@@ -462,30 +465,32 @@ class DjotRenderer {
     table: (node : Table) => {
       const captions : Caption[] = node.children.filter(isCaption);
       const rows : Row[] = node.children.filter(isRow);
+      const renderSeparator = (headRow : Row) : void => {
+        for (let j=0; j < headRow.children.length; j++) {
+          if (j === 0) { this.lit("|"); }
+          switch (headRow.children[j].align) {
+            case "left":
+              this.lit(":--");
+              break;
+            case "right":
+              this.lit("--:");
+              break;
+            case "center":
+              this.lit(":-:")
+              break;
+            default:
+              this.lit("---");
+          }
+          this.lit("|");
+        }
+        this.cr();
+      };
       for (let i=0; i < rows.length; i++) {
         const row = rows[i];
         // if last row was head and this is not, add separator line
         if ("head" in row && !row.head && i > 0 &&
             rows[i-1].head) {
-          const lastRow : Row = rows[i-1];
-          for (let j=0; j < lastRow.children.length; j++) {
-            if (j === 0) { this.lit("|"); }
-            switch (lastRow && lastRow.children[j].align) {
-              case "left":
-                this.lit(":--");
-                break;
-              case "right":
-                this.lit("--:");
-                break;
-              case "center":
-                this.lit(":-:")
-                break;
-              default:
-                this.lit("---");
-            }
-            this.lit("|");
-          }
-          this.cr();
+          renderSeparator(rows[i-1]);
         }
         // now add the proper row
         for (let j=0; j < row.children.length; j++) {
@@ -501,6 +506,11 @@ class DjotRenderer {
           this.lit("|");
         }
         this.cr();
+      }
+      // a head row at the end still needs its separator line;
+      // otherwise its headness would be lost on reparsing:
+      if (rows.length > 0 && rows[rows.length - 1].head) {
+        renderSeparator(rows[rows.length - 1]);
       }
       if (captions.length > 0 && captions[0].children.length > 0) {
         this.newline();
