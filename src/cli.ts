@@ -93,8 +93,8 @@ while (args[i]) {
     case "-w":
       i++;
       width = parseInt(args[i]);
-      if (typeof width !== "number") {
-        process.stdout.write("--width/-w expects a numerical argument\n");
+      if (isNaN(width)) {
+        process.stderr.write("--width/-w expects a numerical argument\n");
         process.exit(1);
       }
       break;
@@ -123,8 +123,8 @@ while (args[i]) {
         for (let i=1; i < arg.length; i++) {
           args.push("-" + arg.substring(i,i+1));
         }
-      } else if (/=/.test(arg)) { // --width=10
-        for (const argpart in arg.split(/=/)) {
+      } else if (/^-.*=/.test(arg)) { // --width=10
+        for (const argpart of arg.split(/=/)) {
           args.push(argpart);
         }
       } else if (/^-/.test(arg)) {
