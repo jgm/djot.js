@@ -1,5 +1,9 @@
 import { parse } from "./parse";
-import { fromPandoc, toPandoc } from "./pandoc";
+import { fromPandoc, toPandoc, Pandoc, PandocElt } from "./pandoc";
+
+const mkpandoc = function(blocks : PandocElt[]) : Pandoc {
+  return { ["pandoc-api-version"]: [1,23], meta: {}, blocks: blocks };
+}
 
 describe("PandocParser", () => {
   it("parses some things", () => {
@@ -167,7 +171,7 @@ describe("PandocParser", () => {
                     [
                       [
                         {
-                          "t": "AlignDefault"
+                          "t": "AlignRight"
                         },
                         {
                           "t": "ColWidthDefault"
@@ -637,6 +641,85 @@ describe("PandocParser", () => {
     );
 
   });
+
+  it("handles Example list style without crashing", () => {
+    const pd = mkpandoc([
+      {t: "OrderedList",
+       c: [[1, {t: "Example"}, {t: "TwoParens"}],
+           [[{t: "Para", c: [{t: "Str", c: "hi"}]}]]]}]);
+    const ast = fromPandoc(pd);
+    expect(ast.children[0]).toStrictEqual(
+      {tag: "ordered_list",
+       style: "(1)",
+       start: 1,
+       tight: false,
+       children: [
+         {tag: "list_item",
+          children: [{tag: "para", children: [{tag: "str", text: "hi"}]}]}]});
+  });
+
+  it("keeps all items of a mixed bullet list", () => {
+    const pd = mkpandoc([
+      {t: "BulletList",
+       c: [[{t: "Para", c: [{t: "Str", c: "☒"}, {t: "Space"},
+                            {t: "Str", c: "done"}]}],
+           [{t: "Para", c: [{t: "Str", c: "plain"}]}]]}]);
+    const ast = fromPandoc(pd);
+    expect(ast.children[0]).toStrictEqual(
+      {tag: "bullet_list",
+       style: "-",
+       tight: false,
+       children: [
+         {tag: "list_item",
+          children: [{tag: "para",
+                      children: [{tag: "str", text: "☒ done"}]}]},
+         {tag: "list_item",
+          children: [{tag: "para",
+                      children: [{tag: "str", text: "plain"}]}]}]});
+  });
+
+  it("does not mutate its input when detecting checkboxes", () => {
+    const pd = mkpandoc([
+      {t: "BulletList",
+       c: [[{t: "Para", c: [{t: "Str", c: "☒"}, {t: "Space"},
+                            {t: "Str", c: "done"}]}]]}]);
+    const before = JSON.stringify(pd);
+    const ast = fromPandoc(pd);
+    expect(ast.children[0]).toStrictEqual(
+      {tag: "task_list",
+       tight: false,
+       children: [
+         {tag: "task_list_item",
+          checkbox: "checked",
+          children: [{tag: "para",
+                      children: [{tag: "str", text: "done"}]}]}]});
+    expect(JSON.stringify(pd)).toEqual(before);
+  });
+
+  it("only treats a whole class token 'section' as a section", () => {
+    const pd = mkpandoc([
+      {t: "Div",
+       c: [["", ["main-section"], []],
+           [{t: "Para", c: [{t: "Str", c: "x"}]}]]}]);
+    const ast = fromPandoc(pd);
+    expect(ast.children[0]).toStrictEqual(
+      {tag: "div",
+       attributes: {class: "main-section"},
+       children: [{tag: "para", children: [{tag: "str", text: "x"}]}]});
+  });
+
+  it("preserves a __proto__ attribute key without polluting prototypes", () => {
+    const pd = mkpandoc([
+      {t: "Div",
+       c: [["", [], [["__proto__", "evil"]]],
+           [{t: "Para", c: [{t: "Str", c: "x"}]}]]}]);
+    const ast : any = fromPandoc(pd);
+    const attrs = ast.children[0].attributes;
+    expect(Object.prototype.hasOwnProperty.call(attrs, "__proto__"))
+      .toBe(true);
+    expect(attrs["__proto__"]).toEqual("evil");
+    expect(({} as any)["__proto__"]).toEqual(Object.prototype);
+  });
 });
 describe("PandocRenderer", () => {
   it("renders some things", () => {
@@ -722,12 +805,7 @@ describe("PandocRenderer", () => {
                 [
                   "section"
                 ],
-                [
-                  [
-                    "id",
-                    "heading"
-                  ]
-                ]
+                []
               ],
               [
                 {
@@ -824,7 +902,7 @@ describe("PandocRenderer", () => {
                     [
                       [
                         {
-                          "t": "AlignDefault"
+                          "t": "AlignRight"
                         },
                         {
                           "t": "ColWidthDefault"
@@ -1113,5 +1191,20 @@ describe("PandocRenderer", () => {
         ]
       }
     );
+  });
+
+  it("computes colspecs from rows, not from the caption", () => {
+    const ast = parse("|a|b|\n^ my table caption\n", {});
+    const table : any = toPandoc(ast).blocks[0];
+    expect(table.c[2]).toStrictEqual(
+      [[{t: "AlignDefault"}, {t: "ColWidthDefault"}],
+       [{t: "AlignDefault"}, {t: "ColWidthDefault"}]]);
+  });
+
+  it("issues warnings for missing references", () => {
+    const warnings : string[] = [];
+    const ast = parse("[a][missing]\n", {});
+    toPandoc(ast, {warn: (w) => warnings.push(w.message)});
+    expect(warnings).toEqual(["Reference missing not found."]);
   });
 });

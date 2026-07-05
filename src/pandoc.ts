@@ -68,7 +68,7 @@ const toPandocAttr = function(node : AstNode) : PandocAttr {
          (attributes.class && attributes.class.split(" ")) || [];
     const kvs = [];
     for (const k in attributes) {
-      if (k !== id && k !== "class") {
+      if (k !== "id" && k !== "class") {
        kvs.push([k, attributes[k]]);
       }
     }
@@ -100,7 +100,7 @@ class PandocRenderer {
         em_dash: "—",
         en_dash: "–"
       };
-    this.warn ||= (() => {});
+    this.warn = options.warn || (() => {});
   }
 
   toPandocChildren (node : AstNode) : PandocElt[] {
@@ -261,14 +261,16 @@ class PandocRenderer {
           if (!("children" in row)) {
             break;
           }
-          if (colspecs.length === 0) {
-            colspecs = row.children.map(toColSpec);
-          }
           if (row.tag === "caption") {
             if (row.children.length) {
               caption = this.toPandocChildren(row);
             }
-          } else if (row.head) {
+            continue;
+          }
+          if (colspecs.length === 0) {
+            colspecs = row.children.map(toColSpec);
+          }
+          if (row.head) {
             if (currows.length === 0) {
               curheads.push(toPandocRow(row));
             } else {
@@ -485,7 +487,11 @@ const fromPandocAttr = function(pattr : any[]) : Attributes | null {
     attr.class = pattr[1].join(" ");
   }
   for (let i=0; i<pattr[2].length; i++) {
-    attr[pattr[2][i][0].toString()] = pattr[2][i][1];
+    // defineProperty, so that a key like "__proto__" is stored as an
+    // ordinary own property instead of mutating the prototype:
+    Object.defineProperty(attr, pattr[2][i][0].toString(),
+      { value: pattr[2][i][1],
+        writable: true, enumerable: true, configurable: true });
   }
   if (Object.keys(attr).length === 0) {
     return null;
@@ -498,29 +504,34 @@ const isPlainOrPara = function(x : PandocElt) : boolean {
   return (x.t === "Plain" || x.t === "Para");
 }
 
+// Detect (without modifying the input) whether a list item starts
+// with a checkbox character:
 const hasCheckbox = function(elt : PandocElt[]) : CheckboxStatus | null {
-  if (!elt[0]) {
-    return null;
-  }
   const x = elt[0];
-  if (!isPlainOrPara(x)) {
+  if (!x || !isPlainOrPara(x)) {
     return null;
   }
-  if (x.c.length >= 2 && x.c[0].t === "Str" && x.c[1].t === "Space") {
+  if (x.c.length >= 1 && x.c[0].t === "Str" &&
+      (x.c.length === 1 || x.c[1].t === "Space")) {
     if (x.c[0].c === "☒") {
-      x.c.shift(); // remove the checkbox
-      x.c.shift();
       return "checked";
     } else if (x.c[0].c === "☐") {
-      x.c.shift(); // remove the checkbox
-      x.c.shift();
       return "unchecked";
-    } else {
-      return null;
     }
-  } else {
-    return null;
   }
+  return null;
+}
+
+// Return a copy of a task list item's blocks with the leading
+// checkbox (and following space) removed, leaving the input unchanged:
+const stripCheckbox = function(elt : PandocElt[]) : PandocElt[] {
+  const first = elt[0];
+  const skip = (first.c[1] && first.c[1].t === "Space") ? 2 : 1;
+  const rest = first.c.slice(skip);
+  if (rest.length === 0) { // e.g. a task list item with no content
+    return elt.slice(1);
+  }
+  return [{t: first.t, c: rest}, ...elt.slice(1)];
 }
 
 class PandocParser {
@@ -708,16 +719,17 @@ class PandocParser {
                 })};
 
       case "Div": {
-        let attr = fromPandocAttr(block.c[0]);
-        const tag = /\bsection\b/.test((attr && attr.class) || "")
-                    ? "section" : "div";
+        const attr = fromPandocAttr(block.c[0]);
+        const classes = ((attr && attr.class) || "").split(/ +/);
+        const tag = classes.includes("section") ? "section" : "div";
         const blocks = block.c[1].map((b : PandocElt) => {
                       return this.fromPandocBlock(b);
                     });
-        if (tag === "section") {
-          attr = attr || {};
-          attr.class = attr.class.replace(/section */, "");
-          if (!attr.class) {
+        if (tag === "section" && attr) {
+          const rest = classes.filter((c) => c !== "section" && c !== "");
+          if (rest.length > 0) {
+            attr.class = rest.join(" ");
+          } else {
             delete attr.class;
           }
           return {tag: "section", attributes: attr, children: blocks};
@@ -806,9 +818,16 @@ class PandocParser {
         } else {
           rawitems = block.c[1];
         }
+        // treat as a task list only if every item has a checkbox;
+        // in mixed lists, checkboxes remain literal content:
+        const checkboxes : (CheckboxStatus | null)[] =
+                         rawitems.map(hasCheckbox);
+        const isTaskList = block.t === "BulletList" &&
+          rawitems.length > 0 && checkboxes.every((c) => c !== null);
         for (let i=0; i<rawitems.length; i++) {
-          const checkbox = hasCheckbox(rawitems[i]);
-          const children = rawitems[i].map((b : PandocElt) => {
+          const rawblocks = isTaskList ? stripCheckbox(rawitems[i])
+                                       : rawitems[i];
+          const children = rawblocks.map((b : PandocElt) => {
                                    if (b.t === "Plain") {
                                      tight = true;
                                    } else if (b.t === "Para") {
@@ -816,9 +835,9 @@ class PandocParser {
                                    }
                                    return this.fromPandocBlock(b);
                                 });
-          if (checkbox !== null) {
+          if (isTaskList) {
             taskListItems.push( { tag: "task_list_item",
-                                  checkbox: checkbox,
+                                  checkbox: checkboxes[i] as CheckboxStatus,
                                   children: children });
           } else {
             items.push( { tag: "list_item",
@@ -826,7 +845,7 @@ class PandocParser {
           }
         }
         if (block.t === "BulletList") {
-          if (taskListItems.length > 0) {
+          if (isTaskList) {
             return {tag: "task_list",
                     tight: tight,
                     children: taskListItems};
@@ -839,11 +858,11 @@ class PandocParser {
         } else if (block.t === "OrderedList") {
           const start = block.c[0][0];
           let pandocStyle = block.c[0][1].t;
-          if (pandocStyle === "DefaultStyle") {
+          if (!styleMap[pandocStyle]) { // e.g. DefaultStyle, Example
             pandocStyle = "Decimal";
           }
           let pandocDelim = block.c[0][2].t;
-          if (pandocDelim === "DefaultDelim") {
+          if (!styleMap[pandocStyle][pandocDelim]) { // e.g. DefaultDelim
             pandocDelim = "Period";
           }
           const style : OrderedListStyle = styleMap[pandocStyle][pandocDelim];
