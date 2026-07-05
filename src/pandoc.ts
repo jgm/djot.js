@@ -20,6 +20,12 @@ interface PandocElt {
 
 type PandocAttr = [ id : string, classes : string[], kvs: (string[])[] ];
 
+// Look up a key that may be user-supplied (e.g. "constructor") without
+// hitting inherited Object.prototype properties:
+const getOwn = function<T>(obj : Record<string, T>, key : string) : T | undefined {
+  return Object.prototype.hasOwnProperty.call(obj, key) ? obj[key] : undefined;
+}
+
 const styleMap : Record<string,Record<string,OrderedListStyle>> =
   { Decimal:    { Period: "1.",
                   OneParen: "1)",
@@ -369,7 +375,7 @@ class PandocRenderer {
         let destination = node.destination || "";
         const linkAttrs : Record<string,any> = {};
         if (node.reference) {
-          const ref = this.references[node.reference];
+          const ref = getOwn(this.references, node.reference);
           if (ref) {
             destination = ref.destination || "";
             const attributes = {
@@ -444,7 +450,7 @@ class PandocRenderer {
         break;
 
       case "footnote_reference": {
-        const note = this.footnotes[node.text];
+        const note = getOwn(this.footnotes, node.text);
         if (note) {
           elts.push({ t: "Note", c: this.toPandocChildren(note) });
         } else {

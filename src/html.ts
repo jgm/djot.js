@@ -10,6 +10,12 @@ interface HTMLRenderOptions extends Options {
 const reNeedsEscape = /[&<>]/;
 const reNeedsEscapeAttr = /[&<>"]/;
 
+// Look up a key that may be user-supplied (e.g. "constructor") without
+// hitting inherited Object.prototype properties:
+const getOwn = function<T>(obj : Record<string, T>, key : string) : T | undefined {
+  return Object.prototype.hasOwnProperty.call(obj, key) ? obj[key] : undefined;
+}
+
 class HTMLRenderer {
   warn: (warning : Warning) => void;
   options: HTMLRenderOptions;
@@ -24,11 +30,11 @@ class HTMLRenderer {
     this.warn = options.warn || (() => {});
     this.options = options || {};
     this.tight = false;
-    this.footnoteIndex = {};
+    this.footnoteIndex = Object.create(null); // keys are user-supplied labels
     this.nextFootnoteIndex = 1;
-    this.fnrefIdEmitted = {};
-    this.references = {};
-    this.autoReferences = {};
+    this.fnrefIdEmitted = Object.create(null);
+    this.references = Object.create(null);
+    this.autoReferences = Object.create(null);
   }
 
   escape(s: string): string {
@@ -155,7 +161,7 @@ class HTMLRenderer {
   renderNotes(notes: Record<string, Footnote>): string {
     let result  = "";
     const orderedFootnotes = [];
-    const renderedNotes : Record<string, string> = {};
+    const renderedNotes : Record<string, string> = Object.create(null);
     for (const k in notes) {
       renderedNotes[k] = this.renderChildren(notes[k]);
     }
@@ -409,7 +415,10 @@ class HTMLRenderer {
         const extraAttr : Record<string,string> = {};
         let dest: string | undefined = node.destination;
         if (node.reference) {
-          const ref = this.references[node.reference] ||this.autoReferences[node.reference];
+          // use getOwn because this.references may be a plain object
+          // (e.g. from a doc parsed from external JSON):
+          const ref = getOwn(this.references, node.reference) ||
+                      getOwn(this.autoReferences, node.reference);
           if (ref) {
             dest = ref.destination;
             if (node.tag === "image") {

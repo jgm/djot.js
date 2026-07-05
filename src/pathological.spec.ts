@@ -1,4 +1,5 @@
 import { parse } from "./parse";
+import { renderHTML } from "./html";
 import { performance } from "perf_hooks";
 
 const n = 500;
@@ -67,4 +68,43 @@ describe("Pathological tests", () => {
       expect(end - start).toBeLessThan(1000);
     });
   }
+});
+
+// Labels that collide with Object.prototype properties must behave
+// exactly like any other undefined label:
+describe("Labels inherited from Object.prototype", () => {
+  const badLabels = ["constructor", "toString", "hasOwnProperty", "__proto__"];
+
+  const html = (s : string) : string => renderHTML(parse(s));
+
+  it("treats undefined footnote labels like any other label", () => {
+    for (const label of badLabels) {
+      expect(html(`hi[^${label}]\n`)).toEqual(html("hi[^zzz]\n"));
+    }
+  });
+
+  it("treats undefined reference labels like any other label", () => {
+    for (const label of badLabels) {
+      expect(html(`[x][${label}]\n`)).toEqual(html("[x][zzz]\n"));
+    }
+  });
+
+  it("resolves defined references with prototype-colliding labels", () => {
+    for (const label of badLabels) {
+      expect(html(`[x][${label}]\n\n[${label}]: /url\n`))
+        .toEqual("<p><a href=\"/url\">x</a></p>\n");
+    }
+  });
+
+  it("resolves defined footnotes with prototype-colliding labels", () => {
+    for (const label of badLabels) {
+      expect(html(`hi[^${label}]\n\n[^${label}]: note\n`))
+        .toEqual(html("hi[^zzz]\n\n[^zzz]: note\n"));
+    }
+  });
+
+  it("does not treat prototype-colliding heading ids as duplicates", () => {
+    expect(html("# constructor\n"))
+      .toEqual("<section id=\"constructor\">\n<h1>constructor</h1>\n</section>\n");
+  });
 });

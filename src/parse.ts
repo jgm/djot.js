@@ -171,10 +171,13 @@ const parseFromEvents = function(events: Event[],
 
   let context = Context.Normal;
   let accumulatedText = "";
-  const references: Record<string, Reference> = {};
-  const autoReferences: Record<string, Reference> = {};
-  const footnotes: Record<string, Footnote> = {};
-  const identifiers: Record<string, boolean> = {}; // identifiers used
+  // Use null-prototype objects for maps with user-supplied keys, so
+  // that labels like "constructor" or "__proto__" don't hit inherited
+  // Object.prototype properties:
+  const references: Record<string, Reference> = Object.create(null);
+  const autoReferences: Record<string, Reference> = Object.create(null);
+  const footnotes: Record<string, Footnote> = Object.create(null);
+  const identifiers: Record<string, boolean> = Object.create(null); // identifiers used
   const blockAttributes: Attributes = {}; // accumulated block attributes
   let listDepth = 0;
   const warn = options.warn || (() => {});
