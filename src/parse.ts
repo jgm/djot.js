@@ -252,6 +252,53 @@ const parseFromEvents = function(events: Event[],
     }
   }
 
+  const getLastChildEnd = function(node: Container): SourceLoc | undefined {
+    for (let i = node.children.length - 1; i >= 0; i--) {
+      const child = node.children[i];
+      if (child.pos) {
+        return child.pos.end;
+      }
+    }
+    return undefined;
+  }
+
+  const getLastBlockEnd = function(node: Container | AstNode):
+      SourceLoc | undefined {
+    if ("children" in node) {
+      for (let i = node.children.length - 1; i >= 0; i--) {
+        const child = node.children[i];
+        if ("tag" in child && isBlock(child) && child.pos) {
+          return child.pos.end;
+        }
+        const end = getLastBlockEnd(child);
+        if (end) {
+          return end;
+        }
+      }
+    }
+    return undefined;
+  }
+
+  const tightenContainerEnd = function(node: Container): void {
+    if (!node.pos) {
+      return;
+    }
+    const end = getLastChildEnd(node);
+    if (end) {
+      node.pos.end = end;
+    }
+  }
+
+  const tightenListEnd = function(node: Container): void {
+    if (!node.pos) {
+      return;
+    }
+    const end = getLastBlockEnd(node);
+    if (end) {
+      node.pos.end = end;
+    }
+  }
+
 
   const handlers : Record<string, (suffixes : string[],
                                    startpos : number,
@@ -812,6 +859,11 @@ const parseFromEvents = function(events: Event[],
         if (!listStyle) {
           throw (new Error("No style defined for list"));
         }
+        if (listStyle === ":") {
+          tightenContainerEnd(node);
+        } else {
+          tightenListEnd(node);
+        }
         const listStart = getListStart(node.data.firstMarker, listStyle);
         if (listStyle === ":") {
           addChildToTip({
@@ -869,6 +921,10 @@ const parseFromEvents = function(events: Event[],
 
       ["-list_item"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
+        // A lazily closed item (e.g. before a blank line that ends the list)
+        // must not extend past its own content, so the parent list's
+        // tightened range still contains it.
+        tightenContainerEnd(node);
         if (node.data.definitionList) {
           if (node.children[0] && node.children[0].tag === "para") {
             const term: Term =
@@ -934,6 +990,7 @@ const parseFromEvents = function(events: Event[],
 
       ["-block_quote"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
+        tightenContainerEnd(node);
         addChildToTip({
           tag: "block_quote",
           children: node.children,
@@ -949,6 +1006,7 @@ const parseFromEvents = function(events: Event[],
 
       ["-table"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
+        tightenContainerEnd(node);
         const rows = node.children;
         let caption: Caption = {
           tag: "caption",
@@ -1059,6 +1117,7 @@ const parseFromEvents = function(events: Event[],
 
       ["-footnote"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
+        tightenContainerEnd(node);
         if (node.data.label) {
           const lab = normalizeLabel(node.data.label);
           footnotes[lab] =
