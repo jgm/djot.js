@@ -197,6 +197,88 @@ describe("Parser", () => {
     );
   });
 
+  it("uses tight source position ends for lazy-closing block quotes", () => {
+    const ast = parse("> q\n\nAfter.\n", {sourcePositions: true}) as any;
+    const blockQuote = ast.children[0];
+    const para = ast.children[1];
+    expect(blockQuote.pos).toEqual({
+      "start": { "line": 1, "col": 1, "offset": 0 },
+      "end": { "line": 2, "col": 0, "offset": 3 }
+    });
+    expect(para.pos).toEqual({
+      "start": { "line": 3, "col": 1, "offset": 5 },
+      "end": { "line": 4, "col": 0, "offset": 11 }
+    });
+    expect(blockQuote.pos.end.offset).toBeLessThan(para.pos.start.offset);
+  });
+
+  it("uses tight source position ends for lazy-closing tables", () => {
+    const ast = parse("| a |\n| --- |\n| 1 |\n\nAfter.\n",
+      {sourcePositions: true}) as any;
+    const table = ast.children[0];
+    const para = ast.children[1];
+    expect(table.pos).toEqual({
+      "start": { "line": 1, "col": 1, "offset": 0 },
+      "end": { "line": 4, "col": 0, "offset": 19 }
+    });
+    expect(para.pos).toEqual({
+      "start": { "line": 5, "col": 1, "offset": 21 },
+      "end": { "line": 6, "col": 0, "offset": 27 }
+    });
+    expect(table.pos.end.offset).toBeLessThan(para.pos.start.offset);
+  });
+
+  it("uses tight source position ends for lazy-closing lists", () => {
+    const ast = parse("- a\n- b\n\nAfter.\n",
+      {sourcePositions: true}) as any;
+    const list = ast.children[0];
+    const para = ast.children[1];
+    expect(list.pos).toEqual({
+      "start": { "line": 1, "col": 1, "offset": 0 },
+      "end": { "line": 3, "col": 0, "offset": 7 }
+    });
+    expect(para.pos).toEqual({
+      "start": { "line": 4, "col": 1, "offset": 9 },
+      "end": { "line": 5, "col": 0, "offset": 15 }
+    });
+    expect(list.pos.end.offset).toBeLessThan(para.pos.start.offset);
+    // The lazily closed last item must stay contained in the list's range.
+    const lastItem = list.children[list.children.length - 1];
+    expect(lastItem.pos.end.offset).toBeLessThanOrEqual(list.pos.end.offset);
+  });
+
+  it("uses tight source position ends for lazy-closing definition lists", () => {
+    const ast = parse(": term\n  def\n\nAfter.\n",
+      {sourcePositions: true}) as any;
+    const list = ast.children[0];
+    const para = ast.children[1];
+    expect(list.pos).toEqual({
+      "start": { "line": 1, "col": 1, "offset": 0 },
+      "end": { "line": 3, "col": 0, "offset": 12 }
+    });
+    expect(para.pos).toEqual({
+      "start": { "line": 4, "col": 1, "offset": 14 },
+      "end": { "line": 5, "col": 0, "offset": 20 }
+    });
+    expect(list.pos.end.offset).toBeLessThan(para.pos.start.offset);
+  });
+
+  it("uses tight source position ends for lazy-closing footnotes", () => {
+    const ast = parse("[^a]: note\n\nAfter.\n",
+      {sourcePositions: true}) as any;
+    const footnote = ast.footnotes.a;
+    const para = ast.children[0];
+    expect(footnote.pos).toEqual({
+      "start": { "line": 1, "col": 1, "offset": 0 },
+      "end": { "line": 2, "col": 0, "offset": 10 }
+    });
+    expect(para.pos).toEqual({
+      "start": { "line": 3, "col": 1, "offset": 12 },
+      "end": { "line": 4, "col": 0, "offset": 18 }
+    });
+    expect(footnote.pos.end.offset).toBeLessThan(para.pos.start.offset);
+  });
+
   it("renders pretty", () => {
     const ast = parse("hi there\nfriend\n\nnew para\n", {sourcePositions: true});
     expect(renderAST(ast)).toEqual(
