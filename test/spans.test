@@ -17,3 +17,21 @@ not a [span] {#id}.
 .
 <p><span id="ident">nested <span class="blue">span</span></span></p>
 ```
+
+```
+[not a span]{#a<b}
+.
+<p>[not a span]{#a&lt;b}</p>
+```
+
+```
+[*not* a span]{#a<b}
+.
+<p>[<strong>not</strong> a span]{#a&lt;b}</p>
+```
+
+```
+[not a span]{#a
+.
+<p>[not a span]{#a</p>
+```

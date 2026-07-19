@@ -430,6 +430,12 @@ const matchers = {
         self.addMatch(opener.startpos, opener.endpos, "+span",
                       opener.matchIndex);
         self.addMatch(pos, pos, "-span");
+        if (self.allowAttributes) {
+          // speculative: revert to literal brackets if the attribute
+          // parse that must follow fails
+          self.pendingSpan = { openMatchIndex: opener.matchIndex,
+                               closeMatchIndex: self.matches.length - 1 };
+        }
         // remove any openers between [ and ]
         self.clearOpeners(opener.startpos, pos);
         return pos + 1;
@@ -562,6 +568,7 @@ class InlineParser {
   attributeParser: null | AttributeParser; // attribute parser
   attributeStart: null | number; // start pos of potential attribute
   attributeSlices: null | { startpos: number, endpos: number }[]; // slices we've tried to parse as attributes
+  pendingSpan: null | { openMatchIndex: number, closeMatchIndex: number }; // span awaiting attribute confirmation
   matchers: Record<number, (self: InlineParser, sp: number, ep: number) => null | number>; // functions to handle different code points
 
   constructor(subject: string,
@@ -580,6 +587,7 @@ class InlineParser {
     this.attributeParser = null;
     this.attributeStart = null;
     this.attributeSlices = null;
+    this.pendingSpan = null;
     this.matchers = matchers;
   }
 
@@ -631,6 +639,14 @@ class InlineParser {
     const slices = this.attributeSlices;
     if (slices === null) {
       return;
+    }
+    const pendingSpan = this.pendingSpan;
+    if (pendingSpan) {
+      // a span is only a span when followed by a valid attribute;
+      // make the brackets literal again
+      this.matches[pendingSpan.openMatchIndex].annot = "str";
+      this.matches[pendingSpan.closeMatchIndex].annot = "str";
+      this.pendingSpan = null;
     }
     this.allowAttributes = false;
     this.attributeParser = null;
@@ -778,6 +794,7 @@ class InlineParser {
           this.attributeParser = null;
           this.attributeStart = null;
           this.attributeSlices = null;
+          this.pendingSpan = null;
           pos = ep + 1;
         } else if (result.status === "fail") {
           this.reparseAttributes();
