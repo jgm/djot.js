@@ -252,50 +252,10 @@ const parseFromEvents = function(events: Event[],
     }
   }
 
-  const getLastChildEnd = function(node: Container): SourceLoc | undefined {
-    for (let i = node.children.length - 1; i >= 0; i--) {
-      const child = node.children[i];
-      if (child.pos) {
-        return child.pos.end;
-      }
-    }
-    return undefined;
-  }
-
-  const getLastBlockEnd = function(node: Container | AstNode):
-      SourceLoc | undefined {
-    if ("children" in node) {
-      for (let i = node.children.length - 1; i >= 0; i--) {
-        const child = node.children[i];
-        if ("tag" in child && isBlock(child) && child.pos) {
-          return child.pos.end;
-        }
-        const end = getLastBlockEnd(child);
-        if (end) {
-          return end;
-        }
-      }
-    }
-    return undefined;
-  }
-
   const tightenContainerEnd = function(node: Container): void {
-    if (!node.pos) {
-      return;
-    }
-    const end = getLastChildEnd(node);
-    if (end) {
-      node.pos.end = end;
-    }
-  }
-
-  const tightenListEnd = function(node: Container): void {
-    if (!node.pos) {
-      return;
-    }
-    const end = getLastBlockEnd(node);
-    if (end) {
-      node.pos.end = end;
+    const lastChild = node.children[node.children.length - 1];
+    if (node.pos && lastChild && lastChild.pos) {
+      node.pos.end = lastChild.pos.end;
     }
   }
 
@@ -859,11 +819,7 @@ const parseFromEvents = function(events: Event[],
         if (!listStyle) {
           throw (new Error("No style defined for list"));
         }
-        if (listStyle === ":") {
-          tightenContainerEnd(node);
-        } else {
-          tightenListEnd(node);
-        }
+        tightenContainerEnd(node);
         const listStart = getListStart(node.data.firstMarker, listStyle);
         if (listStyle === ":") {
           addChildToTip({
