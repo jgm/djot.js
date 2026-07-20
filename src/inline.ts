@@ -154,6 +154,7 @@ const betweenMatched = function(
             if (linkOpener.annot === "explicit_link" &&
                 opener.startpos < linkOpener.startpos) {
               // opener is outside the link, don't match
+              self.hasUnmatchedClosers = true;
               self.addMatch(pos, endcloser, defaultmatch);
               return endcloser + 1;
             }
@@ -176,6 +177,9 @@ const betweenMatched = function(
       self.addOpener(e, startopener, pos, defaultmatch);
       return pos + 1;
     } else {
+      if (can_close) {
+        self.hasUnmatchedClosers = true;
+      }
       self.addMatch(pos, endcloser, defaultmatch);
       return endcloser + 1;
     }
@@ -570,6 +574,7 @@ class InlineParser {
   attributeSlices: null | { startpos: number, endpos: number }[]; // slices we've tried to parse as attributes
   pendingSpan: null | { openMatchIndex: number, closeMatchIndex: number }; // span awaiting attribute confirmation
   matchers: Record<number, (self: InlineParser, sp: number, ep: number) => null | number>; // functions to handle different code points
+  hasUnmatchedClosers: boolean;
 
   constructor(subject: string,
               options: Options = {}) {
@@ -589,6 +594,7 @@ class InlineParser {
     this.attributeSlices = null;
     this.pendingSpan = null;
     this.matchers = matchers;
+    this.hasUnmatchedClosers = false;
   }
 
   addMatch(startpos: number, endpos: number,
