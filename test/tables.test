@@ -103,6 +103,49 @@ determines the alignment for following cells, until the next header.
 </table>
 ```
 
+A separator row's cells must start immediately after the leading
+`|`. With a leading space (`| --- |`), the row is not a separator
+and the preceding row stays a `<td>` row; without the space
+(`|---|`) the preceding row becomes a `<th>` header row:
+
+```
+| a | b |
+| --- | --- |
+| c | d |
+.
+<table>
+<tr>
+<td>a</td>
+<td>b</td>
+</tr>
+<tr>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td>c</td>
+<td>d</td>
+</tr>
+</table>
+```
+
+```
+| a | b |
+|---|---|
+| c | d |
+.
+<table>
+<tr>
+<th>a</th>
+<th>b</th>
+</tr>
+<tr>
+<td>c</td>
+<td>d</td>
+</tr>
+</table>
+```
+
 ```
 | |
 .

@@ -132,3 +132,15 @@ before a closing fence, the fenced div is implicitly closed.
 </code></pre>
 </div>
 ````
+
+A fenced div containing nothing but a blank line is valid and
+emits an empty `<div>`:
+
+```
+:::
+
+:::
+.
+<div>
+</div>
+```
