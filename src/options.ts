@@ -28,9 +28,15 @@ interface Options {
   warn?: (warning : Warning) => void;
 }
 
+interface IncludeOptions {
+  readFile?: (path: string) => string | null;
+  basePath?: string;
+}
+
 export type {
   SourceLoc,
   Options,
+  IncludeOptions,
 }
 export {
   Warning,

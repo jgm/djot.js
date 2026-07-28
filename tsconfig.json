@@ -28,6 +28,7 @@
     "src/index.ts",
     "src/version.ts",
     "src/options.ts",
+    "src/include.ts",
     "src/cli.ts"
   ]
 }
