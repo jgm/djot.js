@@ -129,10 +129,13 @@ const betweenMatched = function(
       endcloser = pos + 1;
     }
 
-    if (has_open_marker && defaultmatch.match(/^right/)) {
-      defaultmatch = defaultmatch.replace(/^right/, "left");
-    } else if (has_close_marker && defaultmatch.match(/^left/)) {
-      defaultmatch = defaultmatch.replace(/^left/, "right");
+    // NB. assigning to `defaultmatch` here would outlive the call: it is
+    // captured from betweenMatched, and the matchers table is built once.
+    let match = defaultmatch;
+    if (has_open_marker && match.match(/^right/)) {
+      match = match.replace(/^right/, "left");
+    } else if (has_close_marker && match.match(/^left/)) {
+      match = match.replace(/^left/, "right");
     }
 
     let d = c;
@@ -154,7 +157,7 @@ const betweenMatched = function(
             if (linkOpener.annot === "explicit_link" &&
                 opener.startpos < linkOpener.startpos) {
               // opener is outside the link, don't match
-              self.addMatch(pos, endcloser, defaultmatch);
+              self.addMatch(pos, endcloser, match);
               return endcloser + 1;
             }
           }
@@ -173,10 +176,10 @@ const betweenMatched = function(
       if (has_open_marker) {
         e = "{" + e;
       }
-      self.addOpener(e, startopener, pos, defaultmatch);
+      self.addOpener(e, startopener, pos, match);
       return pos + 1;
     } else {
-      self.addMatch(pos, endcloser, defaultmatch);
+      self.addMatch(pos, endcloser, match);
       return endcloser + 1;
     }
   }

@@ -190,3 +190,16 @@ No ellipses\.\.\.
 .
 <p>No ellipses...</p>
 ```
+
+An explicit `"}` closer applies only to its own quote. It must not
+change how later unmatched double quotes render -- an unmatched `"`
+is a left quote:
+
+```
+He said "hello"}
+
+Later an unmatched "quote here.
+.
+<p>He said “hello”</p>
+<p>Later an unmatched “quote here.</p>
+```
