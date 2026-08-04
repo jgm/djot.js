@@ -11,6 +11,7 @@ const testfiles = [
   "symb.test",
   "emphasis.test",
   "escapes.test",
+  "fenced_comments.test",
   "fenced_divs.test",
   "footnotes.test",
   "headings.test",
