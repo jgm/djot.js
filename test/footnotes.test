@@ -90,3 +90,43 @@ text[^footnote].
 </ol>
 </section>
 ```
+
+Footnote references are normalized like reference labels, so consecutive
+space/newlines are collapsed:
+```
+[^a
+  b]
+
+[^a b]:
+    foo
+.
+<p><a id="fnref1" href="#fn1" role="doc-noteref"><sup>1</sup></a></p>
+<section role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn1">
+<p>foo<a href="#fnref1" role="doc-backlink">↩︎</a></p>
+</li>
+</ol>
+</section>
+```
+
+Issue #146: Footnote labels can't contain line breaks (so this
+is interpreted not as a footnote but as an inline footnote reference):
+
+```
+[^a
+b]:  
+    foo
+.
+<p><a id="fnref1" href="#fn1" role="doc-noteref"><sup>1</sup></a>:  
+foo</p>
+<section role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn1">
+<p><a href="#fnref1" role="doc-backlink">↩︎</a></p>
+</li>
+</ol>
+</section>
+```
