@@ -106,6 +106,21 @@ Doubled quotes are treated as nested:
 <p>‘‘hi’’</p>
 ```
 
+With nothing between them there is nothing to enclose, so they don't
+pair and each takes its unmatched form:
+
+```
+''
+.
+<p>’’</p>
+```
+
+```
+""
+.
+<p>““</p>
+```
+
 Heuristics for determining openers and closers can
 be overridden using `{` and `}`:
 
