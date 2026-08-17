@@ -373,6 +373,34 @@ text{a=x
 <p>{a=“ inline text</p>
 ```
 
+The cases in this section so far all fail for want of a closing brace.
+A terminated `{...}` is rejected too when its contents aren't
+attributes: `=` must be followed by a value, and a bare one cannot be
+empty (a quoted `key=""` is fine).
+
+```
+[x]{key}
+.
+<p>[x]{key}</p>
+```
+
+```
+[y]{key=}
+.
+<p>[y]{key=}</p>
+```
+
+Nothing in a rejected block is applied, so `.a` is not a class here and
+the line below stays a paragraph:
+
+```
+{.a key}
+# not a heading
+.
+<p>{.a key}
+# not a heading</p>
+```
+
 
 ``` a
 {
