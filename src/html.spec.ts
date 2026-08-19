@@ -36,4 +36,19 @@ rendering the light markup format <a href="https://djot.net">djot</a>.</p>
     );
   });
 
+  it("closes a fenced div with CRLF line endings", () => {
+    // Regression test for issue #113: with CRLF line endings the closing
+    // ::: fence must close the div, so following content ("after") lands
+    // outside the div rather than being swallowed inside an unclosed div.
+    const expected =
+`<div>
+<p>hello</p>
+</div>
+<p>after</p>
+`;
+    expect(renderHTML(parse(":::\r\nhello\r\n:::\r\nafter\r\n"))).toEqual(expected);
+    // The LF equivalent is unchanged and produces byte-identical HTML.
+    expect(renderHTML(parse(":::\nhello\n:::\nafter\n"))).toEqual(expected);
+  });
+
 });
