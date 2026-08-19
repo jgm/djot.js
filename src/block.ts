@@ -642,7 +642,7 @@ class EventParser {
             if (colons.length >= container.extra.colons) {
               container.extra.endFenceStartpos = m.startpos;
               container.extra.endFenceEndpos = m.startpos + colons.length - 1;
-              this.pos = m.endpos; // before newline
+              this.pos = this.starteol; // before newline (CRLF-safe, see #113)
               return false;
             }
           }
