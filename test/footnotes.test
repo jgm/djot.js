@@ -93,6 +93,7 @@ text[^footnote].
 
 Footnote references are normalized like reference labels, so consecutive
 space/newlines are collapsed:
+
 ```
 [^a
   b]
