@@ -165,6 +165,75 @@ b
 </ul>
 ```
 
+Blank lines at the end of a nested list do not count against the list
+around it, so the outer list here stays tight:
+
+```
+- one
+
+  - sub
+    more
+
+- two
+.
+<ul>
+<li>
+one
+<ul>
+<li>
+sub
+more
+</li>
+</ul>
+</li>
+<li>
+two
+</li>
+</ul>
+```
+
+Tightness is a property of each list, so a loose list nests inside a
+tight one:
+
+```
+- x
+
+  - a
+
+    b
+.
+<ul>
+<li>
+x
+<ul>
+<li>
+<p>a</p>
+<p>b</p>
+</li>
+</ul>
+</li>
+</ul>
+```
+
+Items in a tight list can contain non-paragraph blocks:
+
+```
+- ~~~
+  x
+  ~~~
+- b
+.
+<ul>
+<li>
+<pre><code>x
+</code></pre>
+</li>
+<li>
+b
+</li>
+</ul>
+```
+
 ```
 - one
 lazy
@@ -199,6 +268,31 @@ b
 c
 </li>
 </ul>
+```
+
+A blank line between two lists doesn't make either of them loose:
+
+```
+1. A
+a. B
+
+1) C
+.
+<ol>
+<li>
+A
+</li>
+</ol>
+<ol type="a">
+<li>
+B
+</li>
+</ol>
+<ol>
+<li>
+C
+</li>
+</ol>
 ```
 
 ```
@@ -565,6 +659,39 @@ a
 </li>
 <li>
 b
+</li>
+</ol>
+```
+
+A lone `i.` could be roman 1 or alphabetic 9. Roman wins:
+
+```
+i. one
+.
+<ol type="i">
+<li>
+one
+</li>
+</ol>
+```
+
+Every item narrows the readings, not only the second, so a later item
+can still settle an ambiguity the earlier ones left open:
+
+```
+i. a
+v. b
+j. c
+.
+<ol start="9" type="a">
+<li>
+a
+</li>
+<li>
+b
+</li>
+<li>
+c
 </li>
 </ol>
 ```

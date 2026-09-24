@@ -59,3 +59,36 @@ baz
 </li>
 </ul>
 ```
+
+A task marker is its own list style, so a task item and a plain one
+never continue each other's list:
+
+```
+- a
+- [ ] x
+.
+<ul>
+<li>
+a
+</li>
+</ul>
+<ul class="task-list">
+<li>
+<input disabled="" type="checkbox"/>
+x
+</li>
+</ul>
+```
+
+The box takes an upper-case `X` as well as a lower-case one:
+
+```
+- [X] y
+.
+<ul class="task-list">
+<li>
+<input disabled="" type="checkbox" checked=""/>
+y
+</li>
+</ul>
+```
