@@ -82,6 +82,19 @@ lazy</p>
 </blockquote>
 ```
 
+A thematic break is closed at once, so a later line has nothing to
+continue:
+
+```
+> ***
+lazy
+.
+<blockquote>
+<hr>
+</blockquote>
+<p>lazy</p>
+```
+
 ```
 > nested
 >
