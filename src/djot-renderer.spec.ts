@@ -17,6 +17,29 @@ describe("DjotRenderer", () => {
       { tag: "para",
         children: [ { tag: "str", text: cicero } ] }]);
 
+  it.each([-1, 0, 8, 80])("preserves hard breaks with wrapWidth %s", (wrapWidth) => {
+    const sources = [
+      "one\\\n" + "two\n",
+      "> one\\\n" + "> two\n",
+      "- one\\\n" + "  two\n",
+    ];
+    for (const source of sources) {
+      const doc = parse(source);
+      const rendered = renderDjot(doc, {wrapWidth});
+      expect(rendered).toEqual(source);
+      expect(parse(rendered)).toEqual(doc);
+    }
+  });
+
+  it.each([
+    ["aaaa bbbb\\\ncccc\n", "aaaa\nbbbb\\\ncccc\n", 6],
+    ["> aaaa bbbb\\\n> cccc\n", "> aaaa\n> bbbb\\\n> cccc\n", 8],
+    ["- aaaa bbbb\\\n  cccc\n", "- aaaa\n  bbbb\\\n  cccc\n", 8],
+  ])("wraps text before a hard break in %s", (source, expected, wrapWidth) => {
+    expect(renderDjot(parse(source as string), {wrapWidth: wrapWidth as number}))
+      .toEqual(expected);
+  });
+
   it("breaks lines properly", () => {
     expect(renderDjot(cicero1, {wrapWidth: 30})).toEqual(
 `Sed ut perspiciatis unde omnis

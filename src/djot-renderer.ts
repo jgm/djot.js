@@ -533,6 +533,7 @@ class DjotRenderer {
     },
     space: () => { this.space(); },
     soft_break: () => { this.soft_break(); },
+    hard_break: () => { this.lit("\\"); this.wrap(); this.newline(); },
     smart_punctuation: (node : SmartPunctuation) => { this.lit(node.text); },
     non_breaking_space: () => { this.lit("\\ "); },
     single_quoted: this.inlineContainer("'"),
