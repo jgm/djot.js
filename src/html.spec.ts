@@ -1,5 +1,6 @@
 import { parse } from "./parse";
 import { renderHTML } from "./html";
+import { Warning } from "./options";
 
 describe("Parser", () => {
   it("parses paragraphs", () => {
@@ -49,6 +50,22 @@ rendering the light markup format <a href="https://djot.net">djot</a>.</p>
     expect(renderHTML(parse(":::\r\nhello\r\n:::\r\nafter\r\n"))).toEqual(expected);
     // The LF equivalent is unchanged and produces byte-identical HTML.
     expect(renderHTML(parse(":::\nhello\n:::\nafter\n"))).toEqual(expected);
+  });
+
+  it("renders deeply nested content without exhausting the stack", () => {
+    const warnings : Warning[] = [];
+    const warn = (w : Warning) => { warnings.push(w); };
+    const quotes = renderHTML(parse("> ".repeat(25000) + "a *b* <c>\n"), { warn });
+    expect(quotes).toContain("<blockquote>\na b &lt;c&gt;</blockquote>");
+    expect(quotes.split("<blockquote>").length - 1).toEqual(256);
+    expect(warnings.length).toEqual(1);
+    expect(renderHTML(parse("- ".repeat(1024) + "x\n"), { warn })).toContain("x");
+    expect(renderHTML(parse("> ".repeat(300) + "a\\ b :foo:\n"), { warn }))
+      .toContain("a\u00A0b :foo:</blockquote>");
+  });
+
+  it("does not flatten ordinary nesting", () => {
+    expect(renderHTML(parse("> ".repeat(200) + "*a*\n"))).toContain("<strong>a</strong>");
   });
 
 });

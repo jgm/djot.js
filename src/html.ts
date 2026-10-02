@@ -7,6 +7,10 @@ interface HTMLRenderOptions extends Options {
   overrides?: Visitor<HTMLRenderer, string>;
 }
 
+// Deeper content is rendered as plain text, so a hostile document
+// cannot exhaust the call stack of this recursive renderer.
+const maxNestingDepth = 256;
+
 const reNeedsEscape = /[&<>]/;
 const reNeedsEscapeAttr = /[&<>"]/;
 
@@ -25,6 +29,8 @@ class HTMLRenderer {
   fnrefIdEmitted: Record<string, boolean>;
   references: Record<string, Reference>;
   autoReferences: Record<string, Reference>;
+  private depth: number;
+  private depthWarned: boolean;
 
   constructor(options : HTMLRenderOptions) {
     this.warn = options.warn || (() => {});
@@ -35,6 +41,8 @@ class HTMLRenderer {
     this.fnrefIdEmitted = Object.create(null);
     this.references = Object.create(null);
     this.autoReferences = Object.create(null);
+    this.depth = 0;
+    this.depthWarned = false;
   }
 
   escape(s: string): string {
@@ -135,7 +143,42 @@ class HTMLRenderer {
     }
   }
 
+  // Collects the text of a subtree without recursion.
+  flattenText(node: HasChildren<AstNode>): string {
+    let result = "";
+    const stack: AstNode[] = [...node.children].reverse();
+    while (stack.length > 0) {
+      const child = stack.pop() as AstNode;
+      if (child.tag === "soft_break" || child.tag === "hard_break") {
+        result += "\n";
+      } else if (child.tag === "non_breaking_space") {
+        result += "\u00A0";
+      } else if (child.tag === "symb") {
+        result += `:${child.alias}:`;
+      } else if ("text" in child && child.tag !== "raw_inline" &&
+                 child.tag !== "raw_block" &&
+                 child.tag !== "footnote_reference") {
+        result += child.text;
+      } else if ("children" in child) {
+        for (let i = child.children.length - 1; i >= 0; i--) {
+          stack.push(child.children[i]);
+        }
+      }
+    }
+    return result;
+  }
+
   renderChildren(node: HasChildren<AstNode>): string {
+    if (this.depth >= maxNestingDepth) {
+      if (!this.depthWarned) {
+        this.depthWarned = true;
+        this.warn(new Warning(
+          `Content nested more than ${maxNestingDepth} levels deep rendered as plain text`,
+          (node as AstNode).pos?.start));
+      }
+      return this.escape(this.flattenText(node));
+    }
+    this.depth++;
     let result = ""
     const oldtight = this.tight;
     if ("tight" in node) {
@@ -147,6 +190,7 @@ class HTMLRenderer {
     if ("tight" in node) {
       this.tight = oldtight;
     }
+    this.depth--;
     return result
   }
 
