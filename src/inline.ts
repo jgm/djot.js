@@ -123,17 +123,19 @@ const isNonspaceAt = function(subject : string, pos : number) : boolean {
   return c !== C_SPACE && c !== C_TAB && c !== C_CR && c !== C_LF;
 }
 
+// A character that `{` can mark as an explicit opener, as in `{*bold*}`.
+const isDelimChar = function(c : number) : boolean {
+  return c === C_ASTERISK || c === C_PLUS || c === C_HYPHEN ||
+    c === C_EQUALS || c === C_HAT || c === C_UNDERSCORE ||
+    c === C_TILDE || c === C_SINGLE_QUOTE || c === C_DOUBLE_QUOTE;
+}
+
 const pattLineEnd = pattern("[ \\t]*\\r?\\n");
 const pattPunctuation = pattern("['!\"#$%&\\\\'()\\*+,\\-\\.\\/:;<=>?@\\[\\]\\^_`{|}~']");
 const pattAutolink = pattern("\\<([^<>\\s]+)\\>");
-const pattDelim = pattern("[_*~^+='\"-]");
 const pattSymbol = pattern(":[\\w_+-]+:");
-const pattTwoPeriods = pattern("\\.\\.");
 const pattBackticks0 = pattern("`*");
 const pattBackticks1 = pattern("`+");
-const pattDoubleDollars = pattern("\\$\\$");
-const pattSingleDollar = pattern("\\$");
-const pattBackslash = pattern("\\\\");
 const pattRawAttribute = pattern("\\{=[^\\s{}`]+\\}");
 
 const hasBrace = function(self: InlineParser, pos: number): boolean {
@@ -245,13 +247,15 @@ const matchers = {
     const prevMatch = self.matches[self.matches.length - 2];
     const dollarEscaped = prevMatch !== undefined &&
       prevMatch.annot === "escape" && prevMatch.endpos === pos - 2;
-    if (find(subject, pattDoubleDollars, pos - 2) &&
-      !find(subject, pattBackslash, pos - 3)) {
+    if (pos >= 2 && subject.charCodeAt(pos - 2) === C_DOLLARS &&
+      subject.charCodeAt(pos - 1) === C_DOLLARS &&
+      !(pos >= 3 && subject.charCodeAt(pos - 3) === C_BACKSLASH)) {
       self.matches.pop(); // remove first $
       self.matches.pop(); // remove second $
       self.addMatch(pos - 2, endchar, "+display_math");
       self.verbatimType = "display_math"
-    } else if (find(subject, pattSingleDollar, pos - 1) && !dollarEscaped) {
+    } else if (pos >= 1 && subject.charCodeAt(pos - 1) === C_DOLLARS &&
+      !dollarEscaped) {
       self.matches.pop(); // remove $
       self.addMatch(pos - 1, endchar, "+inline_math");
       self.verbatimType = "inline_math";
@@ -363,7 +367,7 @@ const matchers = {
     alwaysTrue),
 
   [C_LEFT_BRACE]: function(self: InlineParser, pos: number, endpos: number): number | null {
-    if (find(self.subject, pattDelim, pos + 1, endpos)) {
+    if (pos + 1 <= endpos && isDelimChar(self.subject.charCodeAt(pos + 1))) {
       self.addMatch(pos, pos, "open_marker");
       return pos + 1;
     } else if (self.allowAttributes) {
@@ -389,7 +393,9 @@ const matchers = {
   },
 
   [C_PERIOD]: function(self: InlineParser, pos: number, endpos: number): number | null {
-    if (find(self.subject, pattTwoPeriods, pos + 1, endpos)) {
+    if (pos + 2 <= endpos &&
+      self.subject.charCodeAt(pos + 1) === C_PERIOD &&
+      self.subject.charCodeAt(pos + 2) === C_PERIOD) {
       self.addMatch(pos, pos + 2, "ellipses");
       return pos + 3;
     } else {
