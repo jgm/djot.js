@@ -111,7 +111,18 @@ const findSpecial = function(s: string, startpos: number, endpos: number)
   }
 }
 
-const pattNonspace = pattern("[^ \t\r\n]");
+// Whether there is a character at pos and it is none of space, tab, CR or
+// LF.  Its two callers below only want that yes or no, and on a document of
+// many inline delimiters they account for most of the searches made during a
+// parse, so the character is read rather than matched against a pattern.
+const isNonspaceAt = function(subject : string, pos : number) : boolean {
+  if (pos >= subject.length) {
+    return false;  // nothing there
+  }
+  const c = subject.charCodeAt(pos);
+  return c !== C_SPACE && c !== C_TAB && c !== C_CR && c !== C_LF;
+}
+
 const pattLineEnd = pattern("[ \\t]*\\r?\\n");
 const pattPunctuation = pattern("['!\"#$%&\\\\'()\\*+,\\-\\.\\/:;<=>?@\\[\\]\\^_`{|}~']");
 const pattAutolink = pattern("\\<([^<>\\s]+)\\>");
@@ -139,9 +150,11 @@ const betweenMatched = function(
   opentest: ((self: InlineParser, pos: number) => boolean)) {
   return function(self: InlineParser, pos: number, endpos: number): number {
     const subject = self.subject;
-    let can_open = find(subject, pattNonspace, pos + 1) !== null &&
-      opentest(self, pos);
-    let can_close = find(subject, pattNonspace, pos - 1) !== null;
+    let can_open = isNonspaceAt(subject, pos + 1) && opentest(self, pos);
+    // The sticky pattern this replaces clamped a negative start to 0, so at
+    // the very start of the subject it looked at the delimiter itself, which
+    // is never a space.  Keep that.
+    let can_close = isNonspaceAt(subject, pos > 0 ? pos - 1 : 0);
     const lastmatch = self.matches[self.matches.length - 1];
     const has_open_marker = lastmatch && lastmatch.annot === "open_marker";
     const has_close_marker = pos + 1 <= endpos &&

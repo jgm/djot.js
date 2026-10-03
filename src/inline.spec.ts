@@ -284,4 +284,18 @@ describe("InlineParser", () => {
     }
   });
 
+  // A delimiter can only open if a non-whitespace character follows it, and
+  // the character ending a line is a carriage return as often as a line
+  // feed. The rest of the suite covers the space and tab cases but not this
+  // one, so none of these must come out as emphasis.
+  it("does not open emphasis before any of the line endings", () => {
+    for (const eol of ["\n", "\r\n", "\r"]) {
+      const subject = "a*" + eol + "b*";
+      const parser = new InlineParser(subject);
+      parser.feed(0, subject.length - 1);
+      expect(parser.getMatches().map(m => m.annot)).toStrictEqual(
+        ["str", "str", "soft_break", "str", "str"]);
+    }
+  });
+
 })

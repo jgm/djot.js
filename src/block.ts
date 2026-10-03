@@ -38,6 +38,10 @@ const isEolChar = function(cp?: number) : boolean {
   return (cp === 10 || cp === 13);
 }
 
+const isWhitespace = function(cp?: number) : boolean {
+  return isSpaceOrTab(cp) || isEolChar(cp);
+}
+
 const reEol = /[\r\n]/g;
 // a CR that is not the first half of a CRLF
 const reLoneCR = /\r(?!\n)/;
@@ -45,7 +49,6 @@ const reLoneCR = /\r(?!\n)/;
 const pattEndline = pattern("[ \\t]*\\r?\\n");
 // no "^" needed: the sticky flag anchors the match at the search position
 const pattWord = pattern("\\w+\\s");
-const pattWhitespace = pattern("[ \\t\\r\\n]");
 const pattNonWhitespace = pattern("[^ \\t\\r\\n]+");
 const pattBlockquotePrefix = pattern("[>][ \\t\\r\\n]");
 const pattBangs = pattern("#+");
@@ -184,7 +187,7 @@ class EventParser {
       type: ContentType.Block,
       content: ContentType.Inline,
       continue: (container) => {
-        if (this.find(pattWhitespace) === null) {
+        if (!isWhitespace(this.subject.charCodeAt(this.pos))) {
           return true;
         } else {
           return false;
@@ -240,7 +243,7 @@ class EventParser {
         continue: (container) => {
           const m = this.find(pattBangs);
           if (m && container.extra.level === (m.endpos - m.startpos + 1) &&
-            find(this.subject, pattWhitespace, m.endpos + 1)) {
+            isWhitespace(this.subject.charCodeAt(m.endpos + 1))) {
             this.pos = m.endpos + 1;
             return true;
           } else {
@@ -249,7 +252,7 @@ class EventParser {
         },
         open: (spec) => {
           const m = this.find(pattBangs);
-          if (m && find(this.subject, pattWhitespace, m.endpos + 1)) {
+          if (m && isWhitespace(this.subject.charCodeAt(m.endpos + 1))) {
             const level = m.endpos - m.startpos + 1;
             this.addContainer(new Container(spec, { level: level }));
             this.addMatch(m.startpos, m.endpos, "+heading");
@@ -273,7 +276,7 @@ class EventParser {
         type: ContentType.Block,
         content: ContentType.Inline,
         continue: (container) => {
-          return (find(this.subject, pattWhitespace, this.pos) === null);
+          return !isWhitespace(this.subject.charCodeAt(this.pos));
         },
         open: (spec) => {
           const m = this.find(pattCaptionStart);
