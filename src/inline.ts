@@ -66,11 +66,43 @@ const C_TILDE = 126;
 
 const reSpecial = /[\r\n"'()*+.:<=[\\\]^_`${}~-]/g;
 
+// Which characters reSpecial matches, one entry per code unit.  Derived from
+// the regex itself so the two cannot drift apart.  Every special character
+// is ASCII, so a code unit past the end of the table is never special.
+const isSpecial = (function() {
+  const table = new Uint8Array(128);
+  for (let c = 0; c < table.length; c++) {
+    reSpecial.lastIndex = 0;
+    if (reSpecial.test(String.fromCharCode(c))) {
+      table[c] = 1;
+    }
+  }
+  reSpecial.lastIndex = 0;
+  return table;
+})();
+
+// How far findSpecial looks before handing over to the regex.
+const specialLookahead = 32;
+
 // find first special character starting from startpos, and not
 // going beyond endpos, or null if none found.
 const findSpecial = function(s: string, startpos: number, endpos: number)
                           : number | null {
-  reSpecial.lastIndex = startpos;
+  // The next special character is usually only a few away, and for such a
+  // short distance reading the characters costs less than the regex does to
+  // start up.  Beyond that the regex's native scan is the faster of the two,
+  // so it takes over where this leaves off.
+  const stop = Math.min(endpos, startpos + specialLookahead);
+  for (let i = startpos; i <= stop; i++) {
+    const c = s.charCodeAt(i);
+    if (c < 128 && isSpecial[c] === 1) {
+      return i;
+    }
+  }
+  if (stop === endpos) {
+    return null;  // nothing special in the whole range
+  }
+  reSpecial.lastIndex = stop + 1;
   const result = reSpecial.exec(s);
   if (result && result.index <= endpos) {
     return result.index;

@@ -268,4 +268,20 @@ describe("InlineParser", () => {
     ]);
   });
 
+  // The search for the next special character reads a fixed number of
+  // characters itself before falling back to a regex, so a run of ordinary
+  // characters around that length is where the two could disagree.
+  it("finds a special character at any distance from the last one", () => {
+    for (let run = 0; run <= 70; run++) {
+      const parser = new InlineParser("a".repeat(run) + "_x_");
+      parser.feed(0, run + 2);
+      expect(parser.getMatches()).toStrictEqual([
+        ...(run > 0 ? [{ annot: "str", startpos: 0, endpos: run - 1 }] : []),
+        { annot: "+emph", startpos: run, endpos: run },
+        { annot: "str", startpos: run + 1, endpos: run + 1 },
+        { annot: "-emph", startpos: run + 2, endpos: run + 2 }
+      ]);
+    }
+  });
+
 })
