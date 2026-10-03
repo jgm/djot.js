@@ -298,6 +298,25 @@ describe("Parser", () => {
     expect(warnings).toEqual(["Ignoring unattached attribute at offset 3"]);
   });
 
+  // Events already handed to the consumer are dropped once enough have
+  // piled up, and a paragraph ends just after the last match before it,
+  // which can belong to an earlier line. This document is long enough to
+  // cross that point several times, so the positions would drift if a drain
+  // lost track of where the previous line left off.
+  it("keeps paragraph positions right across a drain of handed-over events",
+    () => {
+    const para = "alpha beta\ngamma delta\n\n";   // 24 characters, 3 lines
+    const count = 400;
+    const ast = parse(para.repeat(count),
+      { warn: () => {}, sourcePositions: true });
+    expect(ast.children.length).toEqual(count);
+    expect(ast.children.map(c => c.pos)).toEqual(
+      Array.from({ length: count }, (_, i) => ({
+        start: { line: 3 * i + 1, col: 1, offset: 24 * i },
+        end: { line: 3 * i + 3, col: 0, offset: 24 * i + 22 }
+      })));
+  });
+
   // The pattern that closes a fenced code block is kept and reused per
   // opening fence, so each distinct fence has to keep its own: a block
   // opened with a longer fence must not be closed by a shorter one that an

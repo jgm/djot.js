@@ -79,6 +79,14 @@ const closePatternFor = function(border : string) : RegExp {
   return patt;
 }
 
+// How many events may pile up before the iterator drops the ones it has
+// already handed over.  Dropping them after every line would keep the array
+// smallest, but V8 then shrinks and regrows its backing store constantly,
+// which on a document of many short blocks costs more than it saves; waiting
+// for a batch makes that negligible while still keeping the array's size
+// proportional to this many events rather than to the whole document.
+const drainThreshold = 1024;
+
 type EventIterator = {
   next: () => { value: Event, done: boolean };
 }
@@ -1009,6 +1017,18 @@ class EventParser {
               value: self.matches[self.returned - 1],
               done: false
             };
+          }
+
+          // Every event collected so far has been handed over, so there is
+          // no need to keep them.  The most recent one stays: closing a
+          // paragraph or heading ends it just after the last match before
+          // it, which can belong to an earlier line, and keeping that match
+          // where it was leaves every other use of this array unaffected.
+          if (self.matches.length >= drainThreshold &&
+              self.returned === self.matches.length) {
+            self.matches[0] = self.matches[self.matches.length - 1];
+            self.matches.length = 1;
+            self.returned = 1;
           }
 
           self.indent = 0;
