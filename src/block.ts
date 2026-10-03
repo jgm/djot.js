@@ -46,25 +46,60 @@ const reEol = /[\r\n]/g;
 // a CR that is not the first half of a CRLF
 const reLoneCR = /\r(?!\n)/;
 
+// Each pattern a block spec's `open` tries below begins with a character
+// class, so a line whose first non-space character is outside that class
+// cannot open that kind of block and the pattern need not be run at all.
+// The specs declare their class here and it becomes a table with one slot
+// per ASCII character and a last slot for everything else.  Only ASCII is
+// spelled out, so a class must not reach beyond it -- no literal above
+// \x7f, and none of \s, \S, \w, \W or \D, which match characters that are.
+const startCharTable = function(cls : string) : Uint8Array {
+  const re = new RegExp("^" + cls + "$");
+  const table = new Uint8Array(129);
+  for (let c = 0; c < 128; c++) {
+    if (re.test(String.fromCharCode(c))) {
+      table[c] = 1;
+    }
+  }
+  return table;
+}
+
 const pattEndline = pattern("[ \\t]*\\r?\\n");
 // no "^" needed: the sticky flag anchors the match at the search position
 const pattWord = pattern("\\w+\\s");
 const pattNonWhitespace = pattern("[^ \\t\\r\\n]+");
 const pattBlockquotePrefix = pattern("[>][ \\t\\r\\n]");
+const startBlockquote = startCharTable("[>]");
 const pattBangs = pattern("#+");
+const startBangs = startCharTable("[#]");
 const pattCodeFence = pattern("(~~~~*|````*)([ \\t]*)([^ \\t\\r\\n`]*)[ \\t]*\\r?\\n");
+const startCodeFence = startCharTable("[~`]");
 const pattRowSep = pattern("(:?)--*(:?)([ \\t]*\\|[ \\t]*)");
 const pattNextBarOrTicks = pattern("[^`|\\r\\n]*(?:[|]|`+)");
 const pattCaptionStart = pattern("\\^[ \\t]+");
+const startCaption = startCharTable("[\\^]");
 const pattFootnoteStart = pattern("\\[\\^([^\\]\\r\\n]+)\\]:[ \\t\\r\\n]");
 const pattThematicBreak = pattern("[-*][ \t]*[-*][ \\t]*[-*][-* \\t]*\\r?\\n");
+const startThematicBreak = startCharTable("[-*]");
 const pattDivFence = pattern("(::::*)[ \\t]*\\r?\\n");
 const pattDivFenceStart = pattern("(::::*)[ \\t]*");
+const startDivFence = startCharTable("[:]");
 const pattDivFenceEnd = pattern("([\\w_-]*)[ \\t]*\\r?\\n");
 const pattReferenceDefinition = pattern("\\[([^\\]\\r\\n]*)\\]:([ \\t]+[^ \\t\\r\\n]*|)[\\r\\n]");
+// shared by the footnote and reference definition patterns above
+const startBracket = startCharTable("[\\[]");
 const pattTableRow = pattern("(\\|[^\\r\\n]*\\|)[ \\t]*\\r?\\n");
+const startTableRow = startCharTable("[|]");
 const pattListMarker = pattern("(:?[-*+:]|\\([0-9]+\\)|[0-9]+[.)]|[ivxlcdmIVXLCDM]+[.)]|\\([ivxlcdmIVXLCDM]+\\)|[a-zA-Z][.)]|\\([a-zA-Z]\\))[ \\t\\r\\n]");
 const pattTaskListMarker = pattern("[*+-] \\[[Xx ]\\][ \\t\\r\\n]");
+// The list marker pattern leads with an alternation rather than a single
+// class, so this is the union of the first character of each branch: the
+// bullet and definition markers, the "(" the parenthesised ones open with,
+// and a digit or letter for the numbered, roman and alphabetical ones.  The
+// task list marker pattern leads with a subset of the bullets.
+const startListMarker = startCharTable("[-*+:(0-9a-zA-Z]");
+// the "{" of a block attribute
+const startAttributes = startCharTable("[{]");
 
 // The pattern that closes a fenced code block depends only on the fence that
 // opened it, and a document generally fences every block the same way, so
@@ -114,6 +149,12 @@ type BlockSpec =
     close: () => void
   }
 
+// A spec the iterator tries when looking for a new container.  Only these
+// need to say which characters they can start with; a paragraph opens
+// wherever nothing else did, and is opened directly rather than through the
+// loop below.
+type StartSpec = BlockSpec & { startChars: Uint8Array }
+
 class Container {
   name: string;
   type: ContentType;
@@ -156,7 +197,7 @@ class EventParser {
   lastMatchedContainer: number;
   finishedLine: boolean;
   returned: number;
-  specs: BlockSpec[];
+  specs: StartSpec[];
   paraSpec: BlockSpec;
 
   constructor(subject: string, options: Options = {}) {
@@ -212,6 +253,7 @@ class EventParser {
         name: "block_quote",
         type: ContentType.Block,
         content: ContentType.Block,
+        startChars: startBlockquote,
         continue: (container) => {
           if (this.find(pattBlockquotePrefix) !== null) {
             this.pos = this.pos + 1;
@@ -240,6 +282,7 @@ class EventParser {
         name: "heading",
         type: ContentType.Block,
         content: ContentType.Inline,
+        startChars: startBangs,
         continue: (container) => {
           const m = this.find(pattBangs);
           if (m && container.extra.level === (m.endpos - m.startpos + 1) &&
@@ -275,6 +318,7 @@ class EventParser {
         name: "caption",
         type: ContentType.Block,
         content: ContentType.Inline,
+        startChars: startCaption,
         continue: (container) => {
           return !isWhitespace(this.subject.charCodeAt(this.pos));
         },
@@ -301,6 +345,7 @@ class EventParser {
         name: "footnote",
         type: ContentType.Block,
         content: ContentType.Block,
+        startChars: startBracket,
         continue: (container) => {
           if (this.indent > (container.extra.indent || 0) ||
             this.pos === this.starteol) {
@@ -338,6 +383,7 @@ class EventParser {
         name: "reference_definition",
         type: ContentType.Block,
         content: ContentType.None,
+        startChars: startBracket,
         continue: (container) => {
           if (container.extra.indent >= this.indent) {
             return false;
@@ -384,6 +430,7 @@ class EventParser {
         name: "thematic_break",
         type: ContentType.Block,
         content: ContentType.None,
+        startChars: startThematicBreak,
         continue: (container) => {
           return false;
         },
@@ -407,6 +454,7 @@ class EventParser {
         name: "list",
         type: ContentType.Block,
         content: ContentType.ListItem,
+        startChars: startListMarker,
         continue: (container) => {
           // TODO remove code duplication btw list and list_item
           if (this.indent > container.extra.indent ||
@@ -477,6 +525,7 @@ class EventParser {
         name: "list_item",
         type: ContentType.ListItem,
         content: ContentType.Block,
+        startChars: startListMarker,
         continue: (container) => {
           return (this.indent > container.extra.indent ||
             this.pos === this.starteol);
@@ -533,6 +582,7 @@ class EventParser {
         name: "table",
         type: ContentType.Block,
         content: ContentType.Cells,
+        startChars: startTableRow,
         continue: (container) => {
           const m = this.find(pattTableRow);
           if (m) {
@@ -570,6 +620,7 @@ class EventParser {
         name: "attributes",
         type: ContentType.Block,
         content: ContentType.Attributes,
+        startChars: startAttributes,
         open: (spec) => {
           if (this.subject.codePointAt(this.pos) === 123) { // {
             const attributeParser = new AttributeParser(this.subject);
@@ -668,6 +719,7 @@ class EventParser {
         name: "fenced_div",
         type: ContentType.Block,
         content: ContentType.Block,
+        startChars: startDivFence,
         continue: (container) => {
           const tip = this.tip();
           if (tip && tip.name === "code_block") {
@@ -723,6 +775,7 @@ class EventParser {
         name: "code_block",
         type: ContentType.Block,
         content: ContentType.Text,
+        startChars: startCodeFence,
         continue: (container) => {
           const m = this.find(container.extra.closePattern);
           if (m) {
@@ -1078,9 +1131,19 @@ class EventParser {
               !self.find(pattWord); // optimization
             while (checkStarts) {
               checkStarts = false;
+              // Most lines open no container, so rather than run every
+              // spec's pattern only to have it fail, let the character the
+              // line begins with say which specs are worth trying at all.
+              // skipSpace above has moved past the indent, and a spec that
+              // opens moves on again, so this is read afresh on every pass.
+              // Anything outside ASCII goes in the table's last slot, as
+              // does the NaN charCodeAt gives past the end of the subject.
+              const code = self.subject.charCodeAt(self.pos);
+              const slot = code < 128 ? code : 128;
               for (const spec of specs) {
-                if ((!lastMatch && spec.type === ContentType.Block) ||
-                  (lastMatch && lastMatch.content === spec.type)) {
+                if (spec.startChars[slot] !== 0 &&
+                    ((!lastMatch && spec.type === ContentType.Block) ||
+                     (lastMatch && lastMatch.content === spec.type))) {
                   if (spec.open(spec)) {
                     const tip = self.tip();
                     if (tip) {
