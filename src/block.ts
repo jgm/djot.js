@@ -63,6 +63,22 @@ const pattTableRow = pattern("(\\|[^\\r\\n]*\\|)[ \\t]*\\r?\\n");
 const pattListMarker = pattern("(:?[-*+:]|\\([0-9]+\\)|[0-9]+[.)]|[ivxlcdmIVXLCDM]+[.)]|\\([ivxlcdmIVXLCDM]+\\)|[a-zA-Z][.)]|\\([a-zA-Z]\\))[ \\t\\r\\n]");
 const pattTaskListMarker = pattern("[*+-] \\[[Xx ]\\][ \\t\\r\\n]");
 
+// The pattern that closes a fenced code block depends only on the fence that
+// opened it, and a document generally fences every block the same way, so
+// the patterns are kept rather than compiled afresh for each block.  Sharing
+// one is safe for the same reason sharing the patterns above is: find assigns
+// lastIndex before every match.
+const closePatterns = new Map<string, RegExp>();
+const closePatternFor = function(border : string) : RegExp {
+  let patt = closePatterns.get(border);
+  if (patt === undefined) {
+    patt = pattern("(" + border + border.substring(0, 1) +
+                   "*)[ \\t]*[\\r\\n]");
+    closePatterns.set(border, patt);
+  }
+  return patt;
+}
+
 type EventIterator = {
   next: () => { value: Event, done: boolean };
 }
@@ -713,8 +729,7 @@ class EventParser {
           if (m) {
             const [border, ws, lang] = m.captures;
             const isRaw = lang.charAt(0) === "=" && true || false;
-            const closePattern = pattern("(" + border +
-                          border.substring(0,1) + "*)[ \\t]*[\\r\\n]");
+            const closePattern = closePatternFor(border);
             const cont = this.addContainer(new Container(spec,
                                             { closePattern: closePattern }));
             cont.indent = this.indent;

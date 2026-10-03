@@ -298,6 +298,20 @@ describe("Parser", () => {
     expect(warnings).toEqual(["Ignoring unattached attribute at offset 3"]);
   });
 
-
+  // The pattern that closes a fenced code block is kept and reused per
+  // opening fence, so each distinct fence has to keep its own: a block
+  // opened with a longer fence must not be closed by a shorter one that an
+  // earlier block had used.
+  it("closes each code block with a fence matching the one that opened it",
+    () => {
+      const ast = parse("~~~\na\n~~~\n\n~~~~\n~~~\n~~~~\n\n```\nb\n```\n",
+        { warn: () => {} });
+      expect(ast.children.map(c => [c.tag, (c as { text?: string }).text]))
+        .toEqual([
+          ["code_block", "a\n"],
+          ["code_block", "~~~\n"],
+          ["code_block", "b\n"]
+        ]);
+    });
 
 });
