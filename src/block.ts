@@ -38,6 +38,10 @@ const isEolChar = function(cp?: number) : boolean {
   return (cp === 10 || cp === 13);
 }
 
+const reEol = /[\r\n]/g;
+// a CR that is not the first half of a CRLF
+const reLoneCR = /\r(?!\n)/;
+
 const pattEndline = pattern("[ \\t]*\\r?\\n");
 // no "^" needed: the sticky flag anchors the match at the search position
 const pattWord = pattern("\\w+\\s");
@@ -112,6 +116,9 @@ class EventParser {
   warn: (warning : Warning) => void;
   subject: string;
   maxoffset: number;
+  // whether the subject contains a CR that is not part of a CRLF, which
+  // decides how getEol looks for the end of a line
+  hasLoneCR: boolean;
   indent: number;
   startline: number;
   starteol: number;
@@ -132,6 +139,9 @@ class EventParser {
     }
     this.subject = subject;
     this.maxoffset = subject.length - 1;
+    // the lookahead costs real time on a large subject, so it only runs
+    // when a plain scan has found a CR to begin with
+    this.hasLoneCR = subject.indexOf("\r") !== -1 && reLoneCR.test(subject);
     this.options = options;
     this.warn = options.warn || (() => {});
     this.indent = 0;
@@ -819,14 +829,25 @@ class EventParser {
   // set this.starteol, this.endeol
   getEol(): void {
     const subject = this.subject;
-    let i = this.pos;
-    while (!isEolChar(subject.codePointAt(i))) {
-      i++;
-    }
-    this.starteol = i;
-    if (subject.codePointAt(i) === 13 && subject.codePointAt(i+1) === 10) {
-      this.endeol = i+1;
+    const pos = this.pos;
+    // The constructor guarantees a trailing newline, so there is always a
+    // line ending at or after pos.  A lone CR ends a line too, so finding
+    // the end of a line means finding the first of two characters -- but
+    // scanning for one is much faster, and unless the subject holds a CR
+    // outside a CRLF (checked once, in the constructor) the only CR that
+    // can end this line is the one just before its LF.
+    if (this.hasLoneCR) {
+      reEol.lastIndex = pos;
+      const i = (reEol.exec(subject) as RegExpExecArray).index;
+      this.starteol = i;
+      if (subject.charCodeAt(i) === 13 && subject.charCodeAt(i + 1) === 10) {
+        this.endeol = i + 1;
+      } else {
+        this.endeol = i;
+      }
     } else {
+      const i = subject.indexOf("\n", pos);
+      this.starteol = (i > pos && subject.charCodeAt(i - 1) === 13) ? i - 1 : i;
       this.endeol = i;
     }
   }

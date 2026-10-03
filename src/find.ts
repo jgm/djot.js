@@ -1,9 +1,5 @@
-// see https://stackoverflow.com/questions/72119570/
-type RegExpMatchArrayWithIndices =
-  RegExpMatchArray & { indices: Array<[number, number]> };
-
 const pattern = function(patt : string) : RegExp {
-  return new RegExp(patt, 'yd');
+  return new RegExp(patt, 'y');
 }
 
 const find = function(subject : string,
@@ -19,18 +15,19 @@ const find = function(subject : string,
   } else {
     subj = subject;
   }
-  const result = (patt.exec(subj) as null | RegExpMatchArrayWithIndices);
+  const result = patt.exec(subj);
   if (result !== null) {
-    let idx = 1;
     const capts = [];
-    if (result.indices.length > 1) {
-      for (let i = 1; i < result.indices.length; i++) {
-        const [sp, ep] = result.indices[i];
-        capts.push(subj.substring(sp, ep));
-      }
+    for (let i = 1; i < result.length; i++) {
+      capts.push(result[i]);
     }
-    return { startpos: result.indices[0][0],
-             endpos: result.indices[0][1] - 1,
+    // The patterns are sticky, so a match begins exactly where the search
+    // did and ends where exec left lastIndex.  Taking the bounds from
+    // there rather than from a `d` flag's `indices` saves building an
+    // array of index pairs for every match; the captures come straight
+    // off the result instead of being cut out of the subject again.
+    return { startpos: startpos,
+             endpos: patt.lastIndex - 1,
              captures: capts };
   } else {
     return null;

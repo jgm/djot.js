@@ -147,7 +147,11 @@ const normalizeLabel = function(label : string): string {
   return label.trim().replace(/[ \t\r\n]+/g, " ")
 }
 
-const parseFromEvents = function(events: Event[],
+// `events` is only ever walked front to back, so it is enough for it to
+// be iterable; accepting any iterable lets parse hand over the block
+// parser itself instead of first collecting every event into an array.
+// Arrays are iterable, so existing callers are unaffected.
+const parseFromEvents = function(events: Iterable<Event>,
                                  input: string,
                                  options: ParseOptions = {}): Doc {
 
@@ -1413,7 +1417,7 @@ const renderAST = function(doc: Doc): string {
 
 const parse = function(input: string, options: ParseOptions = {}): Doc {
   const parser = parseEvents(input, options);
-  return parseFromEvents(Array.from(parser), input, options);
+  return parseFromEvents(parser, input, options);
 }
 
 export type {
