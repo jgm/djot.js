@@ -36,20 +36,40 @@ const getStringContent = function(node: (AstNode | Container)): string {
   return buffer.join("");
 }
 
+// Uses an explicit stack rather than recursion, so that deeply nested
+// content cannot overflow the JS call stack.  Siblings are stacked in
+// reverse, so that they come back off in document order; the node being
+// visited is held in `current` rather than on the stack, which keeps a
+// leaf or a single chain of only children from touching it at all.
 const addStringContent = function(node: (AstNode | Container),
   buffer: string[]): void {
-  if ("tag" in node && node.tag === "footnote_reference") {
-    return; // exclude footnote references from heading IDs
-  }
-  if ("text" in node) {
-    buffer.push(node.text);
-  } else if ("tag" in node &&
-    (node.tag === "soft_break" || node.tag === "hard_break")) {
-    buffer.push("\n");
-  } else if ("children" in node) {
-    for (const child of node.children) {
-      addStringContent(child, buffer);
+  const stack: (AstNode | Container)[] = [];
+  let top = 0;
+  let current = node;
+  for (;;) {
+    if ("tag" in current && current.tag === "footnote_reference") {
+      // excluded from heading IDs
+    } else if ("text" in current) {
+      buffer.push(current.text);
+    } else if ("tag" in current &&
+      (current.tag === "soft_break" || current.tag === "hard_break")) {
+      buffer.push("\n");
+    } else if ("children" in current) {
+      const children = current.children;
+      let i = children.length;
+      if (i > 0) {
+        // descend into the first child directly, stacking only the rest
+        while (--i > 0) {
+          stack[top++] = children[i];
+        }
+        current = children[0];
+        continue;
+      }
     }
+    if (top === 0) {
+      return;
+    }
+    current = stack[--top];
   }
 }
 
