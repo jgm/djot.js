@@ -132,7 +132,9 @@ const isDelimChar = function(c : number) : boolean {
 
 const pattLineEnd = pattern("[ \\t]*\\r?\\n");
 const pattPunctuation = pattern("['!\"#$%&\\\\'()\\*+,\\-\\.\\/:;<=>?@\\[\\]\\^_`{|}~']");
-const pattAutolink = pattern("\\<([^<>\\s]+)\\>");
+const pattAutolink = pattern("[<][^<>\\s]+[>]");
+const pattEmail = pattern("[^:]+@");
+const pattUrl = pattern("[a-zA-Z0-9+.-]+:");
 const pattSymbol = pattern(":[\\w_+-]+:");
 const pattBackticks0 = pattern("`*");
 const pattBackticks1 = pattern("`+");
@@ -318,13 +320,14 @@ const matchers = {
     }
     const endurl = m.endpos;
     const starturl = m.startpos;
-    const url = m.captures[0];
-    if (url.match(/[^:]@/)) { // email
+    let isEmail = find(subject, pattEmail, pos + 1, endurl);
+    let isUrl = find(subject, pattUrl, pos + 1, endurl);
+    if (isEmail) {
       self.addMatch(starturl, starturl, "+email");
       self.addMatch(starturl + 1, endurl - 1, "str");
       self.addMatch(endurl, endurl, "-email");
       return endurl + 1;
-    } else if (url.match(/[a-zA-Z]:/)) { /// url
+    } else if (isUrl) {
       self.addMatch(starturl, starturl, "+url");
       self.addMatch(starturl + 1, endurl - 1, "str");
       self.addMatch(endurl, endurl, "-url");

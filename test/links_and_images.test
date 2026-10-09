@@ -287,9 +287,17 @@ Autolinks:
 ```
 <http://example.com/foo>
 <me@example.com>
+<me.and.you+something@example.com>
+<mailto:me@example.com>
+<https://example.com?email=me@example.com>
+<tel:+1-555-555-5555>
 .
 <p><a href="http://example.com/foo">http://example.com/foo</a>
-<a href="mailto:me@example.com">me@example.com</a></p>
+<a href="mailto:me@example.com">me@example.com</a>
+<a href="mailto:me.and.you+something@example.com">me.and.you+something@example.com</a>
+<a href="mailto:me@example.com">mailto:me@example.com</a>
+<a href="https://example.com?email=me@example.com">https://example.com?email=me@example.com</a>
+<a href="tel:+1-555-555-5555">tel:+1-555-555-5555</a></p>
 ```
 
 Openers inside `[..](` or `[..][` or `[..]{` can't match
