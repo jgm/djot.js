@@ -292,6 +292,37 @@ Autolinks:
 <a href="mailto:me@example.com">me@example.com</a></p>
 ```
 
+Explicit mailto schemes preserve their text and case:
+```
+<mailto:a@b.c>
+<MAILTO:a@b.c>
+<MailTo:a@b.c>
+<a@b.c>
+.
+<p><a href="mailto:a@b.c">mailto:a@b.c</a>
+<a href="MAILTO:a@b.c">MAILTO:a@b.c</a>
+<a href="MailTo:a@b.c">MailTo:a@b.c</a>
+<a href="mailto:a@b.c">a@b.c</a></p>
+```
+
+Explicit mailto schemes parse as URLs:
+```a
+<mailto:a@b.c>
+<MAILTO:a@b.c>
+<MailTo:a@b.c>
+<a@b.c>
+.
+doc
+  para
+    url text="mailto:a@b.c"
+    soft_break
+    url text="MAILTO:a@b.c"
+    soft_break
+    url text="MailTo:a@b.c"
+    soft_break
+    email text="a@b.c"
+```
+
 Openers inside `[..](` or `[..][` or `[..]{` can't match
 outside them, even if the construction doesn't turn out to be
 a link or span or image.

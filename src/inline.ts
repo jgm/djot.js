@@ -319,7 +319,7 @@ const matchers = {
     const endurl = m.endpos;
     const starturl = m.startpos;
     const url = m.captures[0];
-    if (url.match(/[^:]@/)) { // email
+    if (url.match(/[^:]@/) && !url.match(/^mailto:/i)) { // email
       self.addMatch(starturl, starturl, "+email");
       self.addMatch(starturl + 1, endurl - 1, "str");
       self.addMatch(endurl, endurl, "-email");
