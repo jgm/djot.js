@@ -804,7 +804,9 @@ class InlineParser {
     }
     while (this.matches[i] && this.matches[i].endpos <= endpos) {
       const m = this.matches[i];
-      if (m.annot !== "escape" && m.annot !== "str") {
+      // An open marker is already included in the following delimiter match.
+      if (m.annot !== "escape" && m.annot !== "str" &&
+          m.annot !== "open_marker") {
         m.annot = "str";
       }
       i++;
