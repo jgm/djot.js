@@ -40,6 +40,7 @@ type Block =
   | TaskList
   | DefinitionList
   | Table
+  | Figure
   ;
 
 interface Para extends HasAttributes {
@@ -130,6 +131,16 @@ type OrderedListStyle =
 
 interface Caption extends HasAttributes {
   tag: "caption";
+  children: Inline[];
+}
+
+interface Figure extends HasAttributes {
+  tag: "figure";
+  children: AstNode[];
+}
+
+interface Figcaption extends HasAttributes {
+  tag: "figcaption";
   children: Inline[];
 }
 
@@ -378,8 +389,10 @@ type AstNode =
   | Row
   | Cell
   | Caption
+  | Figure
+  | Figcaption
   | Footnote
-  | Reference 
+  | Reference
   ;
 
 type Visitor<C, R> = {
@@ -430,6 +443,8 @@ type Visitor<C, R> = {
   row?: (node: Row, context: C) => R;
   cell?: (node: Cell, context: C) => R;
   caption?: (node: Caption, context: C) => R;
+  figure?: (node: Figure, context: C) => R;
+  figcaption?: (node: Figcaption, context: C) => R;
   footnote?: (node: Footnote, context: C) => R;
   reference?: (node: Reference, context: C) => R;
 };
@@ -450,6 +465,7 @@ const blockTags : Record<string, boolean> = {
   task_list: true,
   definition_list: true,
   table: true,
+  figure: true,
   reference: true,
   footnote: true
 };
@@ -529,6 +545,8 @@ export type {
   Definition,
   Table,
   Caption,
+  Figure,
+  Figcaption,
   Row,
   Cell,
   Alignment,
