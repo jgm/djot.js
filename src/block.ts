@@ -686,7 +686,10 @@ class EventParser {
           // on this line. Rewinding to the previous line's attribute end would
           // feed that prefix to the paragraph as literal text.
           this.pos = Math.max(this.pos, para.inlineParser.lastpos + 1);
-          return true;
+          // A blank line ends the rejected attribute's paragraph here.
+          // Continuing this container would absorb the blank and join the
+          // following text into the same paragraph.
+          return this.pos !== this.starteol;
         },
         close: () => {
           const container = this.containers.pop();

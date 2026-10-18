@@ -332,5 +332,28 @@ describe("EventParser", () => {
     }
   });
 
+  it("keeps a blank after a rejected attribute between paragraphs", () => {
+    for (const input of [
+      "{%\n\nc\n",
+      "{%\r\n\r\nc\r\n",
+      "> {%\n>\n> c\n",
+    ]) {
+      const annotations = [...parseEvents(input)].map(event => event.annot);
+      expect(annotations.filter(annot => annot === "+para")).toHaveLength(2);
+      expect(annotations.filter(annot => annot === "blankline")).toHaveLength(1);
+    }
+  });
+
+  it("keeps indented blank lines inside valid multiline attributes", () => {
+    for (const input of [
+      "{#a\n  \n  .b}\npara\n",
+      "> {#a\n>   \n>   .b}\n> c\n",
+    ]) {
+      const annotations = [...parseEvents(input)].map(event => event.annot);
+      expect(annotations).toContain("+block_attributes");
+      expect(annotations.filter(annot => annot === "+para")).toHaveLength(1);
+    }
+  });
+
 });
 
