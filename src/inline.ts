@@ -200,15 +200,11 @@ const betweenMatched = function(
         // When inside a link destination, don't match openers from outside
         // the link construct (before the [ that started this link)
         if (self.destination) {
-          const linkOpeners = self.openers["["];
-          if (linkOpeners && linkOpeners.length > 0) {
-            const linkOpener = linkOpeners[linkOpeners.length - 1];
-            if (linkOpener.annot === "explicit_link" &&
-                opener.startpos < linkOpener.startpos) {
-              // opener is outside the link, don't match
-              self.addMatch(pos, endcloser, match);
-              return endcloser + 1;
-            }
+          const linkOpener = self.destinationOpener;
+          if (linkOpener && opener.startpos < linkOpener.startpos) {
+            // opener is outside the link, don't match
+            self.addMatch(pos, endcloser, match);
+            return endcloser + 1;
           }
         }
         self.clearOpeners(opener.startpos, pos);
@@ -478,6 +474,7 @@ const matchers = {
         opener.substartpos = pos;  // intermediate ]
         opener.subendpos = pos + 1;  // intermediate (
         self.destination = true;
+        self.destinationOpener = opener;
         // remove any openers between [ and ]
         self.clearOpeners(opener.startpos + 1, pos - 1);
         return pos + 2;
@@ -520,9 +517,8 @@ const matchers = {
       return pos + 1;
     } else {
       const subject = self.subject;
-      const openers = self.openers["["];
-      const opener = openers[openers.length - 1];
-      if (openers && openers.length > 0 && opener.annot === "explicit_link") {
+      const opener = self.destinationOpener;
+      if (opener) {
         // we have inline link
         // convert all matches inside destination to str
         self.strMatches((opener.subendpos || opener.endpos) + 1, pos - 1);
@@ -548,6 +544,7 @@ const matchers = {
           opener.subMatchIndex + 1);
         self.addMatch(pos, pos, "-destination");
         self.destination = false;
+        self.destinationOpener = null;
         // remove from openers
         self.clearOpeners(opener.startpos, pos);
         return pos + 1;
@@ -619,6 +616,7 @@ class InlineParser {
   verbatim: number; // parsing a verbatim span to be ended by N backticks
   verbatimType: string; // math or regular
   destination: boolean; // parsing link destination?
+  destinationOpener: null | Opener;
   firstpos: number; // position of first slice
   lastpos: number; // position of last slice
   allowAttributes: boolean; // allow parsing of attributes
@@ -638,6 +636,7 @@ class InlineParser {
     this.verbatim = 0;
     this.verbatimType = "";
     this.destination = false;
+    this.destinationOpener = null;
     this.firstpos = -1;
     this.lastpos = 0;
     this.allowAttributes = true;
@@ -778,9 +777,17 @@ class InlineParser {
       while (v[i]) {
         const opener = v[i];
         if (opener.startpos >= startpos && opener.endpos <= endpos) {
+          if (opener === this.destinationOpener) {
+            this.destination = false;
+            this.destinationOpener = null;
+          }
           v.splice(i, 1);
         } else if ((opener.substartpos && opener.substartpos >= startpos) &&
           (opener.subendpos && opener.subendpos <= endpos)) {
+          if (opener === this.destinationOpener) {
+            this.destination = false;
+            this.destinationOpener = null;
+          }
           v[i].substartpos = null;
           v[i].subendpos = null;
           v[i].annot = null;

@@ -262,6 +262,51 @@ _hello [link](a_b) world_
 <p><em>hello <a href="a_b">link</a> world</em></p>
 ```
 
+Brackets that do not start another construct are URL text in a destination:
+```
+[x](http://u/[)
+.
+<p><a href="http://u/[">x</a></p>
+```
+
+```
+[x](http://u/[a])
+.
+<p><a href="http://u/[a]">x</a></p>
+```
+
+```
+![x](http://u/[a])
+.
+<p><img alt="x" src="http://u/[a]"></p>
+```
+
+```
+[x](u/[^a])
+.
+<p><a href="u/[^a]">x</a></p>
+```
+
+An unclosed destination still lets later links form:
+```
+[a](b and [c](d)
+.
+<p>[a](b and <a href="d">c</a></p>
+```
+
+```
+[a](b [c](d))
+.
+<p>[a](b <a href="d">c</a>)</p>
+```
+
+An opener before the destination cannot close inside it, even after `[`:
+```
+_a [x](u/[_b)
+.
+<p>_a <a href="u/[_b">x</a></p>
+```
+
 ```
 [x](a{"b)
 .
