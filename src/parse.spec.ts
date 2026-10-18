@@ -1,6 +1,25 @@
 import { parse, renderAST } from "./parse";
 
 describe("Parser", () => {
+  it("keeps a list tight across a table's caption blank", () => {
+    const list = parse("- | a |\n\n  ^ cap\n- c\n").children[0];
+    expect(list.tag).toBe("bullet_list");
+    if (list.tag === "bullet_list") {
+      expect(list.tight).toBe(true);
+      expect(list.children[0].children[0].tag).toBe("table");
+    }
+  });
+
+  it("still loosens a list after two blanks before a caption", () => {
+    const list = parse("- | a |\n\n\n  ^ cap\n- c\n").children[0];
+    expect(list.tag).toBe("bullet_list");
+    if (list.tag === "bullet_list") expect(list.tight).toBe(false);
+  });
+  it("keeps an orphan caption's blank as a list separator", () => {
+    const list = parse("- text\n\n  ^ cap\n- c\n").children[0];
+    expect(list.tag).toBe("bullet_list");
+    if (list.tag === "bullet_list") expect(list.tight).toBe(false);
+  });
   it("parses paragraphs", () => {
     const ast = parse("hi there\nfriend\n\nnew para", {});
     expect(ast).toEqual(
