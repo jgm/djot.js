@@ -317,5 +317,20 @@ describe("EventParser", () => {
     ]);
   });
 
+  it("does not reparse a quote prefix as text after a rejected attribute", () => {
+    for (const [input, expected] of [
+      ["> {%\n> c\n> %}\n", ["{%", "c", "%}"]],
+      ["> > {%\n> > c\n", ["{%", "c"]],
+      ["> {%\r\n> c\r\n", ["{%", "c"]],
+    ] as const) {
+      const events = [...parseEvents(input)];
+      const strings = events.filter(event => event.annot === "str")
+        .map(event => input.slice(event.startpos, event.endpos + 1));
+      expect(strings).toEqual(expected);
+      expect(events.filter(event => event.annot === "soft_break"))
+        .toHaveLength(input.includes("%}\n") ? 2 : 1);
+    }
+  });
+
 });
 

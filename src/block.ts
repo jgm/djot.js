@@ -682,7 +682,10 @@ class EventParser {
           }
           para.inlineParser.attributeSlices = attrContainer.extra.slices;
           para.inlineParser.reparseAttributes();
-          this.pos = para.inlineParser.lastpos + 1;
+          // A container such as a block quote has already consumed its prefix
+          // on this line. Rewinding to the previous line's attribute end would
+          // feed that prefix to the paragraph as literal text.
+          this.pos = Math.max(this.pos, para.inlineParser.lastpos + 1);
           return true;
         },
         close: () => {
