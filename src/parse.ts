@@ -517,6 +517,57 @@ const parseFromEvents = function(events: Iterable<Event>,
             warnUnattached();
             return;
           }
+          const children = topContainer().children;
+          const last = children.length - 1;
+          let first = last;
+          // A smart apostrophe splits a contraction into separate nodes.
+          // Keep the whole word together when applying its attribute.
+          while (first >= 2 &&
+                 children[first].tag === "str" &&
+                 /^[\p{L}\p{N}]\S*$/u.test(children[first].text) &&
+                 children[first - 1].tag === "smart_punctuation" &&
+                 children[first - 1].type === "right_single_quote" &&
+                 children[first - 2].tag === "str" &&
+                 /[\p{L}\p{N}]$/u.test(children[first - 2].text)) {
+            first -= 2;
+          }
+          if (first < last) {
+            const initial = children[first];
+            const word = initial.text.match(/[^\s]+$/);
+            if (word && word.index && word.index > 0) {
+              const originalEnd = initial.pos?.end;
+              const wordpos = originalEnd ? {
+                start: {
+                  line: originalEnd.line,
+                  col: originalEnd.col - word[0].length + 1,
+                  offset: originalEnd.offset - word[0].length + 1
+                },
+                end: originalEnd
+              } : undefined;
+              if (originalEnd) {
+                initial.pos.end = {
+                  line: originalEnd.line,
+                  col: originalEnd.col - word[0].length,
+                  offset: originalEnd.offset - word[0].length
+                };
+              }
+              initial.text = initial.text.substring(0, word.index);
+              children.splice(first + 1, 0, { tag: "str", text: word[0], pos: wordpos });
+              first += 1;
+            }
+            const parts = children.splice(first);
+            const firstPos = parts[0].pos;
+            const lastPos = parts[parts.length - 1].pos;
+            children.push({
+              tag: "span",
+              children: parts,
+              pos: firstPos && lastPos ? {
+                start: firstPos.start,
+                end: lastPos.end
+              } : undefined
+            });
+            tip = getTip();
+          }
           if (!tip.attributes) {
             tip.attributes = {};
           }

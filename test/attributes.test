@@ -1,6 +1,32 @@
 An inline attribute attaches to the preceding element, which might
 be complex (span, emphasis, link) or a simple word (defined as a
 sequence of non-ASCII-whitespace characters).
+
+Smart apostrophes inside a word remain part of the attributed word:
+
+```
+don't{.x} and rock'n'roll{.y}
+.
+<p><span class="x">don’t</span> and <span class="y">rock’n’roll</span></p>
+```
+
+```
+a b'c{.x}
+.
+<p>a <span class="x">b’c</span></p>
+```
+
+```
+a'c d'e{.x}
+.
+<p>a’c <span class="x">d’e</span></p>
+```
+
+```
+don't {.x}
+.
+<p>don’t </p>
+```
 ```
 foo привет{.ru}
 .
