@@ -1,6 +1,34 @@
 import { parse, renderAST } from "./parse";
 
 describe("Parser", () => {
+  it("loosens a list after a footnote followed by a blank", () => {
+    for (const input of [
+      "- [^n]: a\n\n- c\n",
+      "- [^n]: a\n\n  b\n",
+    ]) {
+      const list = parse(input).children[0];
+      expect(list.tag).toBe("bullet_list");
+      if (list.tag === "bullet_list") expect(list.tight).toBe(false);
+    }
+  });
+
+  it("keeps a list tight when the blank stays inside a footnote", () => {
+    const list = parse("- [^n]: a\n\n    b\n- c\n").children[0];
+    expect(list.tag).toBe("bullet_list");
+    if (list.tag === "bullet_list") expect(list.tight).toBe(true);
+  });
+
+  it("keeps a list tight when the footnote blank stays in a quote", () => {
+    const list = parse("- > [^n]: a\n  >\n  > b\n- c\n").children[0];
+    expect(list.tag).toBe("bullet_list");
+    if (list.tag === "bullet_list") expect(list.tight).toBe(true);
+  });
+
+  it("passes a trailing blank through nested footnotes", () => {
+    const list = parse("- [^n]: a\n\n      [^m]: b\n\n- c\n").children[0];
+    expect(list.tag).toBe("bullet_list");
+    if (list.tag === "bullet_list") expect(list.tight).toBe(false);
+  });
   it("parses paragraphs", () => {
     const ast = parse("hi there\nfriend\n\nnew para", {});
     expect(ast).toEqual(
