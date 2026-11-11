@@ -166,3 +166,24 @@ and the preceding row stays a `<td>` row; without the space
 </tr>
 </table>
 ```
+
+```
+| a	| b 	|
+.
+<table>
+<tr>
+<td>a</td>
+<td>b</td>
+</tr>
+</table>
+```
+
+```
+| a \ 	|
+.
+<table>
+<tr>
+<td>a &nbsp;</td>
+</tr>
+</table>
+```
