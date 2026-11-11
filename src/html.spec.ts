@@ -54,6 +54,41 @@ rendering the light markup format <a href="https://djot.net">djot</a>.</p>
 
 });
 
+describe("Paragraphs in tight lists", () => {
+  const cases = [
+    ["block quote", "- > a\n  >\n  > b\n- c\n",
+      "<ul>\n<li>\n<blockquote>\n<p>a</p>\n<p>b</p>\n</blockquote>\n</li>\n<li>\nc\n</li>\n</ul>\n"],
+    ["div", "- ::: d\n  a\n  :::\n",
+      '<ul>\n<li>\n<div class="d">\n<p>a</p>\n</div>\n</li>\n</ul>\n'],
+  ];
+
+  it.each(cases)("preserves paragraphs inside a %s", (_name, source, expected) => {
+    expect(renderHTML(parse(source))).toEqual(expected);
+  });
+
+  it.each(cases)("preserves paragraphs in a %s override", (_name, source, expected) => {
+    expect(renderHTML(parse(source), {
+      overrides: {
+        block_quote: (node, renderer) =>
+          `<blockquote>\n${renderer.renderChildren(node)}</blockquote>\n`,
+        div: (node, renderer) => renderer.inTags("div", node, 2),
+      },
+    })).toEqual(expected);
+  });
+
+  it("keeps a list inside a quote tight and restores the outer list's tightness", () => {
+    const source = "- > a\n  >\n  > - b\n  > - c\n- d\n";
+    expect(renderHTML(parse(source))).toEqual(
+      "<ul>\n<li>\n<blockquote>\n<p>a</p>\n<ul>\n<li>\nb\n</li>\n<li>\nc\n</li>\n</ul>\n</blockquote>\n</li>\n<li>\nd\n</li>\n</ul>\n");
+  });
+
+  it("preserves paragraphs in a loose list after leaving a quote", () => {
+    const source = "- > a\n  >\n  > b\n\n- c\n";
+    expect(renderHTML(parse(source))).toEqual(
+      "<ul>\n<li>\n<blockquote>\n<p>a</p>\n<p>b</p>\n</blockquote>\n</li>\n<li>\n<p>c</p>\n</li>\n</ul>\n");
+  });
+});
+
 // The block and inline parsers are iterative, so they happily build ASTs
 // far deeper than the JS call stack can hold.  The renderer must be able
 // to render them back: a recursive renderer overflows at around a

@@ -31,8 +31,8 @@ interface NodeParts {
   open: string;
   close: string;
   children: AstNode[] | undefined;
-  // the `tight` value to apply while the children are rendered, for the
-  // three list tags that carry the flag; undefined for every other node:
+  // the `tight` value to apply while the children are rendered: lists
+  // supply their flag, quotes and divs reset it, other nodes inherit it:
   tight: boolean | undefined;
   // a doc's footnotes, whose section can only be rendered once the body
   // has assigned every footnote its index; undefined for other nodes:
@@ -47,9 +47,8 @@ interface RenderFrame {
   children: AstNode[];
   childIndex: number;
   close: string;
-  // the `tight` value to restore afterwards, for nodes carrying a
-  // `tight` flag that applies while their children are rendered;
-  // undefined for every other node:
+  // the `tight` value to restore afterwards, for nodes that change it
+  // while their children are rendered; undefined for other nodes:
   oldTight: boolean | undefined;
   // a doc's footnotes, whose section can only be rendered once the body
   // has assigned every footnote its index; undefined for other nodes:
@@ -325,13 +324,14 @@ class HTMLRenderer {
     const oldtight = this.tight;
     if ("tight" in node) {
       this.tight = !!node.tight;
+    } else if ("tag" in node &&
+               (node.tag === "block_quote" || node.tag === "div")) {
+      this.tight = false;
     }
     for (const child of node.children) {
       result += this.renderNested(child, true);
     }
-    if ("tight" in node) {
-      this.tight = oldtight;
-    }
+    this.tight = oldtight;
     return result;
   }
 
@@ -426,10 +426,12 @@ class HTMLRenderer {
       }
 
       case "block_quote":
-        return this.tagParts("blockquote", node, 2);
-
-      case "div":
-        return this.tagParts("div", node, 2);
+      case "div": {
+        const tag = node.tag === "block_quote" ? "blockquote" : "div";
+        const parts = this.tagParts(tag, node, 2);
+        parts.tight = false;
+        return parts;
+      }
 
       case "section":
         return this.tagParts("section", node, 2);
