@@ -1027,8 +1027,9 @@ class EventParser {
           const s = match.startpos;
           let e = match.endpos;
           if (i === cellMatches.length - 1 && match.annot === "str") {
-            // strip trailing space
-            while (this.subject.codePointAt(e) === 32 && e >= s) {
+            // strip trailing spaces and tabs
+            while (e >= s && (this.subject.codePointAt(e) === 32 ||
+                              this.subject.codePointAt(e) === 9)) {
               e = e - 1;
             }
           }
