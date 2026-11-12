@@ -181,6 +181,42 @@ two
 </ul>
 ```
 
+A line that opens a block is not lazy. The container is looked for
+before the line is asked whether it continues the paragraph, so the
+block wins and the item ends:
+
+```
+- one
+> q
+.
+<ul>
+<li>
+one
+</li>
+</ul>
+<blockquote>
+<p>q</p>
+</blockquote>
+```
+
+A paragraph opened after a blank line inside the item takes lazy
+continuation like the first one:
+
+```
+- a
+
+  b
+next
+.
+<ul>
+<li>
+<p>a</p>
+<p>b
+next</p>
+</li>
+</ul>
+```
+
 ```
 - a
 - b
