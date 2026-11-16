@@ -119,6 +119,78 @@ A paragraph
 <p>A paragraph</p>
 ```
 
+Attributes at the end of a container are not applied to a block
+that follows the container:
+
+```
+- {.a}
+- b
+.
+<ul>
+<li>
+</li>
+<li>
+b
+</li>
+</ul>
+```
+
+```
+- x
+
+  {.a}
+- b
+.
+<ul>
+<li>
+<p>x</p>
+</li>
+<li>
+<p>b</p>
+</li>
+</ul>
+```
+
+```
+> {.a}
+- b
+.
+<blockquote>
+</blockquote>
+<ul>
+<li>
+b
+</li>
+</ul>
+```
+
+```
+> {.a}
+tail
+.
+<blockquote>
+</blockquote>
+<p>tail</p>
+```
+
+```
+x[^n]
+
+[^n]: {.a}
+tail
+.
+<p>x<a id="fnref1" href="#fn1" role="doc-noteref"><sup>1</sup></a></p>
+<p>tail</p>
+<section role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn1">
+<p><a href="#fnref1" role="doc-backlink">↩︎</a></p>
+</li>
+</ol>
+</section>
+```
+
 Use indentation if you need to continue the attributes over a line break.
 
 ```

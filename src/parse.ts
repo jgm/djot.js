@@ -203,6 +203,8 @@ const parseFromEvents = function(events: Iterable<Event>,
   const footnotes: Record<string, Footnote> = Object.create(null);
   const identifiers: Record<string, boolean> = Object.create(null); // identifiers used
   const blockAttributes: Attributes = {}; // accumulated block attributes
+  const blockContainerEnds = new Set(
+    ["-list_item", "-list", "-block_quote", "-div", "-footnote"]);
   let listDepth = 0;
   const warn = options.warn || (() => {});
   const addBlockAttributes = function(container: HasAttributes) {
@@ -1254,8 +1256,9 @@ const parseFromEvents = function(events: Iterable<Event>,
     }
 
     // Attributes must come right before a block, so we
-    // reset them on blank lines.
-    if (annot === "blankline") {
+    // reset them on blank lines. They also don't leave the
+    // container they were written in.
+    if (annot === "blankline" || blockContainerEnds.has(annot)) {
       for (const key in blockAttributes) {
         delete blockAttributes[key];
       }
