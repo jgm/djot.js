@@ -428,3 +428,52 @@ doc
     para key="bar a$bim"
       str text="ou"
 ```
+
+Paragraph attributes in tight lists must retain an element to carry them.
+
+```
+- {.a #i}
+  b
+- c
+.
+<ul>
+<li>
+<p class="a" id="i">b</p>
+</li>
+<li>
+c
+</li>
+</ul>
+```
+
+```
+1. {.a #i}
+   b
+2. c
+.
+<ol>
+<li>
+<p class="a" id="i">b</p>
+</li>
+<li>
+c
+</li>
+</ol>
+```
+
+```
+> - {.a #i}
+>   b
+> - c
+.
+<blockquote>
+<ul>
+<li>
+<p class="a" id="i">b</p>
+</li>
+<li>
+c
+</li>
+</ul>
+</blockquote>
+```
