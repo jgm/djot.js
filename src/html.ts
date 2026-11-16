@@ -418,7 +418,7 @@ class HTMLRenderer {
       }
 
       case "para": {
-        if (this.tight) {
+        if (this.tight && !node.attributes && !node.autoAttributes) {
           return this.setParts("", "\n", node.children);
         } else {
           return this.tagParts("p", node, 1);
