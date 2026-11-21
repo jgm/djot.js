@@ -1231,6 +1231,8 @@ const parseFromEvents = function(events: Iterable<Event>,
         }
         if (listnode) {
           listnode.data.blanklines = true;
+          listnode.data.blanklineCount =
+            (listnode.data.blanklineCount || 0) + 1;
         }
       }
 
@@ -1278,11 +1280,18 @@ const parseFromEvents = function(events: Iterable<Event>,
         }
       }
       if (ln) {
-        if (!/^[+-]list/.test(annot) && ln.data.blanklines) {
+        const parent = topContainer();
+        const previous = parent?.children[parent.children.length - 1];
+        const attachedCaption = annot === "+caption" &&
+          ln.data.blanklineCount === 1 && previous?.tag === "table";
+        // One blank before an attached caption belongs to the table.
+        if (!/^[+-]list/.test(annot) && !attachedCaption &&
+            ln.data.blanklines) {
           ln.data.tight = false;
         }
         if (!/^[-+]list_item$/.test(annot)) {
           ln.data.blanklines = false;
+          ln.data.blanklineCount = 0;
         }
       }
     }
