@@ -204,6 +204,7 @@ const parseFromEvents = function(events: Iterable<Event>,
   const identifiers: Record<string, boolean> = Object.create(null); // identifiers used
   const blockAttributes: Attributes = {}; // accumulated block attributes
   let listDepth = 0;
+  const openFootnotes: Container[] = [];
   const warn = options.warn || (() => {});
   const addBlockAttributes = function(container: HasAttributes) {
     if (Object.keys(blockAttributes).length > 0) {
@@ -1096,10 +1097,23 @@ const parseFromEvents = function(events: Iterable<Event>,
 
       ["+footnote"]: (suffixes, startpos, endpos, pos) => {
         pushContainer(pos);
+        openFootnotes.push(topContainer());
       },
 
       ["-footnote"]: (suffixes, startpos, endpos, pos) => {
         const node = popContainer(pos);
+        openFootnotes.pop();
+        if (node.data.pendingListBlank) {
+          const top = topContainer();
+          if (top === openFootnotes[openFootnotes.length - 1]) {
+            top.data.pendingListBlank = true;
+          } else if ("tight" in top.data) {
+            top.data.blanklines = true;
+          } else if (containers.length >= 2 &&
+              "tight" in containers[containers.length - 2].data) {
+            containers[containers.length - 2].data.blanklines = true;
+          }
+        }
         tightenContainerEnd(node);
         if (node.data.label) {
           const lab = normalizeLabel(node.data.label);
@@ -1222,6 +1236,10 @@ const parseFromEvents = function(events: Iterable<Event>,
       // We set the blanklines property of a parent list or
       // sublist to aid with tight/loose list determination.
       blankline: (suffixes, startpos, endpos, pos) => {
+        const footnote = openFootnotes[openFootnotes.length - 1];
+        if (footnote && topContainer() === footnote) {
+          footnote.data.pendingListBlank = true;
+        }
         let listnode;
         if ("tight" in topContainer().data) {
           listnode = topContainer();
@@ -1258,6 +1276,11 @@ const parseFromEvents = function(events: Iterable<Event>,
     if (annot === "blankline") {
       for (const key in blockAttributes) {
         delete blockAttributes[key];
+      }
+    } else if (annot !== "-footnote") {
+      const footnote = openFootnotes[openFootnotes.length - 1];
+      if (footnote && topContainer() === footnote) {
+        footnote.data.pendingListBlank = false;
       }
     }
 
