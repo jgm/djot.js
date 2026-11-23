@@ -137,8 +137,12 @@ class PandocRenderer {
       if ("checkbox" in item && item.checkbox) {
         const box : PandocElt =
           {t: "Str", c: item.checkbox === "checked" ? "☒" : "☐"};
-        if (elts[0] && elts[0].t === "Para") {
-          elts[0].c.unshift(box, {t: "Space"});
+        let first = elts[0];
+        if (first && first.t === "Div" && item.children[0]?.tag === "para") {
+          first = first.c[1][0];
+        }
+        if (first && first.t === "Para") {
+          first.c.unshift(box, {t: "Space"});
         } else {
           // e.g. a task list item with no content:
           elts.unshift({t: "Para", c: [box]});
@@ -195,9 +199,18 @@ class PandocRenderer {
       case "list_item": // should be handled at "list" above
         break;
 
-      case "para":
-        elts.push({ t: "Para", c: this.toPandocChildren(node) });
+      case "para": {
+        const para = { t: "Para", c: this.toPandocChildren(node) };
+        const attrs = toPandocAttr(node);
+        if (attrs[0] || attrs[1].length || attrs[2].length) {
+          // Pandoc's Para has no attributes; use its Djot wrapper convention.
+          attrs[2].unshift(["wrapper", "1"]);
+          elts.push({ t: "Div", c: [attrs, [para]] });
+        } else {
+          elts.push(para);
+        }
         break;
+      }
 
       case "heading":
         elts.push({ t: "Header", c: [node.level, toPandocAttr(node),
@@ -504,10 +517,18 @@ const isPlainOrPara = function(x : PandocElt) : boolean {
   return (x.t === "Plain" || x.t === "Para");
 }
 
+const isWrapperDiv = function(elt : PandocElt) : boolean {
+  return elt.t === "Div" &&
+    elt.c[0][2].some(([k,v] : string[]) => k === "wrapper" && v === "1");
+}
+
 // Detect (without modifying the input) whether a list item starts
 // with a checkbox character:
 const hasCheckbox = function(elt : PandocElt[]) : CheckboxStatus | null {
   const x = elt[0];
+  if (x && isWrapperDiv(x)) {
+    return hasCheckbox(x.c[1]);
+  }
   if (!x || !isPlainOrPara(x)) {
     return null;
   }
@@ -526,6 +547,9 @@ const hasCheckbox = function(elt : PandocElt[]) : CheckboxStatus | null {
 // checkbox (and following space) removed, leaving the input unchanged:
 const stripCheckbox = function(elt : PandocElt[]) : PandocElt[] {
   const first = elt[0];
+  if (isWrapperDiv(first)) {
+    return [{t: "Div", c: [first.c[0], stripCheckbox(first.c[1])]}, ...elt.slice(1)];
+  }
   const skip = (first.c[1] && first.c[1].t === "Space") ? 2 : 1;
   const rest = first.c.slice(skip);
   if (rest.length === 0) { // e.g. a task list item with no content

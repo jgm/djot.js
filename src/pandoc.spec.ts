@@ -1144,6 +1144,80 @@ describe("PandocRenderer", () => {
 
   });
 
+  it.each([
+    {name: "class", input: "{.class-name}\nhello\n",
+     attrs: ["", ["class-name"], [["wrapper", "1"]]]},
+    {name: "id", input: "{#greeting}\nhello\n",
+     attrs: ["greeting", [], [["wrapper", "1"]]]},
+    {name: "key-value", input: "{key=\"value\"}\nhello\n",
+     attrs: ["", [], [["wrapper", "1"], ["key", "value"]]]},
+    {name: "combined", input: "{#greeting .first .second key=\"value\"}\nhello\n",
+     attrs: ["greeting", ["first", "second"], [["wrapper", "1"], ["key", "value"]]]},
+    {name: "wrapper", input: "{wrapper=\"custom\"}\nhello\n",
+     attrs: ["", [], [["wrapper", "1"], ["wrapper", "custom"]]]},
+  ])("preserves $name paragraph attributes in a wrapper Div", ({input, attrs}) => {
+    expect(toPandoc(parse(input)).blocks).toStrictEqual([
+      {t: "Div", c: [attrs, [{t: "Para", c: [{t: "Str", c: "hello"}]}]]},
+    ]);
+  });
+
+  it("merges automatic paragraph attributes without mutating the input", () => {
+    const ast = parse("{#explicit}\nhello\n");
+    ast.children[0].autoAttributes = {id: "automatic", class: "generated", key: "value"};
+    const before = JSON.stringify(ast);
+    expect(toPandoc(ast).blocks).toStrictEqual([
+      {t: "Div", c: [["explicit", ["generated"], [["wrapper", "1"], ["key", "value"]]],
+                    [{t: "Para", c: [{t: "Str", c: "hello"}]}]]},
+    ]);
+    expect(JSON.stringify(ast)).toEqual(before);
+  });
+
+  it("preserves paragraph attributes inside a tight list", () => {
+    const ast = parse("- {.class-name}\n  hello\n");
+    expect(toPandoc(ast).blocks).toStrictEqual([
+      {t: "BulletList", c: [[
+        {t: "Div", c: [["", ["class-name"], [["wrapper", "1"]]],
+                      [{t: "Para", c: [{t: "Str", c: "hello"}]}]]},
+      ]]},
+    ]);
+  });
+
+  it.each([
+    {name: "missing", attributes: undefined, autoAttributes: undefined},
+    {name: "empty", attributes: {}, autoAttributes: undefined},
+    {name: "empty automatic", attributes: undefined, autoAttributes: {}},
+  ])("does not wrap paragraphs with $name attributes", ({attributes, autoAttributes}) => {
+    const ast = parse("hello\n");
+    ast.children[0].attributes = attributes;
+    ast.children[0].autoAttributes = autoAttributes;
+    expect(toPandoc(ast).blocks).toStrictEqual([
+      {t: "Para", c: [{t: "Str", c: "hello"}]},
+    ]);
+  });
+
+  it("keeps task list checkboxes inside attributed paragraphs", () => {
+    const ast = parse("- [x] {.todo}\n  hello\n");
+    const pandoc = toPandoc(ast);
+    const before = JSON.stringify(pandoc);
+    expect(pandoc.blocks).toStrictEqual([
+      {t: "BulletList", c: [[
+        {t: "Div", c: [["", ["todo"], [["wrapper", "1"]]], [
+          {t: "Para", c: [{t: "Str", c: "☒"}, {t: "Space"},
+                          {t: "Str", c: "hello"}]},
+        ]]},
+      ]]},
+    ]);
+    expect(fromPandoc(pandoc).children[0]).toMatchObject({
+      tag: "task_list", children: [{
+        tag: "task_list_item", checkbox: "checked", children: [{
+          tag: "div", attributes: {class: "todo", wrapper: "1"},
+          children: [{tag: "para", children: [{tag: "str", text: "hello"}]}],
+        }],
+      }],
+    });
+    expect(JSON.stringify(pandoc)).toEqual(before);
+  });
+
   it("renders task list items with empty content", () => {
     const ast = parse("- [x]\n- [ ] done\n", {});
     expect(toPandoc(ast)).toStrictEqual(
