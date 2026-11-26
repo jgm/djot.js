@@ -217,6 +217,8 @@ describe("Parser", () => {
       {sourcePositions: true}) as any;
     const table = ast.children[0];
     const para = ast.children[1];
+    expect(table.children[0]).toMatchObject({ tag: "caption", children: [] });
+    expect(table.children[0].pos).toBeUndefined();
     expect(table.pos).toEqual({
       "start": { "line": 1, "col": 1, "offset": 0 },
       "end": { "line": 4, "col": 0, "offset": 19 }
@@ -226,6 +228,52 @@ describe("Parser", () => {
       "end": { "line": 6, "col": 0, "offset": 27 }
     });
     expect(table.pos.end.offset).toBeLessThan(para.pos.start.offset);
+  });
+
+  it("extends a table's source position through an adjacent caption", () => {
+    const [table, para] = parse("| a |\n^ Short caption\n\nAfter.\n",
+      {sourcePositions: true}).children;
+    expect(table).toMatchObject({
+      tag: "table",
+      pos: {
+        start: { line: 1, col: 1, offset: 0 },
+        end: { line: 3, col: 0, offset: 21 }
+      },
+      children: [
+        { tag: "caption", pos: {
+          start: { line: 2, col: 3, offset: 8 },
+          end: { line: 3, col: 0, offset: 21 }
+        } },
+        { tag: "row", pos: { end: { line: 2, col: 0, offset: 5 } } }
+      ]
+    });
+    expect(para.pos).toEqual({
+      start: { line: 4, col: 1, offset: 23 },
+      end: { line: 5, col: 0, offset: 29 }
+    });
+  });
+
+  it("extends a table's source position through a multiline CRLF caption", () => {
+    const [table, para] = parse("| a |\r\n\r\n^ Caption\r\n  continues.\r\n\r\nAfter.\r\n",
+      {sourcePositions: true}).children;
+    expect(table).toMatchObject({
+      tag: "table",
+      pos: {
+        start: { line: 1, col: 1, offset: 0 },
+        end: { line: 5, col: 0, offset: 33 }
+      },
+      children: [
+        { tag: "caption", pos: {
+          start: { line: 3, col: 3, offset: 11 },
+          end: { line: 5, col: 0, offset: 33 }
+        } },
+        { tag: "row", pos: { end: { line: 1, col: 6, offset: 5 } } }
+      ]
+    });
+    expect(para.pos).toEqual({
+      start: { line: 6, col: 1, offset: 36 },
+      end: { line: 6, col: 7, offset: 42 }
+    });
   });
 
   it("uses tight source position ends for lazy-closing lists", () => {

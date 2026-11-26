@@ -1091,6 +1091,9 @@ const parseFromEvents = function(events: Iterable<Event>,
           };
         if (tip.children[0]?.tag === "caption") {
           tip.children[0] = capt;
+          if (tip.pos && capt.pos) {
+            tip.pos.end = capt.pos.end;
+          }
         }
       },
 
