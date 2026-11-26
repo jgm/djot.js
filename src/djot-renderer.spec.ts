@@ -540,6 +540,13 @@ etc.
     expect(renderDjot(doc, {wrapWidth: 5})).toEqual("averyverylongword\n");
   });
 
+  it("escapes text that would start a list", () => {
+    for (const s of ["\\- a\n", "\\+ a\n", "\\: a\n", "1\\. a\n", "(i\\) a\n",
+                     "- \\- a\n", "> \\- a\n", "- \\# a\n"]) {
+      expect(renderDjot(parse(s))).toEqual(s);
+    }
+  });
+
    const readme = `# djot.js
 
 A library and command-line tool for parsing and
