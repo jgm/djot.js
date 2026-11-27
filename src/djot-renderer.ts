@@ -115,8 +115,26 @@ class DjotRenderer {
     s = s.replace(/([~`'"${}[\]^<>\\*_|]|-(?=-)|!(?=\[)|\.(?=\.))/g, "\\$1");
     if (this.column === 0 || this.column === this.endOfPrefix) {
       s = s.replace(/^#/, "\\#");
+      // a bullet, definition or ordered list marker
+      s = s.replace(/^([-+:])(?= |$)/, "\\$1");
+      s = s.replace(/^(\(?(?:[0-9]+|[a-zA-Z]|[ivxlcdm]+|[IVXLCDM]+))([.)])(?= |$)/,
+                    "$1\\$2");
+    } else if (/^[.)]/.test(s) &&
+               /^\(?(?:[0-9]+|[a-zA-Z]|[ivxlcdm]+|[IVXLCDM]+)$/.test(this.lineText())) {
+      // the delimiter of an ordered list marker started by an earlier str
+      s = "\\" + s;
     }
     return s;
+  }
+
+  // The text written on the current line after the prefixes.
+  lineText () : string {
+    let i = this.buffer.length;
+    while (i > 0 && !this.buffer[i - 1].includes("\n")) {
+      i--;
+    }
+    const line = this.buffer.slice(i).join("");
+    return line.slice(this.endOfPrefix);
   }
 
   out (s : string) : void {
@@ -341,6 +359,7 @@ class DjotRenderer {
     block_quote: (node: BlockQuote) => {
       this.prefixes.push("> ");
       this.lit("> ");
+      this.endOfPrefix = this.column;
       this.renderChildren<Block>(node.children);
       this.prefixes.pop();
       this.blankline();
@@ -380,6 +399,7 @@ class DjotRenderer {
         this.lit(":");
         this.needsBlankLine = false;
         this.space();
+        this.endOfPrefix = this.column;
         this.prefixes.push(" ".repeat(2));
         this.renderChildren<Term | Definition>(item.children);
         this.prefixes.pop();
@@ -402,6 +422,7 @@ class DjotRenderer {
         this.lit(marker);
         this.needsBlankLine = false;
         this.space();
+        this.endOfPrefix = this.column;
         this.prefixes.push(" ".repeat(marker.length + 1));
         this.renderChildren<Block>(item.children);
         this.prefixes.pop();
@@ -425,6 +446,7 @@ class DjotRenderer {
         this.lit(marker);
         this.needsBlankLine = false;
         this.space();
+        this.endOfPrefix = this.column;
         this.prefixes.push(" ".repeat(marker.length + 1));
         this.renderChildren<Block>(item.children);
         this.prefixes.pop();
@@ -447,6 +469,7 @@ class DjotRenderer {
         this.needsBlankLine = false;
         this.lit(`- [${item.checkbox === "checked" ? "X" : " "}]`);
         this.space();
+        this.endOfPrefix = this.column;
         this.prefixes.push(" ".repeat(6));
         this.renderChildren<Block>(item.children);
         this.prefixes.pop();
